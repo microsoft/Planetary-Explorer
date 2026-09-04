@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-02T12:36:51.084Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "setup_query": "Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28",
+      "image_query": "Explain the February 2025 snow-cover colours around Quebec City.",
+      "outcome": "pass",
+      "elapsed_ms": 33956,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -71.218,
+        46.8039,
+        -71.198,
+        46.8239
+      ],
+      "expected_pin": {
+        "lat": 46.813900000000004,
+        "lng": -71.208
+      },
+      "submitted_pin": {
+        "lat": 46.81390092974547,
+        "lng": -71.20799999999963
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 49965,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 85,
+        "luminanceVariance": 82.37,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-quebec\\payload-images\\01-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "**MODIS snow-cover map colors near Quebec City may show variations due to urban, forested, and water regions.**\n\n**MODIS Snow-Cover Interpretation**\n- White or light blue often represents dense snow cover.\n- Darker shades, such as blues and purples, indicate sparse snow or no snow.\n- Non-snow colors (green or brown) signify vegetation or bare ground.\n\n**Insights for February 2025**\nThese color gradients reflect snow distribution influenced by urbanizations, elevation, and environment-specific factors in the area around Quebec City.\n\n**Data source:** MODIS (`modis-10A1-061`) from the loaded collection and map screenshot.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-quebec\\browser-screenshots\\01-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.png"
+    }
+  ]
+}

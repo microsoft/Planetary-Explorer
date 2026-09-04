@@ -22,6 +22,7 @@ Key Differences from GEOINT Module Vision:
 - Chat vision: Can answer specific user questions about visible features
 """
 
+import asyncio
 from typing import Dict, Any, Optional, List
 import logging
 import os
@@ -30,10 +31,21 @@ import aiohttp
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from cloud_config import cloud_cfg
-from urllib.parse import urlencode, parse_qs, urlparse
 import planetary_computer
 
 logger = logging.getLogger(__name__)
+
+
+def _format_map_location(map_bounds: Dict[str, float]) -> str:
+    """Format signed map coordinates with the correct hemispheres."""
+    try:
+        latitude = float(map_bounds["center_lat"])
+        longitude = float(map_bounds["center_lng"])
+    except (KeyError, TypeError, ValueError):
+        return "N/A"
+    latitude_text = f"{abs(latitude):.4f}°{'N' if latitude >= 0 else 'S'}"
+    longitude_text = f"{abs(longitude):.4f}°{'E' if longitude >= 0 else 'W'}"
+    return f"{latitude_text}, {longitude_text}"
 
 
 class ChatVisionAnalyzer:
@@ -178,12 +190,13 @@ class ChatVisionAnalyzer:
             image_data = None
             image_metadata = {
                 "source": collection_id or "Unknown",
+                "collection": collection_id,
                 "bounds": map_bounds
             }
             
             if imagery_base64:
                 # Use base64 screenshot from frontend
-                logger.info(f" Using base64 screenshot from frontend")
+                logger.info(" Using base64 screenshot from frontend")
                 # Remove the data:image/png;base64, prefix if present
                 if imagery_base64.startswith('data:image'):
                     imagery_base64 = imagery_base64.split(',', 1)[1]
@@ -196,6 +209,7 @@ class ChatVisionAnalyzer:
                 image_data, image_metadata = await self._fetch_visible_imagery(
                     imagery_url, map_bounds, collection_id
                 )
+                image_metadata.setdefault("collection", collection_id)
             
             if not image_data:
                 return {
@@ -214,7 +228,7 @@ class ChatVisionAnalyzer:
                 image_metadata=image_metadata
             )
             
-            logger.info(f" Chat vision analysis completed")
+            logger.info(" Chat vision analysis completed")
             
             return analysis_result
             
@@ -248,7 +262,7 @@ class ChatVisionAnalyzer:
             
             if imagery_url:
                 # Use provided imagery URL (from frontend)
-                logger.info(f" Fetching imagery from provided URL...")
+                logger.info(" Fetching imagery from provided URL...")
                 
                 # Sign the URL if it's from Planetary Computer
                 if "planetarycomputer.microsoft.com" in imagery_url:
@@ -266,7 +280,7 @@ class ChatVisionAnalyzer:
             
             # Fallback: Construct TiTiler static map URL from bounds
             if map_bounds and collection_id:
-                logger.info(f" Constructing TiTiler static map from bounds...")
+                logger.info(" Constructing TiTiler static map from bounds...")
                 static_map_url = self._build_static_map_url(map_bounds, collection_id)
                 
                 if static_map_url:
@@ -280,7 +294,7 @@ class ChatVisionAnalyzer:
                                 return image_bytes, metadata
             
             # Last resort: Fetch Sentinel-2 for the area
-            logger.info(f" Fallback: Fetching Sentinel-2 for area...")
+            logger.info(" Fallback: Fetching Sentinel-2 for area...")
             from geoint.vision_analyzer import get_vision_analyzer
             vision_analyzer = get_vision_analyzer()
             
@@ -343,7 +357,7 @@ class ChatVisionAnalyzer:
         Analyze imagery with GPT-5 Vision in conversational context.
         """
         try:
-            logger.info(f" Analyzing imagery with GPT-5 Vision (conversational mode)...")
+            logger.info(" Analyzing imagery with GPT-5 Vision (conversational mode)...")
             
             # Encode image to base64
             base64_image = base64.b64encode(image_data).decode('utf-8')
@@ -360,6 +374,8 @@ Be specific about features you can identify:
 - Environmental conditions (cloud cover, snow, flooding)
 - Any notable or interesting features
 
+Ground every claim in visible pixels. Distinguish colours actually visible in this screenshot from general legend meanings. If the image is uniform or a requested feature is absent, say so explicitly instead of inventing spatial variation. One image cannot prove temporal growth or change; state that limitation when relevant. Treat the supplied location and collection as authoritative metadata, reproduce their hemispheres exactly, and do not infer a different place.
+
 If they ask "what is in this image?" give a comprehensive overview. If they ask specific questions, focus your answer on what they're asking about."""
 
             # Build user prompt with context
@@ -375,9 +391,20 @@ If they ask "what is in this image?" give a comprehensive overview. If they ask 
                 user_prompt_parts.append("")
             
             # Add map/imagery context
-            user_prompt_parts.append(f"**Current imagery context:**")
-            user_prompt_parts.append(f"- Location: {map_bounds.get('center_lat', 'N/A')}°N, {map_bounds.get('center_lng', 'N/A')}°E")
+            user_prompt_parts.append("**Current imagery context:**")
+            user_prompt_parts.append(f"- Location: {_format_map_location(map_bounds)}")
             user_prompt_parts.append(f"- Collection: {collection_id or 'Unknown'}")
+            if collection_id == "modis-17A2H-061":
+                user_prompt_parts.append(
+                    "- Product meaning: 8-day Gross Primary Productivity (GPP), not Net Primary Productivity (NPP)"
+                )
+            if collection_id == "modis-10A1-061":
+                user_prompt_parts.append(
+                    "- Product meaning: daily MODIS NDSI snow-cover thematic raster. "
+                    "Map labels can remain visible above the raster; a blue thematic "
+                    "field is still rendered data. Describe only the colours and "
+                    "variation present in the supplied screenshot."
+                )
             if image_metadata.get("source"):
                 user_prompt_parts.append(f"- Source: {image_metadata['source']}")
             if image_metadata.get("date"):
@@ -385,13 +412,14 @@ If they ask "what is in this image?" give a comprehensive overview. If they ask 
             user_prompt_parts.append("")
             
             # Add user's question
-            user_prompt_parts.append(f"**User's question:**")
+            user_prompt_parts.append("**User's question:**")
             user_prompt_parts.append(query)
             
             user_prompt = "\n".join(user_prompt_parts)
             
             # Call GPT-5 Vision
-            response = self.client.chat.completions.create(
+            response = await asyncio.to_thread(
+                self.client.chat.completions.create,
                 model=self.deployment_name,
                 messages=[
                     {"role": "system", "content": system_prompt},

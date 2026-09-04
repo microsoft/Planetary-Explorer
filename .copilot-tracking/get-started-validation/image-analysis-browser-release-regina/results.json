@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-02T15:28:59.053Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "setup_query": "Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26",
+      "image_query": "Explain the vegetation colours and identify lower-vigour areas near Regina in 2026.",
+      "outcome": "pass",
+      "elapsed_ms": 45952,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -104.61,
+        50.34,
+        -104.59,
+        50.36
+      ],
+      "expected_pin": {
+        "lat": 50.35,
+        "lng": -104.6
+      },
+      "submitted_pin": {
+        "lat": 50.35000105299872,
+        "lng": -104.59999999999985
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Vegetation Indices 16-Day (250m)",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9978,
+        "meanAbsoluteDifference": 76.19
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 32126,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 92,
+        "meanLuminance": 190.61,
+        "luminanceVariance": 228.22,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-regina\\payload-images\\01-250m-ndvi-and-evi-composites-at-verified-regina-cropland.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "This image uses color coding to represent vegetation vigour, likely based on Normalized Difference Vegetation Index (NDVI) data, a common measure of plant health and density.\n\n### **Vegetation Colour Explanation**:\n- **Dark Red Areas**: Indicate regions with lower vegetation vigour or sparse vegetation. These may correspond to urban zones, arid land, or areas with environmental stress affecting plant health.\n- **Orange to Light Yellow Areas**: Gradually increasing vegetation density and vigour. These areas are likely agricultural zones, grasslands, or moderately vegetated regions. The lighter the colour, the denser and more productive the vegetation tends to be.\n\n### **Areas of Lower Vigour**:\nNear Regina:\n- The upper portion of the image contains **red zones**, which may signify lower vigour around urban areas, degraded land, or dry conditions.\n- Adjacent orange zones reflect transitional areas where vegetation begins to improve but is not yet highly vigorous.\n- **Highway 6** appears ",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-regina\\browser-screenshots\\01-250m-ndvi-and-evi-composites-at-verified-regina-cropland.png"
+    }
+  ]
+}

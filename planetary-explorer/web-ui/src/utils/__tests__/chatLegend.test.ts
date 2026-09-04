@@ -36,7 +36,10 @@ describe('chat legend derivation', () => {
     const legend = deriveChatLegend({
       tools_used: ['get_geofm_run'],
       structured: {
-        get_geofm_run: { structured: { status: 'complete', features: [{}] } },
+        get_geofm_run: {
+          success: true,
+          structured: { status: 'complete', features: [{}] },
+        },
       },
     });
 
@@ -44,6 +47,31 @@ describe('chat legend derivation', () => {
     expect(legend?.items.map((item) => item.color)).toEqual(['#ef4444', '#7f1d1d']);
     expect(legend?.items[0].description).toContain('above the requested threshold');
   });
+
+  it.each(['denied', 'queued', 'failed'])(
+    'keeps the HLS fire legend for a %s GeoFM request',
+    (status) => {
+      const legend = deriveChatLegend(
+        {
+          tools_used: ['compare_with_geofm'],
+          structured: {
+            compare_with_geofm: {
+              success: status !== 'failed' && status !== 'denied',
+              structured: { status },
+            },
+          },
+        },
+        {
+          current_collection: 'hls2-s30',
+          tile_urls: [{
+            tilejson_url: 'https://example.test/item?assets=B12&assets=B8A&assets=B04',
+          }],
+        },
+      );
+
+      expect(legend?.title).toBe('HLS fire false colour');
+    },
+  );
 
   it('identifies scene-stretched HLS fire false colour from its tile URL', () => {
     const legend = deriveChatLegend({
@@ -100,7 +128,12 @@ describe('chat legend derivation', () => {
     const legend = deriveChatLegend(
       {
         tools_used: ['get_geofm_run'],
-        structured: { get_geofm_run: { structured: { status: 'complete' } } },
+        structured: {
+          get_geofm_run: {
+            success: true,
+            structured: { status: 'complete', features: [{}] },
+          },
+        },
       },
       {
         current_collection: 'hls2-s30',

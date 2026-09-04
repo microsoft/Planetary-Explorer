@@ -1,0 +1,779 @@
+{
+  "generated_at": "2026-09-02T04:36:53.139962+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "weather": true
+  },
+  "scenario_count": 32,
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "question": "Sample the 2026 red and near-infrared reflectance values at this pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 12691,
+      "attempts": 1,
+      "pin": [
+        43.72,
+        -79.38
+      ],
+      "collection": "sentinel-2-l2a",
+      "item_id": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "At the pin, 2026 Sentinel\u20112 reflectance is **red 1451** and **NIR 3380**.\n\n**Sample**\n- Date: **2026-08-05**\n- `B04` (red): **1451**\n- `B08` (near-infrared): **3380**\n- NDVI: **0.399**\n\n**Data source:** Public Planetary Computer \u2014 Sentinel\u20112 L2A (`sentinel-2-l2a`)\n\n**Takeaway:** the sampled pixel indicates sparse or stressed vegetation."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Landsat and Sentinel-2 imagery over Calgary",
+      "question": "What is the 2026 NDVI value at this Calgary pin?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11345,
+      "attempts": 1,
+      "pin": [
+        51.03,
+        -114.08
+      ],
+      "collection": "hls2-s30",
+      "item_id": "HLS.S30.T11UQS.2026227T182921.v2.0",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "The 2026 NDVI at the Calgary pin is **0.755** (sampled 2026-07-29).\n\n**Sample**\n- `B04` red: **482**\n- `B08` NIR: **3455**\n- Cloud cover: **14%**\n- The tool used a clear-sky fallback because loaded tiles were cloud-masked at this pin.\n\n**Data source:** Public Planetary Computer \u2014 Harmonized Landsat Sentinel-2 (`hls2-s30`)\n\n**Takeaway:** `NDVI = 0.755` indicates dense, healthy vegetation."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "question": "Sample the 2026 coastal surface-reflectance bands at this location.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 6995,
+      "attempts": 1,
+      "pin": [
+        44.65,
+        -63.58
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC08_L2SP_007029_20260807_02_T1",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "The available 2026 sample is from **2026-08-07** at **44.6500\u00b0, \u221263.5800\u00b0**.\n\n**Surface reflectance**\n- `red`: 12,594\n- `nir08`: 14,118\n- NDVI: **0.057**\n\n**Interpretation**\n- The low NDVI indicates **minimal vegetation / predominantly bare or built surface** at the pin.\n\n**Data source:** Public Planetary Computer \u2014 Landsat Collection 2 Level-2 (`landsat-c2-l2`)"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire and thermal-anomaly observations",
+      "question": "What is the 2026 fire-confidence value at this Alberta pixel?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11043,
+      "attempts": 1,
+      "pin": [
+        54.5,
+        -115.0
+      ],
+      "collection": "modis-14A1-061",
+      "item_id": "MYD14A1.A2026225.h12v03.061.2026234002711",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "No 2026 fire-confidence value was returned for the pinned Alberta location.\n\n**Result**\n- Pin: `54.5000\u00b0N, 115.0000\u00b0W`\n- Value: no data returned\n- The sampler tried 2 loaded `modis-14A1-061` tiles; both were outside this pin\u2019s spatial extent.\n\n**Data source:** Public Planetary Computer \u2014 MODIS Thermal Anomalies/Fire Daily (`modis-14A1-061`)"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites over Prairie cropland",
+      "question": "Sample the 2026 NDVI and EVI values at this Saskatchewan field.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 8373,
+      "attempts": 1,
+      "pin": [
+        54.5,
+        -105.68
+      ],
+      "collection": "modis-13Q1-061",
+      "item_id": "MYD13Q1.A2026217.h12v03.061.2026234002623",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "No 2026 NDVI or EVI values could be sampled at the pinned Saskatchewan field.\n\n**Result**\n- Pin: `54.5000\u00b0N, 105.6800\u00b0W`\n- Loaded collection: `modis-13Q1-061`\n- Sampling found **1 tile**, but it **does not cover the pin location**.\n- NDVI: no value returned\n- EVI: no value returned\n\n**Data source:** Public Planetary Computer \u2014 MODIS Vegetation Indices (`modis-13Q1-061`)\n\n**Takeaway:** Load a MODIS tile/scene covering this field, then I can sample its 2026 NDVI and EVI."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity composites over British Columbia",
+      "question": "What is the 2026 gross primary productivity value at this location?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 6233,
+      "attempts": 1,
+      "pin": [
+        54.15,
+        -126.55
+      ],
+      "collection": "modis-17A2H-061",
+      "item_id": "MYD17A2H.A2026225.h11v03.061.2026234045000",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "No 2026 GPP value could be sampled at this pin from the loaded raster.\n\n- Pin: `54.1500\u00b0, -126.5500\u00b0`\n- The one loaded `modis-17A2H-061` tile does not spatially cover this location.\n- Returned value: `null` (no unit available).\n\n**Data source:** Loaded raster \u2014 `modis-17A2H-061`"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover and normalized-difference snow index",
+      "question": "Sample the February 2025 NDSI value at this Quebec location.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 7677,
+      "attempts": 1,
+      "pin": [
+        53.79,
+        -68.43
+      ],
+      "collection": "modis-10A1-061",
+      "item_id": "MYD10A1.A2025059.h14v03.061.2025063044407",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "No February 2025 NDSI value could be sampled at this pin.  \n\n**Result**\n- Pin: `53.7900\u00b0, -68.4300\u00b0`\n- Loaded collection: `modis-10A1-061`\n- Value: unavailable\n- Reason: the single loaded raster tile does not spatially cover the pinned location.\n\n**Data source:** Public Planetary Computer \u2014 `modis-10A1-061`"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m optical observations of spring river and ice conditions",
+      "question": "Sample 2026 water and ice reflectance at this Mackenzie River pin.",
+      "outcome": "fail",
+      "stage": "scene_selection",
+      "pin": [
+        65.35,
+        -127.0
+      ],
+      "item_count": 50,
+      "response": "No returned scene covers the canonical scenario point."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal and sea-ice observations",
+      "question": "Sample the 2026 water and short-wave infrared bands at this Hudson Bay pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 13046,
+      "attempts": 1,
+      "pin": [
+        57.0,
+        -85.0
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC09_L2SP_024021_20260822_02_T2",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "No 2026 water or SWIR values could be sampled at this pin.  \n\n**Result**\n- Pin: `57.00000\u00b0, -85.00000\u00b0`\n- Loaded collection: `landsat-c2-l2`\n- The 1 available raster tile does not spatially cover the pin, so no band values were returned.\n\n**Data source:** Public Planetary Computer \u2014 Landsat Collection 2 Level-2 (`landsat-c2-l2`)"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "question": "What is the elevation in metres at this Banff pin for the 2026 analysis?",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 19390,
+      "attempts": 1,
+      "pin": [
+        51.23,
+        -115.58
+      ],
+      "collection": "cop-dem-glo-30",
+      "item_id": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+      "tools_used": [
+        "get_terrain_stats"
+      ],
+      "evidence_error": null,
+      "response": "The terrain analysis places the Banff area at a mean elevation of **1,862.5 m above sea level**.\n\n**Terrain context**\n- Analysis-area elevation range: **1,333.0\u20132,996.3 m**\n- The returned result describes mountainous terrain around the pinned Banff location; it did not provide a single exact pixel elevation at the pin.\n- \u201c2026 analysis\u201d does not change DEM elevation, which is a static terrain measurement.\n\n**Data source:** Copernicus DEM (`cop-dem-glo-30`)  \n**Takeaway:** the pin is within high-elevation Rocky Mountain terrain."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "question": "What are the 2026 VV and VH backscatter values in dB?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 19815,
+      "attempts": 1,
+      "pin": [
+        49.2,
+        -123.05
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+      "tools_used": [
+        "sample_raster_value",
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "At the pinned location, the loaded 2026 Sentinel\u20111 scene provides **VV = 10.79 dB**.\n\n**Backscatter**\n- `VV`: raw **12.01 linear** \u2192 **10.79 dB**\n- Acquisition date: **2026-08-23**\n- `VH`: not returned by the currently loaded raster sampler; it repeatedly resolved only the `VV` band.\n\n**Data source:** Public Planetary Computer \u2014 Sentinel\u20111 RTC (`sentinel-1-rtc`)"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "question": "Sample the 2026 radar backscatter at this Red River pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 21592,
+      "attempts": 1,
+      "pin": [
+        49.6,
+        -97.08
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "The pinned Red River location measured **\u221214.03 dB VV radar backscatter** on **2026-05-22**.\n\n**Sample**\n- Location: `49.6000\u00b0, -97.0800\u00b0`\n- Metric: `VV` SAR backscatter\n- Raw value: `0.04` linear\n- Converted value: `\u221214.03 dB`\n\n**Data source:** Public Planetary Computer \u2014 Sentinel-1 RTC (`sentinel-1-rtc`)"
+    },
+    {
+      "family": "Terrain",
+      "location": "Vancouver, British Columbia",
+      "question": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 12300,
+      "attempts": 1,
+      "request": {
+        "message": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview:\nThe location analyzed is Vancouver within a 5 km radius. Vancouver features mixed terrain, with predominantly flat areas interspersed with some steep stretches and moderate slopes. Urban infrastructure is prevalent, influencing suitability for construction activities.\n\n---\n\n### Slope & Traversability:\n- **Min slope:** 0.0\u00b0 | **Max slope:** 59.7\u00b0 | **Mean slope:** 4.1\u00b0\n- **Flat terrain:** 67.8% | **Moderate slope:** 28.5% | **Steep terrain:** 3.8%\n- **Traversability:** Easy. Majority flat terrain suitable for construction projects.\n\n---\n\n### Flood Risk Assessment:\n- **Mean water occurrence:** 30.9% | **Max occurrence:** 99.0%\n- **Area ever flooded:** 33.1%\n- **Area frequently flooded:** 32.2%\n- **Flood risk level:** HIGH\n- **Permitting status:** NOT RECOMMENDED due to **significant historical flooding**\u2014data based on JRC Global Surface Water study.\n\n---\n\n### Flat Areas:\n- **Flat terrain percentage:** 67.8%\n- **Slope threshold:** <5.0\u00b0 suitable for construction\n- **Recommendation:** Excellent availability of flat areas within the radius.\n\n---\n\n### Summary:\nAlthough flat terrain dominates the area, making it physically suitable for construction, the **high flood risk** poses considerable challenges for permitting. Historical flooding across 33.1% of the areas and frequent floods in 32.2% make the site **NOT SUITABLE** for a construction permit. Mitigation or flood-proofing measures would be necessary for conditional approval.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_slope_analysis",
+          "result": null
+        },
+        {
+          "tool": "analyze_flood_risk",
+          "result": null
+        },
+        {
+          "tool": "find_flat_areas",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Terrain",
+      "location": "Calgary, Alberta",
+      "question": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 12492,
+      "attempts": 1,
+      "request": {
+        "message": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+        "latitude": 51.0447,
+        "longitude": -114.0719,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview: Calgary (5 km radius from 51.0447\u00b0N, 114.0719\u00b0W)\n\n#### Elevation & Topography\n- **Elevation Range**:\n  - Minimum: **1022 m**\n  - Maximum: **1142.4 m**\n  - Mean: **1074.1 m**\n- **Terrain Type**: The area consists of gently rolling hills, with an elevation range of approximately **120.4 m**.\n\n#### Slope & Traversability\n- **Slope Data**:\n  - Minimum slope: **0.0\u00b0** (completely flat)\n  - Maximum slope: **37.2\u00b0**\n  - Mean slope: **3.7\u00b0** (mostly gentle)\n- **Area Classification**:\n  - **Flat Terrain**: **76.9%** (suitable for easy traversability)\n  - **Moderate Slopes**: **21.8%**\n  - **Steep Terrain**: **1.3%**\n- **Traversability**: Terrain is classified as **easy** based on the dominance of low slopes and flat areas.\n\n#### Aspect & Sun Exposure (Slope Direction)\n- **Dominant Direction**: **East-facing slopes** are the most prevalent, accounting for **14.6%** of the direction distribution.\n- **Direction Breakdown**:\n  - North: **12.5%**\n  - Northeast: **13.1%**\n  - South: **13.8%**\n  - South-facing slopes provide **moderate sun exposure** due to **39% south-facing terrain**, with **1% flat areas** contributing minimally to the exposure.\n\n### Summary\nBased on elevation, slope data, and aspect analysis near Calgary:\n- **Elevation**: Ranges from **1022 m to 1142.4 m**, with **gently rolling hills** and no extreme variations.\n- **Slope**: Dominantly flat or gently sloped terrain (**77% flat terrain** ensures high traversability).\n- **Aspect**: Favorable sun exposure is provided primarily on south-facing slopes (**39% south-facing**).\n- This location offers good line-of-sight to the east with a preference for east-facing terrain, making it feasible for projects requiring visibility or solar access.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_elevation_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_slope_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_aspect_analysis",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Terrain",
+      "location": "Halifax, Nova Scotia",
+      "question": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 16181,
+      "attempts": 1,
+      "request": {
+        "message": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+        "latitude": 44.6488,
+        "longitude": -63.5752,
+        "radius_km": 5.0
+      },
+      "response": "### Halifax Coastal Terrain and Environmental Permitting Analysis\n\n#### **Flood Exposure Analysis**\n- **Key Metrics**:\n  - Mean historical water occurrence: 26.0%\n  - Maximum historical water occurrence: 99.0%\n  - Area ever flooded: 28.4%\n  - Frequently flooded area: 27.4%\n\n- **Flood Risk Level**: **HIGH**\n  - **Reason**: Significant historical flooding in the area according to JRC Global Surface Water data.\n\n- **Permitting Status**: **NOT RECOMMENDED**\n  - **Reason**: Coastal flooding poses high risk to development suitability without major mitigation efforts.\n\n#### **Environmental Sensitivity Analysis**\n- **Land Cover Breakdown**:\n  - Tree cover: 36.5%\n  - Grassland: 6.6%\n  - Built-up: 27.1%\n  - Bare/Sparse vegetation: 0.8%\n  - Permanent water bodies: 28.8%\n\n- **Sensitive Areas**: **65.5% of the region**\n  - **Environmental Constraints**:\n    - Forests (36.5%): Deforestation permits may be required.\n    - Water Bodies (28.8%): Coastal setback requirements apply.\n\n- **Environmental Sensitivity Level**: **HIGH**\n  - Dominant land cover: Tree-covered areas present significant hurdles to large-scale construction or development without extensive ecological considerations.\n\n- **Permitting Status**: **NOT RECOMMENDED**\n  - **Reason**: A large portion of sensitive environmental areas (forests and water bodies) complicates permitting.\n\n---\n\n### **Summary**\nBased on the flood exposure and environmental constraints for Halifax (5 km radius):\n- **Flood Risk**: The site is highly vulnerable to coastal flooding, making development unsuitable without advanced mitigation strategies.\n- **Environmental Sensitivity**: High sensitivity due to significant tree cover and proximity to permanent water bodies, restricting permitting feasibility.\n\n### **Recommendation**: This site is **NOT SUITABLE** for development based on current flood risk and environmental constraints.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "analyze_flood_risk",
+          "result": null
+        },
+        {
+          "tool": "analyze_environmental_sensitivity",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Mobility",
+      "location": "Kananaskis, Alberta",
+      "question": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 64744,
+      "attempts": 1,
+      "request": {
+        "latitude": 50.7,
+        "longitude": -115.0,
+        "latitude_b": 50.735,
+        "longitude_b": -114.95,
+        "user_query": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers."
+      },
+      "response": "### Two-Point Traverse: Kananaskis to Rocky View County\n\n#### 1. Area of Operations\n- **Origin**: Kananaskis (50.700000, -115.000000)\n- **Destination**: Rocky View County (50.735000, -114.950000)\n- **Distance**: 3.26 miles (5.25 km), bearing 42.1\u00b0\n\n---\n\n#### 2. Weather Conditions\n- **Origin**: 13.2\u00b0C, 12.3 km/h WSW wind, visibility 48.3 km, 95% cloud cover, no precipitation (Cloudy)\n- **Destination**: Same conditions as origin.\n\n---\n\n#### 3. Road Route\nNo road route is available for this traverse due to an API error (400).\n\n---\n\n#### 4. Terrain Overview\n- **Land Cover Composition along the route**:\n  - Dominant: Bare or sparse vegetation (63.7%)\n  - Tree cover: 30.7%\n  - Grassland: 2.1%\n  - Minor: Permanent water 0.1%, Moss/Lichen 3.3%\n- **Elevation Profile (from transect)**:\n  - Total Ascent: 571.7 m\n  - Total Descent: 165.7 m\n  - Elevation Range: 439.8 m (2209.9 m to 2649.6 m)\n  - Starting Elevation (Kananaskis): 2243.6 m\n  - Ending Elevation (Rocky View County): 2649.6 m\n\n---\n\n#### 5. Corridor Assessment (Intermediate Waypoint at 50.7175, -114.975)\n- **Status**: Impassable due to steep terrain with hazardous slopes.\n- **Detailed Hazards**:\n  - Steep slopes: 47.8% of the terrain exceeds 30\u00b0 (max slope of 73.6\u00b0).\n  - Majority land cover: Bare or sparse vegetation (63.7%, challenging for vehicle traction).\n  - No significant water bodies or fire hazards identified.\n\n---\n\n#### 6. Endpoint Assessment\n**Origin (Kananaskis)**\n- **Terrain**: Steep terrain with 51.9% slopes over 30\u00b0 (max slope: 71.5\u00b0).\n- **Water Bodies**: Minimal, 0.0% coverage.\n- **Active Fires**: No detections.\n- **Vegetation**: Dominant bare/sparse vegetation (61%), low grassland (2.4%), and moderate tree cover (33.3%).\n- **Overall**: Impassable due to steep slopes and challenging traction over sparsely vegetated land.\n\n**Destination (Rocky View County)**\n- **Terrain**: Steep terrain with 51.8% slopes over 30\u00b0 (max slope: 72.3\u00b0).\n- **Water Bodies**: Minimal, 0.0% coverage.\n- **Active Fires**: No detections.\n- **Vegetation**: Dominant bare/sparse vegetation (71.5%), low tree cover (23.2%).\n- **Overall**: Impassable due to steep slopes and unstable bare terrain.\n\n---\n\n#### 7. Hazards\n1. **Steep Slopes**:\n   - Corridor waypoint: 47.8% slopes >30\u00b0 (max slope: 73.6\u00b0)\n   - Origin points: ~51% slopes >30\u00b0 (max: 71.5\u00b0)\n   - Destination points: 51.8% slopes >30\u00b0 (max: 72.3\u00b0)\n2. **Land Cover**:\n   - Sparse vegetation and bare ground dominate, with limited traction for vehicles.\n3. **Water Bodies**: No ",
+      "errors": [],
+      "analysis_type": null
+    },
+    {
+      "family": "Mobility",
+      "location": "North Shore Mountains, British Columbia",
+      "question": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 65308,
+      "attempts": 1,
+      "request": {
+        "latitude": 49.32,
+        "longitude": -123.07,
+        "latitude_b": 49.355,
+        "longitude_b": -123.02,
+        "user_query": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints."
+      },
+      "response": "### Situation Report: Two-Point Traverse Analysis between Start (49.32, -123.07) and North Vancouver (49.355, -123.02)\n\n#### 1. Area of Operations\n- **Origin**: Start Point (49.32, -123.07)\n- **Destination**: North Vancouver (49.355, -123.02)\n- **Distance**: 3.3 miles (5.32 km)\n- **Bearing**: 42.9\u00b0 (NE)\n\n#### 2. Weather Conditions\n- **Origin (Start)**: Mostly cloudy, 18.5\u00b0C, ENE winds at 5.8 km/h, 25.7 km visibility, 84% cloud cover, no precipitation.\n- **Destination (North Vancouver)**: Mostly cloudy, 17.8\u00b0C, E winds at 3.7 km/h, 22.5 km visibility, 76% cloud cover, no precipitation.\n\n#### 3. Road Route\n- A **road route exists** between the two points.\n- **Estimated Travel Time**: 26.2 minutes\n- **Road Distance**: 5.92 miles (9.53 km)\n- **Traffic Delays**: None reported\n\n#### 4. Terrain Overview\n- **Land Cover Composition**:\n  - Dominant: Tree cover (74.3%)\n  - Grassland: 2.2%\n  - Built-up: 22.6%\n  - Permanent water bodies: 0.8%\n- **Elevation Profile**:\n  - Total Ascent: 130.7 m\n  - Total Descent: 0 m\n  - Elevation Range: 94.7\u2013225.3 m\n\n#### 5. Corridor Assessment\n- **Intermediate Waypoints**: 1 waypoint sampled along the corridor\n- **Findings**:\n  - **Waypoint**: Latitude 49.3375, Longitude -123.045\n  - **Slope**: 78.9% gentle, 19.4% moderate, 1.7% steep; mean elevation: 9.5\u00b0\n  - **Dominant Land Cover**: 74% tree cover\n  - **Constraints**: \n    - Dense tree cover\n    - 0.8% water occurrence\n- Overall Corridor: Movement classified as **challenging** due to mixed slopes and high tree cover.\n\n#### 6. Endpoint Assessment\n**Origin (Start: 49.32, -123.07)**:\n- **Terrain/Slope**: Mostly gentle slopes (avg 7.7\u00b0)\n- **Land Cover**: 71.8% tree cover, 24.9% built-up, minimal water (0.3%), no permanent obstacles.\n- **Vegetation**: Sparse, NDVI ~0.32\n- **Assessment**: Challenging due to high tree cover.\n\n**Destination (North Vancouver: 49.355, -123.02)**:\n- **Terrain/Slope**: Varied terrain; moderate (48.5%) slopes dominate (avg 19.0\u00b0).\n- **Land Cover**: 98.6% tree cover, very heavily vegetated.\n- **Vegetation**: Sparse, NDVI ~0.36\n- **Assessment**: Challenging\u2014limited open spaces and slope constraints.\n\n#### 7. Hazards\n- **Slopes**: Max elevation gain of 130 m, with moderately steep segments at points along the route.\n- **Tree Cover**: High density (up to 98.6%); minimal open or sparse areas.\n- **Water Bodies**: No significant water hazards, except minor 0.8% at corridor waypoint.\n\n#### 8. Overall Assessment\nThe terrain between the origin and destination is **challeng",
+      "errors": [],
+      "analysis_type": null
+    },
+    {
+      "family": "Mobility",
+      "location": "Yukon River corridor, Yukon",
+      "question": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 159744,
+      "attempts": 2,
+      "request": {
+        "latitude": 60.7212,
+        "longitude": -135.0568,
+        "latitude_b": 60.7562,
+        "longitude_b": -135.0068,
+        "user_query": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility."
+      },
+      "response": "### Two-Point Traverse Report\n\n**1. Area of Operations**  \n- **Origin:** Unnamed starting point near Whitehorse (60.7212, -135.0568)  \n- **Destination:** Whitehorse (60.7562, -135.0068)  \n- **Distance:** 2.95 miles (4.75 km)  \n- **Bearing:** ~34.9\u00b0  \n\n**2. Weather Conditions**  \n- **Origin:** Cloudy (8.9\u00b0C, 87% humidity, 7.4 km/h wind from North, 64.4 km visibility). No precipitation.  \n- **Destination:** Similar to origin.  \n\n**3. Road Route**  \n- **Available:** Yes  \n- **Distance via Road:** 4.42 miles (7.11 km)  \n- **Estimated Travel Time:** ~29.9 minutes  \n- **Traffic Delays:** None  \n\n**4. Terrain Overview**  \n- **Land Cover Composition:** Dominantly tree cover (69.9%) with some built-up (10.1%) and minimal wetlands and grassy areas.  \n- **Elevation Profile:**  \n  - **Start Elevation:** 638.4 m  \n  - **End Elevation:** 743.4 m  \n  - **Max Elevation:** 744.5 m  \n  - **Ascent:** 106 m total  \n  - **Descent:** Minimal (1.1 m)  \n\n**5. Corridor Assessment**  \n- **Waypoint (60.7387, -135.0318):**  \n  - Challenging with ~70% tree cover and wetland conditions.  \n  - Slopes: 90.6% gentle, 9.0% moderate, 0.4% steep.  \n  - Roads likely present in proximity. Land cover and mild terrain suggest caution.  \n\n**6. Endpoint Assessment**  \n- **Origin:**  \n  - Terrain: Gentle slopes (average incline ~5.9\u00b0).  \n  - Water: Low (5.1% coverage; mostly permanent).  \n  - Fire: No active detections.  \n  - Vegetation: Sparse with 99.8% light cover (avg NDVI=0.14).  \n  - Land Cover: Dominated by tree cover (62%) with some wetland. Contains built-up area and roads available.  \n  - Assessment: Challenging due to tree cover and wetlands but feasible.    \n\n- **Destination:**  \n  - Terrain: Similar gentle conditions (avg slope ~6.6\u00b0).  \n  - Water: Minimal (mostly permanent, ~2.8% coverage).  \n  - Fire: No active detections.  \n  - Vegetation: Light cover (98.7% sparse, avg NDVI=0.25).  \n  - Land Cover: Tree cover dominant (~75%), no fire hazards, some moderate wet areas.  \n  - Assessment: Challenging primarily due to tree cover, minor wetlands.  \n\n**7. Hazards**  \n- **Water Crossing Potential:** Low \u2014 minimal water coverage (~5.1% at origin, ~2.8% at destination). Mostly permanent.  \n- **Slope Conditions:** Favorable \u2014 primarily gentle terrain (90.6%-95.8% <15\u00b0 slopes).  \n- **Vegetation:** Sparse overall, except ~70%-76% tree cover within the corridor.  \n- **Fires:** None detected during this analysis.  \n\n**8. Overall Assessment**  \n- **Feasibility for Vehicles:** Challenging \u2014 while w",
+      "errors": [],
+      "analysis_type": null
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Vancouver, British Columbia",
+      "question": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 31781,
+      "attempts": 1,
+      "request": {
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "user_query": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?"
+      },
+      "response": "### Location & Context: Vancouver (49.2827, -123.1207)\n\nFor the year 2026 under the worst-case emissions scenario (SSP5-8.5), the projected precipitation values for Vancouver, based on NASA NEX-GDDP-CMIP6 data, are:\n\n### Climate Projections:\n- **Annual Precipitation:** Estimated total of **1525.7 mm** (4.18 mm/day average over the year).\n- **Peak Daily Rainfall:** **31.23 mm** during the heaviest rain event.\n\n### Interpretation:\n- **Annual Total Precipitation:** This is in line with Vancouver's historically wet climate, given its location in the Pacific Northwest. The figure reflects a slightly wetter-than-usual year if global emissions and warming trends follow the SSP5-8.5 trajectory.\n- **Peak Daily Rainfall:** A single day could see around 31.23 mm, which indicates heavy rainfall potentially contributing to urban flooding risks. Such values are typical during fall/winter storms in the region.\n\n### Scenario Context:\nThe SSP5-8.5 (business-as-usual, high emissions) scenario tends to amplify precipitation extremes, which aligns with the projected peak rainfall for Vancouver. However, these values are modeled predictions, not fixed forecasts.\n\n### Caveats:\n- These estimates are from a single climate model (UKESM1-0-LL), subsampled from the nearest valid land grid cell ~10 km away from central Vancouver.\n- Models simplify complex weather dynamics; thus, actual conditions may slightly vary.\n\n### Summary:\nIn 2026, Vancouver is projected to experience around **1525.7 mm of annual precipitation** (consistent with a very wet climate) and **31.23 mm peak daily rainfall**, highlighting the possibility of heavy storm events under worst-case emission scenarios.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_precipitation_projection",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Toronto, Ontario",
+      "question": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 51507,
+      "attempts": 1,
+      "request": {
+        "latitude": 43.6532,
+        "longitude": -79.3832,
+        "user_query": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month."
+      },
+      "response": "### Location & Context\nFor Toronto (**coordinates: 43.6532, -79.3832**), I analyzed monthly precipitation projections for 2026 under the SSP5-8.5 (worst-case) emissions scenario using the NASA NEX-GDDP-CMIP6 dataset.\n\n### Climate Projections: Monthly Precipitation in 2026\nBelow is the precipitation data (in **mm/day**) for each month, along with the wettest month's identification:\n\n- **January**: Mean 2.88 mm/day (Max: 14.08 mm/day)\n- **February**: Mean 1.53 mm/day (Max: 10.03 mm/day)\n- **March**: Mean 5.26 mm/day (Max: 30.43 mm/day) \ud83c\udf27\ufe0f **Wettest Month**\n- **April**: Mean 2.81 mm/day (Max: 12.69 mm/day)\n- **May**: Mean 2.36 mm/day (Max: 11.98 mm/day)\n- **June**: Mean 3.65 mm/day (Max: 15.52 mm/day)\n- **July**: Mean 2.46 mm/day (Max: 20.64 mm/day)\n- **August**: Mean 2.58 mm/day (Max: 11.56 mm/day)\n- **September**: Mean 3.55 mm/day (Max: 23.12 mm/day)\n- **October**: Mean 3.53 mm/day (Max: 24.49 mm/day)\n- **November**: Mean 1.82 mm/day (Max: 14.85 mm/day)\n- **December**: Mean 0.81 mm/day (Max: 5.00 mm/day)\n\n### Interpretation\n- The **wettest month** is **March**, with an average precipitation of **5.26 mm/day**, peaking at a maximum of **30.43 mm/day**.\n- Overall, precipitation levels vary moderately throughout the year, with higher rainfall typically occurring in March and the fall months (September and October).\n\n### Caveats\nThis data is based on climate projections from a single model (UKESM1-0-LL) and offers insights into monthly patterns rather than daily events. While highly detailed, projections carry uncertainty and may not account for small-scale variability.\n\n### Summary\nMarch 2026 is projected to be Toronto's wettest month under SSP5-8.5 based on precipitation averages (5.26 mm/day).",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "sample_timeseries",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Montreal, Quebec",
+      "question": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 73958,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.5019,
+        "longitude": -73.5674,
+        "user_query": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?"
+      },
+      "response": "For Montreal in 2026, temperature and precipitation projections under SSP2-4.5 and SSP5-8.5 vary significantly:\n\n### Temperature:\n- **SSP2-4.5 (Moderate emissions):**\n  - Daily Maximum: **28.0\u00b0C**\n  - Daily Minimum: **9.6\u00b0C**\n  - Daily Mean: **18.8\u00b0C**\n  \n- **SSP5-8.5 (Worst-case emissions):**\n  - Daily Maximum: **21.9\u00b0C**\n  - Daily Minimum: **8.7\u00b0C**\n  - Daily Mean: **15.3\u00b0C**\n\n### Precipitation:\n- **SSP2-4.5 (Moderate emissions):**\n  - Mean Daily Precipitation: **4.17 mm/day**\n  - Total Annual Precipitation: **1522.0 mm**\n  - Peak Daily Rainfall: **19.03 mm/day**\n\n- **SSP5-8.5 (Worst-case emissions):**\n  - Mean Daily Precipitation: **3.62 mm/day**\n  - Total Annual Precipitation: **1321.3 mm**\n  - Peak Daily Rainfall: **20.05 mm/day**\n\n### Interpretation:\nUnder SSP2-4.5, Montreal generally experiences higher temperatures and more precipitation compared to SSP5-8.5. The peak daily rainfall is slightly higher under SSP5-8.5, potentially indicating heavier rainfall events despite a lower overall annual precipitation.\n\n### Caveats:\n- These values are taken from NASA NEX-GDDP-CMIP6 data with a 0.25\u00b0 (25 km) resolution.\n- Some grid cells near Montreal were water-masked, so data reflects the closest valid land grid about **14 km away**.\n\n### Summary:\nIn 2026, SSP2-4.5 suggests warmer average temperatures (**18.8\u00b0C**) and higher annual rainfall (**1522 mm**) than SSP5-8.5. The latter scenario shows reduced warming (**15.3\u00b0C**) and total rainfall (**1321 mm**) but more intense rainfall events.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_temperature_projection",
+          "result": null
+        },
+        {
+          "tool": "get_precipitation_projection",
+          "result": null
+        },
+        {
+          "tool": "get_temperature_projection",
+          "result": null
+        },
+        {
+          "tool": "get_precipitation_projection",
+          "result": null
+        },
+        {
+          "tool": "compute_trend",
+          "result": null
+        },
+        {
+          "tool": "compute_trend",
+          "result": null
+        },
+        {
+          "tool": "compute_trend",
+          "result": null
+        },
+        {
+          "tool": "compute_trend",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Building Damage",
+      "location": "Jasper, Alberta",
+      "question": "Using the 2026 before-and-after tenant imagery, assess potential building damage and distinguish destroyed, major-damage, and unaffected structures.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Building Damage",
+      "location": "Lytton, British Columbia",
+      "question": "Using the 2026 before-and-after tenant imagery, assess structural damage and identify blocks requiring field verification.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Calgary region, Alberta - Data centre",
+      "question": "For 2026, score our candidate data-centre sites near Calgary for power, water, competition, wildfire, flood, and heat exposure.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Montreal region, Quebec - Industrial parcels",
+      "question": "Which 2026 candidate parcels near Montreal clear slope, flood, heat, and grid-proximity thresholds?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Edmonton region, Alberta - Grid expansion",
+      "question": "Rank the top three 2026 sites near Edmonton with permitting precedent and grid proximity weighted highest.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Resilience",
+      "location": "Seven-day Canadian facility outlook",
+      "question": "Over the next seven days, which Canadian facilities are most at risk and what is the supply-chain blast radius?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Resilience",
+      "location": "Vancouver distribution disruption",
+      "question": "If our Vancouver distribution centre goes offline for 48 hours in 2026, which downstream Canadian facilities are exposed?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Resilience",
+      "location": "Western Canada weekly review",
+      "question": "Show 2026 heat and wildfire risk for all Western Canada facilities this week, ranked by severity with a response playbook.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Forecast",
+      "location": "Great Lakes five-day ensemble",
+      "question": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 33976,
+      "attempts": 1,
+      "request": {
+        "latitude": 43.75,
+        "longitude": -77.9,
+        "lead_hours": 120,
+        "grid_size": 8,
+        "user_query": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+        "location_label": "Great Lakes five-day ensemble"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 291.005,
+            "min": 289.899,
+            "max": 292.11,
+            "samples": 2,
+            "stdev": 1.563,
+            "spread": 2.211
+          },
+          "precip": {
+            "mean": 0.005,
+            "min": 0.003,
+            "max": 0.007,
+            "samples": 2,
+            "stdev": 0.003,
+            "spread": 0.004
+          },
+          "u10": {
+            "mean": 1.04,
+            "min": 0.38,
+            "max": 1.701,
+            "samples": 2,
+            "stdev": 0.934,
+            "spread": 1.321
+          },
+          "v10": {
+            "mean": 0.808,
+            "min": -0.789,
+            "max": 2.406,
+            "samples": 2,
+            "stdev": 2.259,
+            "spread": 3.195
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Prairie temperature and wind",
+      "question": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 810,
+      "attempts": 1,
+      "request": {
+        "latitude": 52.94,
+        "longitude": -106.45,
+        "lead_hours": 72,
+        "grid_size": 8,
+        "user_query": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+        "location_label": "Prairie temperature and wind"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 289.907,
+            "min": 288.907,
+            "max": 290.907,
+            "samples": 2,
+            "stdev": 1.414,
+            "spread": 2.0
+          },
+          "precip": {
+            "mean": 1.446,
+            "min": 0.597,
+            "max": 2.296,
+            "samples": 2,
+            "stdev": 1.201,
+            "spread": 1.699
+          },
+          "u10": {
+            "mean": -2.693,
+            "min": -4.081,
+            "max": -1.305,
+            "samples": 2,
+            "stdev": 1.963,
+            "spread": 2.776
+          },
+          "v10": {
+            "mean": -0.426,
+            "min": -1.286,
+            "max": 0.433,
+            "samples": 2,
+            "stdev": 1.216,
+            "spread": 1.719
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Atlantic Canada precipitation comparison",
+      "question": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 10296,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.0,
+        "longitude": -63.0,
+        "lead_hours": 24,
+        "grid_size": 8,
+        "user_query": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+        "location_label": "Atlantic Canada precipitation comparison"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 287.015,
+            "min": 285.926,
+            "max": 288.104,
+            "samples": 2,
+            "stdev": 1.54,
+            "spread": 2.178
+          },
+          "precip": {
+            "mean": 0.416,
+            "min": -0.011,
+            "max": 0.844,
+            "samples": 2,
+            "stdev": 0.605,
+            "spread": 0.855
+          },
+          "u10": {
+            "mean": 0.655,
+            "min": -2.917,
+            "max": 4.227,
+            "samples": 2,
+            "stdev": 5.052,
+            "spread": 7.144
+          },
+          "v10": {
+            "mean": 0.318,
+            "min": 0.012,
+            "max": 0.623,
+            "samples": 2,
+            "stdev": 0.432,
+            "spread": 0.611
+          }
+        }
+      }
+    }
+  ]
+}

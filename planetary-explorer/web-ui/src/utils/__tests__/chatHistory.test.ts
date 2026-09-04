@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ChatHistorySnapshot } from '../../services/api';
 import {
+  boundedHistorySceneRefs,
   boundedHistoryTileUrls,
   chatHistoryFingerprint,
   confirmFailedHistoryDiscard,
@@ -54,10 +55,32 @@ describe('chat history snapshots', () => {
     const tiles = Array.from({ length: 60 }, (_, index) => ({
       tilejson_url: `https://tiles.example/item-${index}.json`,
       item_id: `item-${index}`,
+      stac_mode: index === 49 ? 'pro' as const : 'public' as const,
     }));
 
     expect(boundedHistoryTileUrls(tiles)).toHaveLength(50);
     expect(boundedHistoryTileUrls(tiles)?.[49].item_id).toBe('item-49');
+    expect(boundedHistoryTileUrls(tiles)?.[49].stac_mode).toBe('pro');
+  });
+
+  it('stores bounded scene provenance without STAC assets', () => {
+    const scenes = Array.from({ length: 60 }, (_, index) => ({
+      id: `item-${index}`,
+      collection: 'sentinel-2-l2a',
+      stac_mode: index === 49 ? 'pro' as const : 'public' as const,
+      bbox: [index, 0, index + 1, 1],
+      properties: { datetime: `2026-06-${String((index % 28) + 1).padStart(2, '0')}T00:00:00Z` },
+      assets: { visual: { href: 'https://storage.example/signed.tif?sig=secret' } },
+    }));
+
+    const refs = boundedHistorySceneRefs(scenes);
+
+    expect(refs).toHaveLength(50);
+    expect(refs?.[49]).toMatchObject({
+      id: 'item-49',
+      stac_mode: 'pro',
+    });
+    expect(refs?.[0]).not.toHaveProperty('assets');
   });
 
   it('creates URL-safe mutation identifiers for idempotent saves', () => {
@@ -116,6 +139,48 @@ describe('chat history snapshots', () => {
       pin: undefined,
       map: undefined,
     });
+  });
+
+  it('removes nested Pro item references before restoring disabled Pro history', () => {
+    const context = normalizeRestoredChatContext({
+      stacMode: 'public',
+      map: {
+        stac_mode: 'public',
+        tile_urls: [
+          {
+            tilejson_url: '/api/pro/tilejson?collection=private-dem&item=item-1',
+            item_id: 'item-1',
+            stac_mode: 'pro',
+          },
+        ],
+      },
+    }, false);
+
+    expect(context).toEqual({
+      stacMode: 'public',
+      selectedDataset: undefined,
+      pin: undefined,
+      map: undefined,
+    });
+  });
+
+  it('removes Pro mosaic scene references before restoring disabled Pro history', () => {
+    const context = normalizeRestoredChatContext({
+      stacMode: 'public',
+      map: {
+        stac_mode: 'public',
+        imagery_url: 'https://tiles.example/mosaic/{z}/{x}/{y}.png',
+        scene_refs: [
+          {
+            id: 'private-scene',
+            collection: 'private-imagery',
+            stac_mode: 'pro',
+          },
+        ],
+      },
+    }, false);
+
+    expect(context.map).toBeUndefined();
   });
 
   it('discards terminal failures instead of flushing them during unmount', () => {

@@ -282,6 +282,22 @@ class TileSelector:
         # STEP 0: DETECT USER INTENT & ADJUST WEIGHTS
         # =================================================================
         weights = cls._determine_scoring_weights(query)
+
+        point_aoi = cls._is_small_query_bbox(query_bbox)
+        if point_aoi:
+            center_covering = [
+                feature
+                for feature in features
+                if cls._geometry_covers_query_center(feature, query_bbox) is True
+            ]
+            if center_covering:
+                logger.info(
+                    "[PIN] Point AOI: retaining %d/%d center-covering scenes "
+                    "before date grouping",
+                    len(center_covering),
+                    len(features),
+                )
+                features = center_covering
         
         # =================================================================
         # STEP 0.5: DETERMINE IF WE SHOULD GROUP BY DATE OR PRIORITIZE COVERAGE
@@ -330,7 +346,18 @@ class TileSelector:
         # =================================================================
         # STEP 2: SORT BY SCORE (highest first)
         # =================================================================
-        scored_tiles.sort(key=lambda x: x["total_score"], reverse=True)
+        scored_tiles.sort(
+            key=lambda tile: (
+                bool(
+                    point_aoi
+                    and cls._geometry_covers_query_center(
+                        tile["feature"], query_bbox
+                    )
+                ),
+                tile["total_score"],
+            ),
+            reverse=True,
+        )
         
         # =================================================================
         # STEP 3: SELECT TOP N TILES
@@ -697,8 +724,19 @@ class TileSelector:
         # =================================================================
         coverage_raw = 0.0
         if query_bbox:
+            query_area = (
+                (query_bbox[2] - query_bbox[0])
+                * (query_bbox[3] - query_bbox[1])
+            )
+            covers_center = (
+                cls._geometry_covers_query_center(feature, query_bbox)
+                if query_area <= 0.1
+                else None
+            )
             tile_bbox = feature.get("bbox")
-            if tile_bbox and len(tile_bbox) == 4:
+            if covers_center is not None:
+                coverage_raw = 100.0 if covers_center else 0.0
+            elif tile_bbox and len(tile_bbox) == 4:
                 overlap = cls._calculate_overlap(query_bbox, tile_bbox)
                 
                 # Normalized scoring curve (0-100):
@@ -765,6 +803,57 @@ class TileSelector:
         )
         
         return scores
+
+    @staticmethod
+    def _geometry_covers_query_center(
+        feature: Dict[str, Any],
+        query_bbox: List[float],
+    ) -> Optional[bool]:
+        """Return whether an item's geometry covers a small AOI center."""
+        geometry = feature.get("geometry")
+        if not geometry or len(query_bbox) != 4:
+            return None
+        try:
+            from shapely.geometry import Point, shape
+
+            center = Point(
+                (query_bbox[0] + query_bbox[2]) / 2,
+                (query_bbox[1] + query_bbox[3]) / 2,
+            )
+            return bool(shape(geometry).covers(center))
+        except Exception as error:
+            logger.debug(
+                "Could not evaluate item geometry against query center; "
+                "falling back to non-spatial ranking: %s",
+                error,
+            )
+            return None
+
+    @staticmethod
+    def _is_small_query_bbox(query_bbox: Optional[List[float]]) -> bool:
+        if not query_bbox or len(query_bbox) != 4:
+            return False
+        return (
+            (query_bbox[2] - query_bbox[0])
+            * (query_bbox[3] - query_bbox[1])
+        ) <= 0.1
+
+    @classmethod
+    def prioritize_center_covering_features(
+        cls,
+        features: List[Dict[str, Any]],
+        query_bbox: Optional[List[float]],
+    ) -> List[Dict[str, Any]]:
+        """Put center-covering items first for a point-sized query AOI."""
+        if not cls._is_small_query_bbox(query_bbox):
+            return list(features)
+        return sorted(
+            features,
+            key=lambda feature: bool(
+                cls._geometry_covers_query_center(feature, query_bbox)
+            ),
+            reverse=True,
+        )
     
     @staticmethod
     def _calculate_overlap(bbox1: List[float], bbox2: List[float]) -> float:

@@ -218,6 +218,46 @@ def test_given_sensitive_context_when_normalized_then_secrets_and_large_data_are
     assert "ownerId" not in public
 
 
+def test_given_scene_references_when_normalized_then_safe_provenance_is_preserved() -> None:
+    # Arrange
+    payload = {
+        "expectedRevision": 0,
+        "mutationId": "scene-provenance-save",
+        "messages": [{"role": "user", "content": "Restore this map"}],
+        "context": {
+            "map": {
+                "scene_refs": [
+                    {
+                        "id": "private-scene",
+                        "collection": "private-imagery",
+                        "stac_mode": "pro",
+                        "bbox": [-123, 47, -122, 48],
+                        "datetime": "2026-06-15T00:00:00Z",
+                        "assets": {
+                            "data": {
+                                "href": "https://example.test/data.tif?sig=secret"
+                            }
+                        },
+                    }
+                ]
+            }
+        },
+    }
+
+    # Act
+    document = normalize_session_document("tenant:user-1", "web-session-1", payload)
+
+    # Assert
+    scene = document["context"]["map"]["scene_refs"][0]
+    assert scene == {
+        "id": "private-scene",
+        "collection": "private-imagery",
+        "stac_mode": "pro",
+        "bbox": [-123, 47, -122, 48],
+        "datetime": "2026-06-15T00:00:00Z",
+    }
+
+
 def test_given_credential_urls_when_normalized_then_userinfo_and_secret_queries_are_redacted() -> None:
     # Arrange
     payload = {

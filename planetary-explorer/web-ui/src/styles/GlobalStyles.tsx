@@ -351,7 +351,6 @@ export const GlobalStyles = () => (
     .search-button:hover {
       background: #64748b;
       border-color: #64748b;
-      transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(148, 163, 184, 0.3);
     }
 

@@ -120,44 +120,6 @@ def _enabled(value: str) -> bool:
     return value.strip().casefold() in {"1", "true", "yes", "on"}
 
 
-def resolve_weather_stub_url(resource_group: str) -> str:
-    """Return the live weather app origin, falling back to the saved output."""
-    weather_stub_url = os.getenv("AZURE_WEATHER_STUB_URL", "").strip().rstrip("/")
-    app_name = os.getenv("AZURE_WEATHER_STUB_CONTAINER_APP_NAME", "").strip()
-    if app_name:
-        live_fqdn = run_az(
-            [
-                "containerapp",
-                "show",
-                "--name",
-                app_name,
-                "--resource-group",
-                resource_group,
-                "--query",
-                "properties.configuration.ingress.fqdn",
-                "--output",
-                "tsv",
-            ]
-        ).strip()
-        if not live_fqdn:
-            raise RuntimeError("Weather Container App has no ingress FQDN.")
-        weather_stub_url = f"https://{live_fqdn}"
-
-    if weather_stub_url:
-        parsed_weather_url = urlsplit(weather_stub_url)
-        if (
-            parsed_weather_url.scheme != "https"
-            or not parsed_weather_url.hostname
-            or parsed_weather_url.username
-            or parsed_weather_url.password
-            or parsed_weather_url.path not in ("", "/")
-            or parsed_weather_url.query
-            or parsed_weather_url.fragment
-        ):
-            raise RuntimeError("Weather stub URL must be an absolute HTTPS origin.")
-    return weather_stub_url
-
-
 def reconcile_api_optional_services(name: str, resource_group: str) -> None:
     """Apply optional-service outputs to a newly deployed or adopted API."""
     values: list[str] = []
@@ -239,8 +201,11 @@ def reconcile_api_optional_services(name: str, resource_group: str) -> None:
             ]
         )
 
-    weather_stub_url = resolve_weather_stub_url(resource_group)
+    weather_stub_url = os.getenv("AZURE_WEATHER_STUB_URL", "").strip().rstrip("/")
     if weather_stub_url:
+        parsed_weather_url = urlsplit(weather_stub_url)
+        if parsed_weather_url.scheme != "https" or not parsed_weather_url.hostname:
+            raise RuntimeError("AZURE_WEATHER_STUB_URL must be an absolute HTTPS URL.")
         values.extend(
             [
                 "FORECAST_AGENT_ENABLED=1",

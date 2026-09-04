@@ -17,13 +17,15 @@ import logging
 import json
 import math
 import os
+import threading
+import time
 from typing import Dict, Any, List, Optional, Set, Callable
 from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 
 import numpy as np
 import planetary_computer
-import pystac_client
+import pystac
 import requests
 from cloud_config import cloud_cfg
 
@@ -37,6 +39,25 @@ SLOPE_THRESHOLD_NO_GO = 30  # degrees
 WATER_BACKSCATTER_THRESHOLD = -20  # dB
 VEGETATION_NDVI_DENSE = 0.6
 FIRE_CONFIDENCE_THRESHOLD = 50
+_stac_pool = ThreadPoolExecutor(max_workers=6, thread_name_prefix="mobility-stac")
+_traverse_pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix="mobility-traverse")
+_traverse_admission = threading.BoundedSemaphore(1)
+
+
+def _release_traverse_admission_when_done(futures: list[Any]) -> None:
+    """Release traverse admission after every already-running task drains."""
+    remaining = len(futures)
+    lock = threading.Lock()
+
+    def completed(_future: Any) -> None:
+        nonlocal remaining
+        with lock:
+            remaining -= 1
+            if remaining == 0:
+                _traverse_admission.release()
+
+    for future in futures:
+        future.add_done_callback(completed)
 
 # ESA WorldCover land cover class labels
 WORLDCOVER_CLASSES = {
@@ -67,18 +88,6 @@ WORLDCOVER_MOBILITY = {
     95: "NO-GO",    # Mangroves — impassable
     100: "GO",      # Moss/lichen — passable
 }
-
-# Lazy-loaded STAC catalog
-_catalog = None
-
-
-def _get_catalog():
-    """Lazy-load STAC catalog (synchronous pystac_client)."""
-    global _catalog
-    if _catalog is None:
-        _catalog = pystac_client.Client.open(STAC_ENDPOINT)
-    return _catalog
-
 
 def _convert_numpy_to_python(obj: Any) -> Any:
     """Recursively convert numpy types to Python native types for JSON serialization."""
@@ -148,15 +157,21 @@ def _items_covering_point(items: list, lat: float, lon: float) -> list:
     Falls back to the full list if no items match (e.g., missing bbox metadata).
     """
     covering = []
+    unknown = []
     for item in items:
         if hasattr(item, 'bbox') and item.bbox:
             b = item.bbox  # [west, south, east, north]
             if b[0] <= lon <= b[2] and b[1] <= lat <= b[3]:
                 covering.append(item)
-    return covering if covering else items  # graceful fallback
+        else:
+            unknown.append(item)
+    return covering if covering else unknown
 
 
-def _prefetch_corridor_stac_items(corridor_bbox: List[float]) -> Dict[str, list]:
+def _prefetch_corridor_stac_items(
+    corridor_bbox: List[float],
+    timeout_seconds: float = 15.0,
+) -> Dict[str, list]:
     """Pre-fetch STAC items for all 6 collections using a single corridor bbox.
 
     Eliminates ~20 redundant STAC queries by querying each collection ONCE
@@ -174,21 +189,27 @@ def _prefetch_corridor_stac_items(corridor_bbox: List[float]) -> Dict[str, list]
         ("esa-worldcover", None, None),
     ]
 
-    results = {}
-    with ThreadPoolExecutor(max_workers=6) as executor:
-        futures = {
-            executor.submit(
-                _query_stac_collection_sync, col, corridor_bbox, dt_range, qparams, 10
-            ): col
-            for col, dt_range, qparams in queries
-        }
-        for f in as_completed(futures):
-            col = futures[f]
-            try:
-                results[col] = f.result()
-            except Exception as e:
-                logger.error(f"Corridor prefetch {col} failed: {e}")
-                results[col] = []
+    results = {collection: [] for collection, _datetime, _query in queries}
+    futures = {
+        _stac_pool.submit(
+            _query_stac_collection_sync, col, corridor_bbox, dt_range, qparams, 3
+        ): col
+        for col, dt_range, qparams in queries
+    }
+    done, pending = wait(futures, timeout=max(0.1, timeout_seconds))
+    for future in done:
+        collection = futures[future]
+        try:
+            results[collection] = future.result()
+        except Exception as exc:
+            logger.error(f"Corridor prefetch {collection} failed: {exc}")
+    for future in pending:
+        future.cancel()
+    if pending:
+        logger.warning(
+            "Corridor prefetch deadline reached; %d collection(s) omitted",
+            len(pending),
+        )
     found = sum(1 for v in results.values() if v)
     logger.info(f"Corridor prefetch complete: {found}/6 collections returned data")
     return results
@@ -200,9 +221,8 @@ def _query_stac_collection_sync(
     query_params: Optional[Dict] = None,
     limit: int = 10
 ) -> list:
-    """Query a STAC collection synchronously via pystac_client."""
+    """Query a STAC collection with bounded, non-retrying HTTP I/O."""
     try:
-        catalog = _get_catalog()
         search_params = {
             "collections": [collection],
             "bbox": bbox,
@@ -212,10 +232,21 @@ def _query_stac_collection_sync(
             search_params["datetime"] = datetime_range
         if query_params:
             search_params["query"] = query_params
-
-        search = catalog.search(**search_params)
-        items = list(search.items())
-        return [planetary_computer.sign(item) for item in items]
+        response = requests.post(
+            f"{STAC_ENDPOINT.rstrip('/')}/search",
+            json=search_params,
+            timeout=(4, 8),
+        )
+        if response.status_code == 429:
+            logger.warning("STAC rate limit for %s; continuing with partial mobility data", collection)
+            return []
+        response.raise_for_status()
+        features = response.json().get("features") or []
+        return [
+            pystac.Item.from_dict(feature)
+            for feature in features[:limit]
+            if isinstance(feature, dict)
+        ]
     except Exception as e:
         logger.error(f"STAC query error for {collection}: {e}")
         return []
@@ -229,18 +260,23 @@ def _read_cog_window_sync(asset_url: str, bbox: List[float], band: int = 1) -> O
         from rasterio.warp import transform_bounds
 
         signed_url = planetary_computer.sign_url(asset_url)
-        with rasterio.open(signed_url) as src:
-            # Reproject bbox from EPSG:4326 to raster's native CRS if needed
-            if src.crs and str(src.crs) != "EPSG:4326":
-                reprojected = transform_bounds("EPSG:4326", src.crs, *bbox)
-            else:
-                reprojected = bbox
-            window = from_bounds(*reprojected, src.transform)
-            data = src.read(band, window=window)
-            if src.nodata is not None:
-                data = data.astype(float)
-                data[data == src.nodata] = np.nan
-            return data
+        with rasterio.Env(
+            GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
+            GDAL_HTTP_TIMEOUT="10",
+            GDAL_HTTP_MAX_RETRY="1",
+        ):
+            with rasterio.open(signed_url) as src:
+                # Reproject bbox from EPSG:4326 to raster's native CRS if needed
+                if src.crs and str(src.crs) != "EPSG:4326":
+                    reprojected = transform_bounds("EPSG:4326", src.crs, *bbox)
+                else:
+                    reprojected = bbox
+                window = from_bounds(*reprojected, src.transform)
+                data = src.read(band, window=window)
+                if src.nodata is not None:
+                    data = data.astype(float)
+                    data[data == src.nodata] = np.nan
+                return data
     except Exception as e:
         logger.error(f"Failed to read COG: {e}")
         return None
@@ -410,8 +446,9 @@ def _sample_corridor_point(lat: float, lon: float, prefetched_items: Optional[Di
     result = {"latitude": lat, "longitude": lon, "status": "GO", "hazards": [], "data": {}}
 
     def _fetch(col, asset_key):
-        if prefetched_items and col in prefetched_items and prefetched_items[col]:
-            items = _items_covering_point(prefetched_items[col], lat, lon)
+        if prefetched_items is not None:
+            available = prefetched_items.get(col) or []
+            items = _items_covering_point(available, lat, lon) if available else []
         else:
             items = _query_stac_collection_sync(col, bbox, limit=3)
         if items:
@@ -471,8 +508,12 @@ def _build_elevation_transect(lat1: float, lon1: float, lat2: float, lon2: float
 
     def _sample_elev(lat, lon):
         bbox = _calculate_bbox(lat, lon, radius_miles=0.5)
-        if prefetched_dem_items:
-            items = _items_covering_point(prefetched_dem_items, lat, lon)
+        if prefetched_dem_items is not None:
+            items = (
+                _items_covering_point(prefetched_dem_items, lat, lon)
+                if prefetched_dem_items
+                else []
+            )
         else:
             items = _query_stac_collection_sync("cop-dem-glo-30", bbox, limit=1)
         if items:
@@ -646,7 +687,7 @@ def _analyze_all_directions_sync(latitude: float, longitude: float, prefetched_i
     terrain_data["collection_status"] = {}
     terrain_data["sources"] = []
 
-    if prefetched_items:
+    if prefetched_items is not None:
         # Use corridor-level pre-fetched items — zero new STAC queries
         # Filter items to those covering THIS endpoint (handles tile boundaries)
         for col, key in col_to_key.items():
@@ -738,7 +779,6 @@ def _analyze_single_direction_sync(direction_name: str, lat: float, lon: float, 
     d_bbox = _calculate_directional_bbox(lat, lon, cardinal)
 
     # ── Pre-fetch all COG pixels in PARALLEL (biggest I/O savings) ──
-    fire_px = water_px = elev_px = red_px = nir_px = None
     fetch_tasks = {}
 
     if terrain_data.get("active_fires") and terrain_data["active_fires"].get("items"):
@@ -1012,7 +1052,23 @@ def analyze_two_point_traverse(latitude_a: float, longitude_a: float, latitude_b
     :param longitude_b: Destination point (Point B) longitude
     :return: JSON string with mobility assessments for both points, corridor, elevation profile, road route, and weather
     """
+    if not _traverse_admission.acquire(blocking=False):
+        return json.dumps({
+            "error": "Another two-point mobility analysis is still running. Try again shortly.",
+            "retryable": True,
+        })
+
+    futures = {}
     try:
+        started = time.monotonic()
+        deadline_seconds = min(
+            40.0,
+            max(0.1, float(os.getenv("MOBILITY_TRAVERSE_DEADLINE_SECONDS", "40"))),
+        )
+
+        def remaining() -> float:
+            return max(0.0, deadline_seconds - (time.monotonic() - started))
+
         logger.info(f"[TOOL] analyze_two_point_traverse A({latitude_a:.4f}, {longitude_a:.4f}) -> B({latitude_b:.4f}, {longitude_b:.4f})")
         route = _haversine_distance(latitude_a, longitude_a, latitude_b, longitude_b)
 
@@ -1031,43 +1087,122 @@ def analyze_two_point_traverse(latitude_a: float, longitude_a: float, latitude_b
         # ── PRE-FETCH: Query all 6 STAC collections ONCE for the full corridor ──
         # Eliminates ~20 redundant STAC queries (was: 6/endpoint + 10 transect + 4 corridor = 26)
         corridor_bbox = _calculate_corridor_bbox(latitude_a, longitude_a, latitude_b, longitude_b)
-        prefetched = _prefetch_corridor_stac_items(corridor_bbox)
-        dem_items = prefetched.get("cop-dem-glo-30") or None
+        prefetched = _prefetch_corridor_stac_items(
+            corridor_bbox,
+            timeout_seconds=min(15.0, remaining()),
+        )
+        dem_items = prefetched.get("cop-dem-glo-30") or []
 
         # Run ALL analyses in PARALLEL with pre-fetched STAC data:
-        with ThreadPoolExecutor(max_workers=6 + num_waypoints) as executor:
-            future_a = executor.submit(_analyze_all_directions_sync, latitude_a, longitude_a, prefetched)
-            future_b = executor.submit(_analyze_all_directions_sync, latitude_b, longitude_b, prefetched)
-            future_transect = executor.submit(_build_elevation_transect, latitude_a, longitude_a, latitude_b, longitude_b, 10, dem_items)
-            future_route = executor.submit(_get_azure_maps_route, latitude_a, longitude_a, latitude_b, longitude_b)
-            future_weather_a = executor.submit(_get_azure_maps_weather, latitude_a, longitude_a)
-            future_weather_b = executor.submit(_get_azure_maps_weather, latitude_b, longitude_b)
-            corridor_futures = [
-                executor.submit(_sample_corridor_point, wp["latitude"], wp["longitude"], prefetched)
-                for wp in waypoints
-            ]
-
-            result_a = future_a.result(timeout=120)
-            result_b = future_b.result(timeout=120)
-
-            # Gather corridor results (tolerate individual failures)
-            corridor_results = []
-            for cf in corridor_futures:
-                try:
-                    corridor_results.append(cf.result(timeout=60))
-                except Exception as e:
-                    logger.error(f"Corridor waypoint failed: {e}")
-
-            # Gather supplementary data (non-blocking)
+        futures = {
+            _traverse_pool.submit(
+                _analyze_all_directions_sync,
+                latitude_a,
+                longitude_a,
+                prefetched,
+            ): ("origin", 0),
+            _traverse_pool.submit(
+                _analyze_all_directions_sync,
+                latitude_b,
+                longitude_b,
+                prefetched,
+            ): ("destination", 0),
+            _traverse_pool.submit(
+                _build_elevation_transect,
+                latitude_a,
+                longitude_a,
+                latitude_b,
+                longitude_b,
+                5,
+                dem_items,
+            ): ("elevation", 0),
+            _traverse_pool.submit(
+                _get_azure_maps_route,
+                latitude_a,
+                longitude_a,
+                latitude_b,
+                longitude_b,
+            ): ("road", 0),
+            _traverse_pool.submit(
+                _get_azure_maps_weather,
+                latitude_a,
+                longitude_a,
+            ): ("weather_origin", 0),
+            _traverse_pool.submit(
+                _get_azure_maps_weather,
+                latitude_b,
+                longitude_b,
+            ): ("weather_destination", 0),
+            **{
+                _traverse_pool.submit(
+                    _sample_corridor_point,
+                    waypoint["latitude"],
+                    waypoint["longitude"],
+                    prefetched,
+                ): ("corridor", index)
+                for index, waypoint in enumerate(waypoints)
+            },
+        }
+        done, pending = wait(futures, timeout=max(0.1, remaining()))
+        completed = {}
+        corridor_by_index = {}
+        for future in done:
+            kind, index = futures[future]
             try:
-                elevation_transect = future_transect.result(timeout=60)
-            except Exception as e:
-                logger.error(f"Elevation transect failed: {e}")
-                elevation_transect = None
-
-            road_route = future_route.result(timeout=15)
-            weather_a = future_weather_a.result(timeout=10)
-            weather_b = future_weather_b.result(timeout=10)
+                value = future.result()
+                if kind == "corridor":
+                    corridor_by_index[index] = value
+                else:
+                    completed[kind] = value
+            except Exception as exc:
+                logger.error("Traverse %s task failed: %s", kind, exc)
+        for future in pending:
+            future.cancel()
+        if pending:
+            logger.warning(
+                "Traverse deadline reached; %d supplementary task(s) omitted",
+                len(pending),
+            )
+        result_a = completed.get("origin") or {
+            "location": {"latitude": latitude_a, "longitude": longitude_a},
+            "directions": {},
+            "data_sources": [],
+            "collection_status": {},
+        }
+        result_b = completed.get("destination") or {
+            "location": {"latitude": latitude_b, "longitude": longitude_b},
+            "directions": {},
+            "data_sources": [],
+            "collection_status": {},
+        }
+        corridor_results = [corridor_by_index[index] for index in sorted(corridor_by_index)]
+        elevation_transect = completed.get("elevation")
+        road_route = completed.get("road")
+        weather_a = completed.get("weather_origin")
+        weather_b = completed.get("weather_destination")
+        required_tasks = {
+            "origin",
+            "destination",
+            "elevation",
+            "road",
+            "weather_origin",
+            "weather_destination",
+        }
+        all_tasks_complete = (
+            not pending
+            and required_tasks.issubset(completed)
+            and len(corridor_results) == len(waypoints)
+        )
+        origin_sources = result_a.get("data_sources") or []
+        destination_sources = result_b.get("data_sources") or []
+        waypoints_with_data = sum(
+            1 for waypoint in corridor_results if waypoint.get("data")
+        )
+        evidence_complete = (
+            bool(origin_sources)
+            and bool(destination_sources)
+            and waypoints_with_data == len(waypoints)
+        )
 
         # Compute corridor summary
         corridor_statuses = [wp.get("status", "GO") for wp in corridor_results]
@@ -1079,6 +1214,14 @@ def analyze_two_point_traverse(latitude_a: float, longitude_a: float, latitude_b
             corridor_overall = "GO"
 
         combined = {
+            "complete": all_tasks_complete and evidence_complete,
+            "elapsed_ms": round((time.monotonic() - started) * 1000),
+            "coverage": {
+                "origin_sources": origin_sources,
+                "destination_sources": destination_sources,
+                "waypoints_with_data": waypoints_with_data,
+                "waypoints_expected": len(waypoints),
+            },
             "route": route,
             "road_route": road_route,
             "weather": {
@@ -1098,6 +1241,17 @@ def analyze_two_point_traverse(latitude_a: float, longitude_a: float, latitude_b
     except Exception as e:
         logger.error(f"[TOOL] analyze_two_point_traverse failed: {e}")
         return json.dumps({"error": str(e)})
+    finally:
+        running = []
+        for future in futures:
+            if future.done():
+                continue
+            if not future.cancel():
+                running.append(future)
+        if running:
+            _release_traverse_admission_when_done(running)
+        else:
+            _traverse_admission.release()
 
 
 def create_mobility_functions() -> Set[Callable]:

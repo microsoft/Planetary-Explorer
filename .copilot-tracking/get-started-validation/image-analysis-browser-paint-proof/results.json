@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-02T13:52:38.976Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "setup_query": "Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28",
+      "image_query": "Explain the February 2025 snow-cover colours around Quebec City.",
+      "outcome": "pass",
+      "elapsed_ms": 49681,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -71.218,
+        46.8039,
+        -71.198,
+        46.8239
+      ],
+      "expected_pin": {
+        "lat": 46.813900000000004,
+        "lng": -71.208
+      },
+      "submitted_pin": {
+        "lat": 46.81390092974547,
+        "lng": -71.20799999999963
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "modis-10A1-061",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9982,
+        "meanAbsoluteDifference": 51.98
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 49965,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 85,
+        "luminanceVariance": 82.37,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-paint-proof\\payload-images\\01-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot",
+        "get_collection_metadata"
+      ],
+      "structured_success": true,
+      "response_excerpt": "**The February 2025 snow-cover colors around Quebec City represent snow conditions based on the MODIS `modis-10A1-061` dataset.**\n\n**Color meaning for snow-cover maps**\n- **White / Light Blue:** High snow cover or dense snow.\n- **Gray:** Minimal or patchy snow cover.\n- **Blue:** No snow or exposed ground.\n- **Dark Colors:** Water bodies or obscured regions (clouds or shadows).\n\n**MODIS `modis-10A1-061` dataset attributes**\n- **Assets:** Snow metrics include `NDSI_Snow_Cover`, `Snow_Albedo_Daily_Tile`, and multiple QA flags.\n- **Typical use:** NDSI (Normalized Difference Snow Index) and albedo maps assess snow quality and extent. \n\n**Interpretation for Quebec City, February 2025:**\nGiven the cold winter climate, white/light blue colors are expected due to dense snow. Gray or darker regions might indicate patchiness or obscured data.\n\n**Data source:** MODIS `modis-10A1-061` via public Planetary Computer tools. Let me know if you need numerical snow-cover metrics sampled specifically.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-paint-proof\\browser-screenshots\\01-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.png"
+    }
+  ]
+}

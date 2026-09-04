@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Dataset, API_BASE_URL } from '../services/api';
 import type { ChatHistoryMapRestore } from '../utils/mapHistory';
-import { buildExpansionSearchBody, resolveLeafletTileSources, restoredLayerFromContext, restorableHistoryModule } from '../utils/mapHistory';
+import { buildExpansionSearchBody, resolveLeafletTileSources, restoredLayerFromContext, restoredSearchDatetime, restorableHistoryModule } from '../utils/mapHistory';
 import { authenticatedFetch } from '../services/authHelper';
 import { getGeoFmMapFeatures } from '../utils/geofmOverlay';
 // TileUrlGenerator removed - using backend-only tile URL generation (MPC best practice)
@@ -40,7 +40,9 @@ import {
   endPerformanceTracking
 } from '../utils/renderingLogger';
 import DataLegend from './DataLegend';
+import MapLayerSelector, { type SelectableMapLayer } from './MapLayerSelector';
 import ResiliencePanel, { ResilienceFacility, ResilienceDossier } from './ResiliencePanel';
+import { applyRasterLayerDisplay, clampLayerOpacity } from '../utils/mapLayerDisplay';
 
 /**
  * Extract geographic region from query text and return appropriate bounds
@@ -85,6 +87,7 @@ interface MapViewProps {
   onAnalysisStateChange?: (inProgress: boolean) => void;
   onHistoryRestoreSettled?: () => void;
   stacMode?: 'public' | 'pro';
+  features?: import('./GetStartedButton').DeploymentFeatureFlags;
 }
 
 interface SatelliteData {
@@ -92,6 +95,7 @@ interface SatelliteData {
   items: Array<{
     id: string;
     collection: string;
+    stac_mode?: 'public' | 'pro';
     datetime: string;
     bbox?: number[];
     preview?: string;
@@ -106,11 +110,23 @@ interface SatelliteData {
     item_id: string;
     bbox: number[];
     tilejson_url: string;
+    stac_mode?: 'public' | 'pro';
   }>;
   // Mosaic support for seamless composited tiles
   is_mosaic?: boolean;
   mosaic_search_id?: string;
 }
+
+const projectSamplingAssets = (assets?: Record<string, any>) => (
+  assets
+    ? Object.fromEntries(
+        Object.entries(assets).map(([key, value]) => [
+          key,
+          value && typeof value === 'object' ? { ...value } : value,
+        ]),
+      )
+    : undefined
+);
 
 /**
  * MapView Component
@@ -141,7 +157,9 @@ const MapView: React.FC<MapViewProps> = ({
   onAnalysisStateChange,
   onHistoryRestoreSettled,
   stacMode,
+  features,
 }) => {
+  const mapShellRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -149,6 +167,16 @@ const MapView: React.FC<MapViewProps> = ({
   const [mapsConfig, setMapsConfig] = useState<any>(null);
   const [satelliteData, setSatelliteData] = useState<SatelliteData | null>(null);
   const [currentLayer, setCurrentLayer] = useState<any>(null);
+  const [layerSelectorOpen, setLayerSelectorOpen] = useState(false);
+  const [activeRenderProfileId, setActiveRenderProfileId] = useState<string | null>(null);
+  const [imageryLayerAvailable, setImageryLayerAvailable] = useState(false);
+  const [imageryLayerVisible, setImageryLayerVisible] = useState(true);
+  const [imageryLayerOpacity, setImageryLayerOpacity] = useState(1);
+  const [geofmLayerAvailable, setGeoFmLayerAvailable] = useState(false);
+  const [geofmLayerVisible, setGeoFmLayerVisible] = useState(true);
+  const [geofmLayerOpacity, setGeoFmLayerOpacity] = useState(0.7);
+  const imageryLayerDisplayRef = useRef({ visible: true, opacity: 1 });
+  const geofmLayerDisplayRef = useRef({ visible: true, opacity: 0.7 });
   const [mapError, setMapError] = useState<string | null>(null);
   const [showStyleTip, setShowStyleTip] = useState<boolean>(false);
   const [isThermalMode, setIsThermalMode] = useState<boolean>(false);
@@ -158,6 +186,7 @@ const MapView: React.FC<MapViewProps> = ({
   
   // Dynamic tile expansion state
   const [originalBounds, setOriginalBounds] = useState<number[] | null>(null);
+  const [originalDatetime, setOriginalDatetime] = useState<string | null>(null);
   const [lastCollection, setLastCollection] = useState<string | null>(null);
   const [isExpanding, setIsExpanding] = useState<boolean>(false);
   
@@ -175,6 +204,7 @@ const MapView: React.FC<MapViewProps> = ({
   const [freePinMode, setFreePinMode] = useState<boolean>(false);
   const [analysisInProgress, setAnalysisInProgress] = useState<boolean>(false);
   const analysisAbortControllerRef = useRef<AbortController | null>(null);
+  const analysisWorkflowGenerationRef = useRef(0);
   const [pinState, setPinState] = useState<{
     lat: number | null;
     lng: number | null;
@@ -193,8 +223,12 @@ const MapView: React.FC<MapViewProps> = ({
     signature: string;
     map: any;
     provider: 'azure' | 'leaflet';
+    setDisplay: (visible: boolean, opacity: number) => void;
+    restore: () => void;
     remove: () => void;
   } | null>(null);
+  const featuresRef = useRef(features);
+  featuresRef.current = features;
 
   // Mobility two-pin A->B state
   const [mobilityPinA, setMobilityPinA] = useState<{ lat: number; lng: number; marker: any } | null>(null);
@@ -258,6 +292,8 @@ const MapView: React.FC<MapViewProps> = ({
   const [showMapLabels, setShowMapLabels] = useState<boolean>(true);
   const restoredHistoryTokenRef = useRef<number | null>(null);
   const pendingHistoryRestoreTokenRef = useRef<number | null>(null);
+  const processedStacResponseRef = useRef<any>(null);
+  const stacParserGenerationRef = useRef(0);
 
   useEffect(() => {
     onAnalysisStateChange?.(analysisInProgress);
@@ -276,7 +312,7 @@ const MapView: React.FC<MapViewProps> = ({
     const context = historyRestore.context;
     pendingHistoryRestoreTokenRef.current = historyRestore.token;
     const restoredMap = context.map;
-    const restoredModule = restorableHistoryModule(context.selectedModule);
+    const restoredModule = restorableHistoryModule(context.selectedModule, featuresRef.current);
     const restoredPin = context.pin || restoredMap?.vision_pin || null;
 
     analysisAbortControllerRef.current?.abort();
@@ -337,6 +373,7 @@ const MapView: React.FC<MapViewProps> = ({
     azureVectorArtifactsRef.current = [];
     mapRenderGenerationRef.current += 1;
     leafletRenderGenerationRef.current += 1;
+    stacParserGenerationRef.current += 1;
     lastRenderedDataRef.current = null;
     isRenderingRef.current = false;
     setVisionScreenshot(null);
@@ -382,6 +419,7 @@ const MapView: React.FC<MapViewProps> = ({
     }
 
     setSelectedModule(restoredModule);
+    setActiveRenderProfileId(restoredMap?.render_profile_id || null);
     setPinMode(false);
     setFreePinMode(false);
     setVisionMode(restoredModule === 'vision');
@@ -397,6 +435,7 @@ const MapView: React.FC<MapViewProps> = ({
     const restoredLayer = restoredLayerFromContext(restoredMap);
     setSatelliteData(restoredLayer);
     setOriginalBounds(restoredLayer?.bbox || null);
+    setOriginalDatetime(restoredSearchDatetime(restoredMap));
     setLastCollection(restoredMap?.current_collection || null);
 
     const bounds = restoredMap?.bounds;
@@ -658,18 +697,37 @@ const MapView: React.FC<MapViewProps> = ({
       // Vision responses are plain strings or objects without new STAC data
       // We should NOT reset satellite data for vision responses - they need the existing data for analysis!
       const hasNewStacData = lastChatResponse?.data?.stac_results?.features?.length > 0 || 
-                             lastChatResponse?.translation_metadata?.stac_query?.collections?.length > 0 ||
-                             lastChatResponse?.action === 'navigate_to';
+                             lastChatResponse?.translation_metadata?.stac_query?.collections?.length > 0;
       const isPlainTextResponse = typeof lastChatResponse === 'string';
+      let stacParserGeneration = stacParserGenerationRef.current;
+
+      if (hasNewStacData && processedStacResponseRef.current === lastChatResponse) {
+        console.log('MapView: STAC response already processed - preserving current render state');
+        return;
+      }
       
       // Only reset map state when there's actual NEW STAC data to replace it with
       if (hasNewStacData) {
+        processedStacResponseRef.current = lastChatResponse;
+        stacParserGeneration = ++stacParserGenerationRef.current;
+        mapRenderGenerationRef.current += 1;
+        leafletRenderGenerationRef.current += 1;
+        isRenderingRef.current = false;
         // CRITICAL FIX: Reset ALL map state when a new STAC query arrives
         // This prevents the map from using stale data from a previous query
         // (e.g., Australia bounds when switching to Greece query)
         setOriginalBounds(null);
+        const queryDatetime = lastChatResponse?.translation_metadata?.stac_query?.datetime;
+        setOriginalDatetime(typeof queryDatetime === 'string' ? queryDatetime : null);
         setSatelliteData(null);  // Clear old satellite data immediately
         setLastCollection(null); // Clear collection tracking
+        setImageryLayerAvailable(false);
+        geofmOverlayRef.current?.remove();
+        geofmOverlayRef.current = null;
+        setGeoFmLayerAvailable(false);
+        setActiveRenderProfileId(
+          lastChatResponse?.translation_metadata?.render_profile?.id || null,
+        );
         console.log('[SYNC] MapView: Reset all map state (originalBounds, satelliteData, lastCollection) for new STAC query');
       } else if (isPlainTextResponse) {
         // Vision/chat responses - preserve existing satellite data
@@ -823,18 +881,11 @@ const MapView: React.FC<MapViewProps> = ({
                   items: stacFeatures.slice(0, 10).map((feature: any) => ({
                     id: feature.id,
                     collection: feature.collection,
+                    stac_mode: feature._planetary_explorer_stac_mode,
                     datetime: feature.properties?.datetime || new Date().toISOString(),
                     bbox: feature.bbox,
                     // Include assets with band URLs and type for vision agent raster analysis (NDVI, etc.)
-                    assets: feature.assets ? Object.fromEntries(
-                      Object.entries(feature.assets).map(([key, value]: [string, any]) => [
-                        key,
-                        { 
-                          href: value?.href,
-                          type: value?.type  // Include media type for raster detection
-                        }
-                      ])
-                    ) : undefined
+                    assets: projectSamplingAssets(feature.assets)
                   })),
                   // Mark as mosaic for special handling in rendering
                   is_mosaic: true,
@@ -894,18 +945,11 @@ const MapView: React.FC<MapViewProps> = ({
                   items: tilesToRenderFeatures.map((feature: any) => ({
                     id: feature.id,
                     collection: feature.collection,
+                    stac_mode: feature._planetary_explorer_stac_mode,
                     datetime: feature.properties?.datetime || new Date().toISOString(),
                     bbox: feature.bbox,
                     // Include assets with band URLs and type for vision agent raster analysis
-                    assets: feature.assets ? Object.fromEntries(
-                      Object.entries(feature.assets).map(([key, value]: [string, any]) => [
-                        key,
-                        { 
-                          href: value?.href,
-                          type: value?.type  // Include media type for raster detection
-                        }
-                      ])
-                    ) : undefined
+                    assets: projectSamplingAssets(feature.assets)
                   })),
                   all_tile_urls: fixedTileUrls // Add multi-tile array with fixed URLs
                 };
@@ -1065,11 +1109,14 @@ const MapView: React.FC<MapViewProps> = ({
                       items: mosaicTilesToRender.map((feature: any) => ({
                         id: feature.id,
                         collection: feature.collection,
+                        stac_mode: feature._planetary_explorer_stac_mode,
                         datetime: feature.properties?.datetime || new Date().toISOString(),
-                        bbox: feature.bbox
+                        bbox: feature.bbox,
+                        assets: projectSamplingAssets(feature.assets)
                       }))
                     };
-                    
+
+                    if (stacParserGeneration !== stacParserGenerationRef.current) return;
                     setSatelliteData(elevationData);
                     console.log('? MapView: Set elevation data with TileJSON tiles');
                     console.log('?? MapView: Tiles will now render from authenticated TileJSON endpoint');
@@ -1291,6 +1338,7 @@ const MapView: React.FC<MapViewProps> = ({
                   // Process tilejson asynchronously with collection info for authentication
                   if (tilejsonUrl) {
                     fetchAndSignTileJSON(tilejsonUrl, { collection }).then((result) => {
+                      if (stacParserGeneration !== stacParserGenerationRef.current) return;
                       if (result.success && result.tileTemplate) {
                         console.log('??? MapView: [DEBUG] Processed tile URL:', result.tileTemplate);
 
@@ -1306,15 +1354,11 @@ const MapView: React.FC<MapViewProps> = ({
                           items: stacFeatures.slice(0, 5).map((feature: any) => ({
                             id: feature.id,
                             collection: feature.collection,
+                            stac_mode: feature._planetary_explorer_stac_mode,
                             datetime: feature.properties?.datetime || new Date().toISOString(),
                             bbox: feature.bbox,
                             // Include assets with band URLs for vision agent raster analysis
-                            assets: feature.assets ? Object.fromEntries(
-                              Object.entries(feature.assets).map(([key, value]: [string, any]) => [
-                                key,
-                                { href: value?.href }
-                              ])
-                            ) : undefined
+                            assets: projectSamplingAssets(feature.assets)
                           })),
                           thermal_mode: isThermalMode,
                           thermal_timestamp: isThermalMode ? Date.now() : undefined // Force refresh for thermal
@@ -1374,15 +1418,11 @@ const MapView: React.FC<MapViewProps> = ({
                   items: stacFeatures.slice(0, 5).map((feature: any) => ({
                     id: feature.id,
                     collection: feature.collection,
+                    stac_mode: feature._planetary_explorer_stac_mode,
                     datetime: feature.properties?.datetime || new Date().toISOString(),
                     bbox: feature.bbox,
                     // Include assets with band URLs for vision agent raster analysis
-                    assets: feature.assets ? Object.fromEntries(
-                      Object.entries(feature.assets).map(([key, value]: [string, any]) => [
-                        key,
-                        { href: value?.href }
-                      ])
-                    ) : undefined
+                    assets: projectSamplingAssets(feature.assets)
                   }))
                 });
               }
@@ -1556,10 +1596,12 @@ const MapView: React.FC<MapViewProps> = ({
               return {
                 id: itemId,
                 collection: collection,
+                stac_mode: feature._planetary_explorer_stac_mode,
                 datetime: feature.properties?.datetime || new Date().toISOString(),
                 preview: previewUrl,
                 tile_url: tileUrl, // ONLY backend URL, never frontend-generated
-                bbox: feature.bbox
+                bbox: feature.bbox,
+                assets: projectSamplingAssets(feature.assets)
               };
             }),
             // Overall preview URL (optional, for thumbnail display)
@@ -1736,12 +1778,15 @@ const MapView: React.FC<MapViewProps> = ({
       return;
     }
     if (
-      features === null
-      || features.length === 0
-      || selectedModule !== 'foundation_change'
+      selectedModule !== 'foundation_change'
+      || (features !== null && features.length === 0)
     ) {
       geofmOverlayRef.current?.remove();
       geofmOverlayRef.current = null;
+      setGeoFmLayerAvailable(false);
+      return;
+    }
+    if (features === null) {
       return;
     }
 
@@ -1751,10 +1796,15 @@ const MapView: React.FC<MapViewProps> = ({
       && geofmOverlayRef.current.map === map
       && geofmOverlayRef.current.provider === mapProvider
     ) {
+      setGeoFmLayerAvailable(true);
       return;
     }
     geofmOverlayRef.current?.remove();
     geofmOverlayRef.current = null;
+    const initialDisplay = { visible: true, opacity: 0.7 };
+    geofmLayerDisplayRef.current = initialDisplay;
+    setGeoFmLayerVisible(initialDisplay.visible);
+    setGeoFmLayerOpacity(initialDisplay.opacity);
 
     if (mapProvider === 'azure' && window.atlas) {
       const dataSource = new window.atlas.source.DataSource(`geofm-change-${Date.now()}`);
@@ -1778,16 +1828,52 @@ const MapView: React.FC<MapViewProps> = ({
         }
       );
       map.layers.add([polygonLayer, lineLayer]);
+      const setDisplay = (visible: boolean, opacity: number) => {
+        const normalizedOpacity = clampLayerOpacity(opacity);
+        polygonLayer.setOptions?.({
+          visible,
+          fillOpacity: visible ? normalizedOpacity * 0.5 : 0,
+        });
+        lineLayer.setOptions?.({
+          visible,
+          strokeOpacity: visible ? normalizedOpacity : 0,
+        });
+      };
+      const restore = () => {
+        const sourceId = dataSource.getId?.();
+        try {
+          if (!sourceId || !map.sources.getById?.(sourceId)) {
+            map.sources.add(dataSource);
+          }
+        } catch (_) {
+          try { map.sources.add(dataSource); } catch (_) { /* already restored */ }
+        }
+        const existingLayerIds = new Set(
+          map.layers.getLayers?.().map((layer: any) => layer.getId?.()) || [],
+        );
+        const missingLayers = [polygonLayer, lineLayer].filter(
+          (layer) => !existingLayerIds.has(layer.getId?.()),
+        );
+        if (missingLayers.length > 0) {
+          map.layers.add(missingLayers);
+        }
+        const display = geofmLayerDisplayRef.current;
+        setDisplay(display.visible, display.opacity);
+      };
+      setDisplay(initialDisplay.visible, initialDisplay.opacity);
       geofmOverlayRef.current = {
         signature,
         map,
         provider: 'azure',
+        setDisplay,
+        restore,
         remove: () => {
           try { map.layers.remove(polygonLayer); } catch (_) { /* already removed */ }
           try { map.layers.remove(lineLayer); } catch (_) { /* already removed */ }
           try { map.sources.remove(dataSource); } catch (_) { /* already removed */ }
         },
       };
+      setGeoFmLayerAvailable(true);
       return;
     }
 
@@ -1803,14 +1889,25 @@ const MapView: React.FC<MapViewProps> = ({
           },
         }
       ).addTo(map);
+      const setDisplay = (visible: boolean, opacity: number) => {
+        const normalizedOpacity = clampLayerOpacity(opacity);
+        layer.setStyle?.({
+          opacity: visible ? normalizedOpacity : 0,
+          fillOpacity: visible ? normalizedOpacity * 0.5 : 0,
+        });
+      };
+      setDisplay(initialDisplay.visible, initialDisplay.opacity);
       geofmOverlayRef.current = {
         signature,
         map,
         provider: 'leaflet',
+        setDisplay,
+        restore: () => undefined,
         remove: () => {
           try { layer.remove(); } catch (_) { /* already removed */ }
         },
       };
+      setGeoFmLayerAvailable(true);
     }
   }, [lastChatResponse, map, mapLoaded, mapProvider, selectedModule]);
 
@@ -1940,6 +2037,11 @@ const MapView: React.FC<MapViewProps> = ({
       return;
     }
 
+    const workflowGeneration = ++analysisWorkflowGenerationRef.current;
+    const isCurrentWorkflow = () => (
+      workflowGeneration === analysisWorkflowGenerationRef.current
+    );
+
     console.log('MapView: Processing comparison user query:', comparisonUserQuery);
 
     // Ensure comparison mode is enabled (may not be if triggered from Get Started button)
@@ -1993,11 +2095,13 @@ const MapView: React.FC<MapViewProps> = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(comparisonRequestBody)
         });
+        if (!isCurrentWorkflow()) return;
 
         if (!response.ok) {
           let errorMessage = `Comparison analysis failed: ${response.statusText}`;
           try {
             const errorData = await response.json();
+            if (!isCurrentWorkflow()) return;
             if (errorData.message) {
               errorMessage = errorData.message;
             } else if (errorData.detail) {
@@ -2010,6 +2114,7 @@ const MapView: React.FC<MapViewProps> = ({
         }
 
         const data = await response.json();
+  if (!isCurrentWorkflow()) return;
         console.log('MapView: Comparison agent response:', data);
 
         // Reset awaiting flag
@@ -2069,8 +2174,10 @@ const MapView: React.FC<MapViewProps> = ({
             try {
               const tileJsonUrl = result.before.tile_urls[0];
               const tileJsonResponse = await fetch(tileJsonUrl);
+              if (!isCurrentWorkflow()) return;
               if (tileJsonResponse.ok) {
                 const tileJson = await tileJsonResponse.json();
+                if (!isCurrentWorkflow()) return;
                 console.log('MapView: BEFORE TileJSON:', tileJson);
                 
                 // Set satellite data to trigger tile layer rendering
@@ -2109,6 +2216,7 @@ const MapView: React.FC<MapViewProps> = ({
             // Fire-and-forget: capture + analyze in background so the user sees tiles immediately
             (async () => {
               try {
+                if (!isCurrentWorkflow()) return;
                 console.log('[SNAP] Comparison: Starting dual screenshot capture for Vision analysis...');
 
                 // Helper: strip data-URL prefix
@@ -2122,8 +2230,10 @@ const MapView: React.FC<MapViewProps> = ({
                 const renderAndCapture = async (tileUrls: string[], label: string): Promise<string | null> => {
                   const tileJsonUrl = tileUrls[0];
                   const tjResp = await fetch(tileJsonUrl);
+                  if (!isCurrentWorkflow()) return null;
                   if (!tjResp.ok) return null;
                   const tj = await tjResp.json();
+                  if (!isCurrentWorkflow()) return null;
 
                   setSatelliteData({
                     bbox: result.bbox || tj.bounds,
@@ -2138,8 +2248,10 @@ const MapView: React.FC<MapViewProps> = ({
                     try { (map as any).render(); } catch { /* ok */ }
                   }
                   await new Promise(r => setTimeout(r, mapProvider === 'azure' ? 3000 : 2000));
+                  if (!isCurrentWorkflow()) return null;
 
                   const snap = await captureMapScreenshot();
+                  if (!isCurrentWorkflow()) return null;
                   if (snap && snap.length > 1000) {
                     console.log(`[SNAP] Comparison: ${label} screenshot captured (${Math.round(snap.length / 1024)}KB)`);
                     return stripPrefix(snap);
@@ -2154,8 +2266,10 @@ const MapView: React.FC<MapViewProps> = ({
                   try { (map as any).render(); } catch { /* ok */ }
                 }
                 await new Promise(r => setTimeout(r, mapProvider === 'azure' ? 3000 : 2000));
+                if (!isCurrentWorkflow()) return;
 
                 const beforeSnap = await captureMapScreenshot();
+                if (!isCurrentWorkflow()) return;
                 const beforeScreenshot = beforeSnap && beforeSnap.length > 1000 ? stripPrefix(beforeSnap) : null;
                 if (beforeScreenshot) {
                   console.log(`[SNAP] Comparison: BEFORE screenshot captured (${Math.round(beforeScreenshot.length / 1024)}KB)`);
@@ -2165,13 +2279,16 @@ const MapView: React.FC<MapViewProps> = ({
 
                 // 2) Render AFTER tiles and capture
                 const afterScreenshot = await renderAndCapture(result.after.tile_urls, 'AFTER');
+                if (!isCurrentWorkflow()) return;
 
                 // 3) Switch back to BEFORE view (user expects to start on BEFORE)
                 if (result.before.tile_urls?.length > 0) {
                   try {
                     const tjResp = await fetch(result.before.tile_urls[0]);
+                    if (!isCurrentWorkflow()) return;
                     if (tjResp.ok) {
                       const tj = await tjResp.json();
+                      if (!isCurrentWorkflow()) return;
                       setSatelliteData({
                         bbox: result.bbox || tj.bounds,
                         items: result.before.stac_items || [],
@@ -2215,9 +2332,11 @@ const MapView: React.FC<MapViewProps> = ({
                     download_rasters: false  // We already have screenshots, skip raster download
                   })
                 });
+                if (!isCurrentWorkflow()) return;
 
                 if (visionResp.ok) {
                   const visionData = await visionResp.json();
+                  if (!isCurrentWorkflow()) return;
                   const visionText = visionData.result?.text || visionData.result?.analysis;
                   if (visionText && onGeointAnalysis) {
                     onGeointAnalysis({
@@ -2254,6 +2373,7 @@ const MapView: React.FC<MapViewProps> = ({
         }
 
       } catch (error) {
+        if (!isCurrentWorkflow()) return;
         console.error('MapView: Error processing comparison query:', error);
         if (onGeointAnalysis) {
           onGeointAnalysis({
@@ -2266,6 +2386,11 @@ const MapView: React.FC<MapViewProps> = ({
     };
 
     processComparisonQuery();
+    return () => {
+      if (isCurrentWorkflow()) {
+        analysisWorkflowGenerationRef.current += 1;
+      }
+    };
   }, [comparisonUserQuery]);
 
   // Fetch Azure Maps configuration
@@ -2710,6 +2835,7 @@ const MapView: React.FC<MapViewProps> = ({
                 });
               }
             }
+            geofmOverlayRef.current?.restore();
 
             // CSS-BASED TEXT ENHANCEMENT (NON-INTRUSIVE)
             // Use CSS only - no layer manipulation to avoid Azure Maps rendering errors
@@ -2906,6 +3032,7 @@ const MapView: React.FC<MapViewProps> = ({
                 lastCollection,
                 expandedBbox,
                 stacMode || 'public',
+                originalDatetime || undefined,
               )),
             });
 
@@ -2970,16 +3097,18 @@ const MapView: React.FC<MapViewProps> = ({
                       bbox: unionBbox,
                       tile_url: allTileUrls[0]?.tilejson_url,
                       all_tile_urls: allTileUrls,
-                      items: stacFeatures.map((f: { id: string; collection?: string; properties?: { datetime?: string }; bbox?: number[] }) => ({
+                      items: stacFeatures.map((f: { id: string; collection?: string; _planetary_explorer_stac_mode?: 'public' | 'pro'; properties?: { datetime?: string }; bbox?: number[]; assets?: Record<string, any> }) => ({
                         id: f.id,
                         collection: f.collection || lastCollection,
+                        stac_mode: f._planetary_explorer_stac_mode,
                         datetime: f.properties?.datetime || new Date().toISOString(),
-                        bbox: f.bbox
+                        bbox: f.bbox,
+                        assets: projectSamplingAssets(f.assets)
                       }))
                     };
                     
                     setSatelliteData(expandedSatelliteData);
-                    setOriginalBounds(unionBbox);
+                    setOriginalBounds(expandedBbox);
                     console.log('MapView: Successfully expanded tile coverage via direct STAC search');
                   } else {
                     console.error('MapView: Expansion returned invalid union bbox:', unionBbox);
@@ -3020,7 +3149,7 @@ const MapView: React.FC<MapViewProps> = ({
                       };
                       
                       setSatelliteData(expandedSatelliteData);
-                      setOriginalBounds(unionBbox);
+                      setOriginalBounds(expandedBbox);
                       console.log('MapView: Successfully expanded tile coverage');
                     } else {
                       console.error('MapView: Expansion returned invalid union bbox:', unionBbox);
@@ -3088,7 +3217,7 @@ const MapView: React.FC<MapViewProps> = ({
         map.off('moveend', handleZoomChange);
       };
     }
-  }, [map, mapLoaded, mapProvider, satelliteData, originalBounds, lastCollection, isExpanding, stacMode]);
+  }, [map, mapLoaded, mapProvider, satelliteData, originalBounds, originalDatetime, lastCollection, isExpanding, stacMode]);
 
   // Track zoom level changes and update state for UI
   useEffect(() => {
@@ -3136,6 +3265,10 @@ const MapView: React.FC<MapViewProps> = ({
   // Terrain analysis click handler
   const handleTerrainAnalysisClick = async (lat: number, lng: number) => {
     console.log(`MapView: Terrain analysis pin placed at (${lat.toFixed(6)}, ${lng.toFixed(6)})`);
+    const workflowGeneration = ++analysisWorkflowGenerationRef.current;
+    const isCurrentWorkflow = () => (
+      workflowGeneration === analysisWorkflowGenerationRef.current
+    );
 
     // Cancel any pending thinking messages from previous terrain analysis
     // This handles the case where user repositions pin while analysis is in progress
@@ -3235,6 +3368,7 @@ const MapView: React.FC<MapViewProps> = ({
         // Wait for tiles to load at new zoom level
         console.log('[SNAP] MapView: Waiting for tiles to load at new zoom...');
         await new Promise(resolve => setTimeout(resolve, 2500));
+        if (!isCurrentWorkflow()) return;
       }
       
       // For Azure Maps, we need to force a render and wait a bit longer
@@ -3255,8 +3389,10 @@ const MapView: React.FC<MapViewProps> = ({
         // Leaflet renders faster
         await new Promise(resolve => setTimeout(resolve, 500));
       }
+      if (!isCurrentWorkflow()) return;
       
       const screenshot = await captureMapScreenshot();
+      if (!isCurrentWorkflow()) return;
       
       if (!screenshot) {
         console.error('MapView: Failed to capture screenshot');
@@ -3345,6 +3481,7 @@ const MapView: React.FC<MapViewProps> = ({
       }
 
     } catch (error) {
+      if (!isCurrentWorkflow()) return;
       console.error('MapView: Error in terrain analysis:', error);
       if (onGeointAnalysis) {
         onGeointAnalysis({
@@ -3470,6 +3607,50 @@ const MapView: React.FC<MapViewProps> = ({
   const azureVectorArtifactsRef = useRef<Array<{ source: any; layers: any[] }>>([]);
   const leafletRenderGenerationRef = useRef(0);
   const mapRenderGenerationRef = useRef(0);
+
+  const handleImageryVisibilityChange = (visible: boolean) => {
+    const next = { ...imageryLayerDisplayRef.current, visible };
+    imageryLayerDisplayRef.current = next;
+    setImageryLayerVisible(visible);
+    applyRasterLayerDisplay(
+      [...activeTileLayersRef.current, currentLayer],
+      mapProvider,
+      next.visible,
+      next.opacity,
+    );
+  };
+
+  const handleImageryOpacityChange = (opacity: number) => {
+    const next = {
+      ...imageryLayerDisplayRef.current,
+      opacity: clampLayerOpacity(opacity),
+    };
+    imageryLayerDisplayRef.current = next;
+    setImageryLayerOpacity(next.opacity);
+    applyRasterLayerDisplay(
+      [...activeTileLayersRef.current, currentLayer],
+      mapProvider,
+      next.visible,
+      next.opacity,
+    );
+  };
+
+  const handleGeoFmVisibilityChange = (visible: boolean) => {
+    const next = { ...geofmLayerDisplayRef.current, visible };
+    geofmLayerDisplayRef.current = next;
+    setGeoFmLayerVisible(visible);
+    geofmOverlayRef.current?.setDisplay(next.visible, next.opacity);
+  };
+
+  const handleGeoFmOpacityChange = (opacity: number) => {
+    const next = {
+      ...geofmLayerDisplayRef.current,
+      opacity: clampLayerOpacity(opacity),
+    };
+    geofmLayerDisplayRef.current = next;
+    setGeoFmLayerOpacity(next.opacity);
+    geofmOverlayRef.current?.setDisplay(next.visible, next.opacity);
+  };
   
   // Create a stable signature for satellite data to detect true changes
   const getSatelliteDataSignature = (data: SatelliteData | null): string | null => {
@@ -3488,12 +3669,26 @@ const MapView: React.FC<MapViewProps> = ({
   // Reset rendering flag when TRULY new satellite data arrives (different signature)
   useEffect(() => {
     const newSignature = getSatelliteDataSignature(satelliteData);
-    if (newSignature !== lastRenderedDataRef.current) {
+    if (!satelliteData) {
+      setImageryLayerAvailable(false);
+      return;
+    }
+    if (newSignature === lastRenderedDataRef.current) {
+      setImageryLayerAvailable(activeTileLayersRef.current.length > 0);
+    } else {
       // This is genuinely new data - allow rendering
       isRenderingRef.current = false;
+      setImageryLayerAvailable(false);
+      const collection = satelliteData.items?.[0]?.collection || '';
+      const configuredOpacity = collection
+        ? getRenderingConfig(collection).opacity
+        : 1;
+      const defaultOpacity = configuredOpacity;
+      imageryLayerDisplayRef.current = { visible: true, opacity: defaultOpacity };
+      setImageryLayerVisible(true);
+      setImageryLayerOpacity(defaultOpacity);
     }
-    // If signature matches, don't reset - we already rendered this
-  }, [satelliteData]);
+  }, [satelliteData, mapProvider]);
 
   // Add satellite imagery to map when data is available
   useEffect(() => {
@@ -3521,6 +3716,28 @@ const MapView: React.FC<MapViewProps> = ({
     if (!satelliteData.tile_url) {
       console.log('??? MapView: No tile URL available - this collection may contain non-visualizable data (like GOES-GLM)');
       console.log('??? MapView: Available satellite data items:', satelliteData.items?.length || 0);
+      mapRenderGenerationRef.current += 1;
+      leafletRenderGenerationRef.current += 1;
+      isRenderingRef.current = false;
+      const staleRasterLayers = new Set<any>([
+        ...(currentLayer ? [currentLayer] : []),
+        ...activeTileLayersRef.current,
+      ]);
+      staleRasterLayers.forEach((layer) => {
+        try {
+          if (mapProvider === 'leaflet') {
+            if (!map.hasLayer || map.hasLayer(layer)) map.removeLayer?.(layer);
+          } else if (mapProvider === 'azure') {
+            map.layers?.remove(layer);
+          }
+        } catch (error) {
+          console.warn('MapView: Failed to remove stale raster layer:', error);
+        }
+      });
+      activeTileLayersRef.current = [];
+      setCurrentLayer(null);
+      setImageryLayerAvailable(false);
+      lastRenderedDataRef.current = currentSignature;
       
       // Still zoom to the geographic area if we have location data
       if (satelliteData.bbox && Array.isArray(satelliteData.bbox) && satelliteData.bbox.length === 4 && map) {
@@ -3796,6 +4013,14 @@ const MapView: React.FC<MapViewProps> = ({
               }
               // FIX: Store layers in ref so styledata handler can re-add them after style reload
               activeTileLayersRef.current = [...successfulLayers];
+              const display = imageryLayerDisplayRef.current;
+              applyRasterLayerDisplay(
+                successfulLayers,
+                'azure',
+                display.visible,
+                display.opacity,
+              );
+              setImageryLayerAvailable(true);
               console.log(`MapView: [STYLE-FIX] Stored ${successfulLayers.length} layers for style-reload recovery`);
             }
             
@@ -3882,6 +4107,7 @@ const MapView: React.FC<MapViewProps> = ({
           console.log('??? MapView: Adding Azure Maps tile layer:', satelliteData.tile_url);
 
           // Ensure map is ready before adding layers
+          isRenderingRef.current = true;
           const addTileLayer = async () => {
             try {
               // Check if map is properly initialized
@@ -4405,6 +4631,14 @@ const MapView: React.FC<MapViewProps> = ({
               
               // FIX: Store layer in ref so styledata handler can re-add after style reload
               activeTileLayersRef.current = [tileLayer];
+              const display = imageryLayerDisplayRef.current;
+              applyRasterLayerDisplay(
+                [tileLayer],
+                'azure',
+                display.visible,
+                display.opacity,
+              );
+              setImageryLayerAvailable(true);
               console.log('MapView: [STYLE-FIX] Stored single tile layer for style-reload recovery');
               
               setCurrentLayer(tileLayer);
@@ -4641,6 +4875,10 @@ const MapView: React.FC<MapViewProps> = ({
             } catch (layerError) {
               console.error('? MapView: Error adding Azure Maps tile layer:', layerError);
               console.log('??? MapView: Tile layer addition failed, but continuing...');
+            } finally {
+              if (mapRenderGeneration === mapRenderGenerationRef.current) {
+                isRenderingRef.current = false;
+              }
             }
           };
 
@@ -4832,7 +5070,7 @@ const MapView: React.FC<MapViewProps> = ({
             if (renderGeneration !== leafletRenderGenerationRef.current) return;
             const layers = sources.map((source) => {
               const options: any = {
-                opacity: 0.8,
+                opacity: imageryLayerDisplayRef.current.opacity,
                 attribution: 'Planetary Computer',
                 errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
                 maxNativeZoom: 18,
@@ -4856,6 +5094,14 @@ const MapView: React.FC<MapViewProps> = ({
               return layer;
             });
             activeTileLayersRef.current = layers;
+            const display = imageryLayerDisplayRef.current;
+            applyRasterLayerDisplay(
+              layers,
+              'leaflet',
+              display.visible,
+              display.opacity,
+            );
+            setImageryLayerAvailable(layers.length > 0);
             setCurrentLayer(layers[0] || null);
             if (layers.length > 0) {
               lastRenderedDataRef.current = getSatelliteDataSignature(satelliteData);
@@ -4927,6 +5173,17 @@ const MapView: React.FC<MapViewProps> = ({
   // Module selection handler - TOGGLES off if clicking the same module
   const handleModuleSelect = (module: string) => {
     console.log('MapView: Module clicked:', module, 'Current:', selectedModule);
+    const deploymentFeatures = featuresRef.current;
+    const unavailable = (
+      (module === 'site_audit' && deploymentFeatures?.fabric === false)
+      || (module === 'resilience' && deploymentFeatures?.resilience === false)
+      || (module === 'forecast' && deploymentFeatures?.weather === false)
+      || (module === 'building_damage' && deploymentFeatures?.mpcPro === false)
+    );
+    if (unavailable) {
+      console.warn(`[UI] MapView: module "${module}" is unavailable in this deployment`);
+      return;
+    }
     
     // TOGGLE OFF: If clicking the already-selected module, deselect it
     if (selectedModule === module) {
@@ -5098,7 +5355,114 @@ const MapView: React.FC<MapViewProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const handleGetStartedSetup = (event: CustomEvent<{ resetContext?: boolean }>) => {
+      if (event.detail?.resetContext === false) return;
+
+      analysisWorkflowGenerationRef.current += 1;
+      analysisAbortControllerRef.current?.abort();
+      analysisAbortControllerRef.current = null;
+      mapRenderGenerationRef.current += 1;
+      leafletRenderGenerationRef.current += 1;
+      stacParserGenerationRef.current += 1;
+      isRenderingRef.current = false;
+
+      const staleLayers = new Set<any>([
+        ...(currentLayer ? [currentLayer] : []),
+        ...activeTileLayersRef.current,
+        ...leafletVectorLayersRef.current,
+        ...azureVectorArtifactsRef.current.flatMap((artifact) => artifact.layers),
+      ]);
+      staleLayers.forEach((layer) => {
+        try {
+          if (mapProvider === 'leaflet' && map?.hasLayer?.(layer)) map.removeLayer(layer);
+          else if (mapProvider === 'azure') map?.layers?.remove(layer);
+        } catch (error) {
+          console.warn('MapView: could not remove stale Get Started layer', error);
+        }
+      });
+      azureVectorArtifactsRef.current.forEach((artifact) => {
+        try { map?.sources?.remove(artifact.source); } catch (_) { /* already removed */ }
+      });
+      setCurrentLayer(null);
+      activeTileLayersRef.current = [];
+      leafletVectorLayersRef.current = [];
+      azureVectorArtifactsRef.current = [];
+      lastRenderedDataRef.current = null;
+      setSatelliteData(null);
+      setOriginalBounds(null);
+      setOriginalDatetime(null);
+      setLastCollection(null);
+      setActiveRenderProfileId(null);
+      setImageryLayerAvailable(false);
+      setLayerSelectorOpen(false);
+      geofmOverlayRef.current?.remove();
+      geofmOverlayRef.current = null;
+      setGeoFmLayerAvailable(false);
+      resilienceMarkersRef.current.forEach((marker) => {
+        try {
+          if (mapProvider === 'leaflet') map?.removeLayer(marker);
+          else map?.markers?.remove(marker);
+        } catch (_) { /* already removed */ }
+      });
+      resilienceMarkersRef.current = [];
+
+      const removeMarker = (marker: any) => {
+        if (!marker || !map) return;
+        try {
+          if (mapProvider === 'leaflet' && window.L) map.removeLayer(marker);
+          else if (mapProvider === 'azure' && window.atlas) map.markers.remove(marker);
+        } catch (error) {
+          console.warn('[PIN] MapView: Failed to remove stale Get Started marker:', error);
+        }
+      };
+
+      removeMarker(pinState.marker);
+      removeMarker(terrainAnalysisPin.marker);
+      removeMarker(mobilityPinARef.current?.marker);
+      removeMarker(mobilityPinBRef.current?.marker);
+
+      setSelectedModule(null);
+      setShowModulesMenu(false);
+      setPinMode(false);
+      setFreePinMode(false);
+      setTerrainAnalysisMode(false);
+      setTerrainAnalysisPin({ lat: null, lng: null, marker: null });
+      setTerrainSessionId(null);
+      setComparisonMode(false);
+      setComparisonState({
+        awaitingUserQuery: false,
+        beforeImagery: null,
+        afterImagery: null,
+        beforeScreenshot: null,
+        afterScreenshot: null,
+        showingBefore: true,
+      });
+      setVisionMode(false);
+      setVisionPin({ lat: null, lng: null });
+      setVisionScreenshot(null);
+      setPinState({ lat: null, lng: null, active: false, marker: null });
+      setMobilityPinA(null);
+      setMobilityPinB(null);
+      mobilityPinARef.current = null;
+      mobilityPinBRef.current = null;
+      setAnalysisInProgress(false);
+      onPinChange?.(null);
+      onModuleSelected?.(null);
+      onTerrainSessionChange?.(null);
+    };
+
+    window.addEventListener('planetaryexplorer-stac-query' as any, handleGetStartedSetup as any);
+    return () => {
+      window.removeEventListener('planetaryexplorer-stac-query' as any, handleGetStartedSetup as any);
+    };
+  }, [currentLayer, map, mapProvider, onModuleSelected, onPinChange, onTerrainSessionChange, pinState.marker, terrainAnalysisPin.marker]);
   const toggleBeforeAfter = async () => {
+    const workflowGeneration = ++analysisWorkflowGenerationRef.current;
+    const isCurrentWorkflow = () => (
+      workflowGeneration === analysisWorkflowGenerationRef.current
+    );
     console.log('MapView: Toggling between BEFORE and AFTER views');
     
     const newShowingBefore = !comparisonState.showingBefore;
@@ -5121,8 +5485,10 @@ const MapView: React.FC<MapViewProps> = ({
         console.log(`MapView: Fetching TileJSON from: ${tileJsonUrl}`);
         
         const tileJsonResponse = await fetch(tileJsonUrl);
+        if (!isCurrentWorkflow()) return;
         if (tileJsonResponse.ok) {
           const tileJson = await tileJsonResponse.json();
+          if (!isCurrentWorkflow()) return;
           console.log('MapView: TileJSON loaded:', tileJson);
           
           setSatelliteData({
@@ -5137,6 +5503,7 @@ const MapView: React.FC<MapViewProps> = ({
           console.warn(`MapView: Failed to fetch TileJSON: ${tileJsonResponse.status}`);
         }
       } catch (error) {
+        if (!isCurrentWorkflow()) return;
         console.error('MapView: Error loading tile data:', error);
       }
     }
@@ -5167,6 +5534,10 @@ const MapView: React.FC<MapViewProps> = ({
 
   // Map click handler for pin placement
   const handleMapClickForPin = async (lat: number, lng: number) => {
+    const workflowGeneration = ++analysisWorkflowGenerationRef.current;
+    const isCurrentWorkflow = () => (
+      workflowGeneration === analysisWorkflowGenerationRef.current
+    );
     // Universal pin drop: no module required. Place a pin, bubble it up to the
     // chat (which sends it on /api/query as the `pin` field), and let the
     // analysis router pick the right analyzer (raster_sampling, vision,
@@ -5266,9 +5637,11 @@ const MapView: React.FC<MapViewProps> = ({
         try { (map as any).render(); } catch { /* ok */ }
       }
       await new Promise(resolve => setTimeout(resolve, mapProvider === 'azure' ? 1500 : 500));
+      if (!isCurrentWorkflow()) return;
       
       try {
         const captured = await captureMapScreenshot();
+        if (!isCurrentWorkflow()) return;
         if (captured) {
           let clean = captured;
           if (clean.startsWith('data:image/png;base64,')) clean = clean.replace('data:image/png;base64,', '');
@@ -5281,6 +5654,7 @@ const MapView: React.FC<MapViewProps> = ({
       } catch (snapErr) {
         console.warn('[SNAP] MapView: Failed to capture comparison pin screenshot:', snapErr);
       }
+      if (!isCurrentWorkflow()) return;
       
       // Set state to await user's temporal query
       setComparisonState(prev => ({ ...prev, awaitingUserQuery: true }));
@@ -5387,6 +5761,7 @@ const MapView: React.FC<MapViewProps> = ({
       // This gives the agent visual context (e.g., nearby airports, roads, landmarks)
       try {
         const screenshot = await captureMapScreenshot();
+        if (!isCurrentWorkflow()) return;
         if (screenshot) {
           let base64 = screenshot;
           if (screenshot.startsWith('data:image/jpeg;base64,')) {
@@ -5402,6 +5777,7 @@ const MapView: React.FC<MapViewProps> = ({
       } catch (e) {
         console.warn('[SNAP] MapView: Failed to capture mobility screenshot:', e);
       }
+      if (!isCurrentWorkflow()) return;
       
       // Both pins placed — prompt user to type their mobility question
       const pinA = mobilityPinARef.current!;
@@ -5594,9 +5970,11 @@ const MapView: React.FC<MapViewProps> = ({
           } else {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
+          if (!isCurrentWorkflow()) return;
           
           // Capture screenshot for context (will be sent via mapContext)
           const capturedScreenshot = await captureMapScreenshot();
+          if (!isCurrentWorkflow()) return;
           
           if (capturedScreenshot) {
             let cleanScreenshot = capturedScreenshot;
@@ -5648,9 +6026,11 @@ const MapView: React.FC<MapViewProps> = ({
           } else {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
+          if (!isCurrentWorkflow()) return;
           
           // Capture screenshot for context (will be sent via mapContext)
           const capturedScreenshot = await captureMapScreenshot();
+          if (!isCurrentWorkflow()) return;
           
           if (capturedScreenshot) {
             // Strip data URL prefix for backend - handle both jpeg and png
@@ -5704,9 +6084,11 @@ const MapView: React.FC<MapViewProps> = ({
           } else {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
+          if (!isCurrentWorkflow()) return;
           
           // Capture screenshot for visual context
           const capturedScreenshot = await captureMapScreenshot();
+          if (!isCurrentWorkflow()) return;
           if (capturedScreenshot) {
             let cleanScreenshot = capturedScreenshot;
             if (cleanScreenshot.startsWith('data:image/png;base64,')) {
@@ -5801,9 +6183,11 @@ const MapView: React.FC<MapViewProps> = ({
           } else {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
+          if (!isCurrentWorkflow()) return;
           
           if (!screenshot) {
             const capturedScreenshot = await captureMapScreenshot();
+            if (!isCurrentWorkflow()) return;
             if (capturedScreenshot) {
               screenshot = capturedScreenshot.startsWith('data:image/png;base64,')
                 ? capturedScreenshot.replace('data:image/png;base64,', '')
@@ -5825,6 +6209,7 @@ const MapView: React.FC<MapViewProps> = ({
         // Trigger analysis based on selected module
         try {
           const { triggerGeointAnalysis } = await import('../services/api');
+          if (!isCurrentWorkflow()) return;
           
           const result = await triggerGeointAnalysis(
             lat, 
@@ -5836,6 +6221,7 @@ const MapView: React.FC<MapViewProps> = ({
             abortController.signal, // Pass abort signal
             { stac_mode: stacMode || 'public' },
           );
+          if (!isCurrentWorkflow()) return;
           
           // Send results to chat
           onGeointAnalysis({
@@ -5850,6 +6236,7 @@ const MapView: React.FC<MapViewProps> = ({
           analysisAbortControllerRef.current = null;
           
         } catch (error) {
+          if (!isCurrentWorkflow()) return;
           // Check if this was an abort (user repositioned pin)
           if (error instanceof Error && error.name === 'AbortError') {
             console.log('[SKIP] MapView: Analysis cancelled (pin repositioned)');
@@ -6067,17 +6454,22 @@ const MapView: React.FC<MapViewProps> = ({
       const currentCollection = satelliteData?.items?.[0]?.collection || lastCollection || null;
       
       // Build tile URLs array from satelliteData for Vision Agent
-      const tileUrls = satelliteData?.all_tile_urls?.map((tile: { tilejson_url: string; item_id: string; bbox: number[] }) => ({
+      const tileUrls = satelliteData?.all_tile_urls?.map((tile: { tilejson_url: string; item_id: string; bbox: number[]; stac_mode?: 'public' | 'pro' }) => ({
         tilejson_url: tile.tilejson_url,
         item_id: tile.item_id,
         bbox: tile.bbox,
-        collection: currentCollection
+        collection: currentCollection,
+        stac_mode: tile.stac_mode
+          || satelliteData?.items?.find((item: { id: string }) => item.id === tile.item_id)?.stac_mode
+          || stacMode
+          || 'public'
       })) || [];
       
       // Build STAC items array with assets for Vision Agent raster analysis (NDVI, etc.)
-      const stacItems = satelliteData?.items?.map((item: { id: string; collection: string; bbox?: number[]; datetime: string; assets?: Record<string, unknown> }) => ({
+      const stacItems = satelliteData?.items?.map((item: { id: string; collection: string; stac_mode?: 'public' | 'pro'; bbox?: number[]; datetime: string; assets?: Record<string, unknown> }) => ({
         id: item.id,
         collection: item.collection,
+        stac_mode: item.stac_mode,
         bbox: item.bbox,
         properties: {
           datetime: item.datetime
@@ -6091,11 +6483,13 @@ const MapView: React.FC<MapViewProps> = ({
         bounds: bounds,
         imagery_base64: (visionMode || selectedModule === 'terrain' || selectedModule === 'mobility' || selectedModule === 'extreme_weather' || selectedModule === 'comparison' || selectedModule === 'building_damage') && visionScreenshot ? visionScreenshot : null, // Include screenshot for all GEOINT modules
         current_collection: currentCollection,
+        render_profile_id: activeRenderProfileId || undefined,
         imagery_url: satelliteData?.tile_url || satelliteData?.preview_url,
         tile_urls: tileUrls, // TiTiler URLs for Vision Agent raster analysis
         stac_items: stacItems, // Full STAC items with assets for NDVI computation
         item_id: satelliteData?.items?.[0]?.id || null,
         datetime: satelliteData?.items?.[0]?.datetime || null,
+        search_datetime: originalDatetime,
         zoom_level: mapProvider === 'leaflet' ? map.getZoom() : (map as any).getCamera().zoom,
         has_satellite_data: !!satelliteData,  // Flag to indicate if STAC imagery is loaded
         vision_mode: visionMode,  // explicit vision mode flag
@@ -6138,7 +6532,7 @@ const MapView: React.FC<MapViewProps> = ({
         mapContextDebounceRef.current = null;
       }
     };
-  }, [satelliteData, map, mapLoaded, mapProvider, onMapContextChange, onHistoryRestoreSettled, lastCollection, visionMode, visionPin, visionScreenshot, mapPositionVersion, selectedModule, pinState.active, pinState.lat, pinState.lng, stacMode]);
+  }, [satelliteData, map, mapLoaded, mapProvider, onMapContextChange, onHistoryRestoreSettled, lastCollection, originalDatetime, activeRenderProfileId, visionMode, visionPin, visionScreenshot, mapPositionVersion, selectedModule, pinState.active, pinState.lat, pinState.lng, stacMode]);
 
   // ─────────────────────────────────────────────────────────────────────
   // Resilience facility markers — listen for events from ResiliencePanel
@@ -6251,8 +6645,49 @@ const MapView: React.FC<MapViewProps> = ({
     };
   }, [map, mapProvider]);
 
+  const layerCollection = satelliteData?.items?.[0]?.collection || lastCollection || '';
+  const isFireFalseColour = activeRenderProfileId === 'hls-s30-fire-false-colour';
+  const configuredCollection = layerCollection ? getCollectionConfig(layerCollection) : null;
+  const imageryLayerLabel = isFireFalseColour
+    ? 'HLS fire false colour'
+    : configuredCollection?.title || layerCollection || 'Satellite imagery';
+  const imageryLayerSwatch = isFireFalseColour
+    ? 'linear-gradient(90deg, #8b1e1e 0%, #c46335 48%, #3f8d55 100%)'
+    : getCollectionVisualization(layerCollection).color;
+  const selectableLayers: SelectableMapLayer[] = [];
+
+  if (imageryLayerAvailable && satelliteData?.tile_url) {
+    selectableLayers.push({
+      id: 'imagery',
+      label: imageryLayerLabel,
+      swatch: imageryLayerSwatch,
+      visible: imageryLayerVisible,
+      opacity: imageryLayerOpacity,
+      onVisibilityChange: handleImageryVisibilityChange,
+      onOpacityChange: handleImageryOpacityChange,
+    });
+  }
+  if (geofmLayerAvailable) {
+    selectableLayers.push({
+      id: 'geofm',
+      label: 'PlanAura contextual change',
+      swatch: 'linear-gradient(90deg, #7f1d1d 0%, #ef4444 100%)',
+      visible: geofmLayerVisible,
+      opacity: geofmLayerOpacity,
+      onVisibilityChange: handleGeoFmVisibilityChange,
+      onOpacityChange: handleGeoFmOpacityChange,
+    });
+  }
+
   return (
-    <div className="map" style={{ position: 'relative' }}>
+    <div
+      ref={mapShellRef}
+      className="map"
+      role="region"
+      aria-label="Interactive map"
+      tabIndex={-1}
+      style={{ position: 'relative' }}
+    >
       {/* Always render map container so mapRef.current is available */}
       <div
         ref={mapRef}
@@ -6503,6 +6938,43 @@ const MapView: React.FC<MapViewProps> = ({
                   </div>
                 </div>
 
+                <button
+                  type="button"
+                  disabled={features?.mpcPro === false}
+                  aria-disabled={features?.mpcPro === false}
+                  title={features?.mpcPro === false ? 'Building Damage requires MPC Pro tenant imagery.' : undefined}
+                  onClick={() => features?.mpcPro !== false && handleModuleSelect('building_damage')}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    cursor: features?.mpcPro === false ? 'not-allowed' : 'pointer',
+                    opacity: features?.mpcPro === false ? 0.5 : 1,
+                    border: selectedModule === 'building_damage' ? '2px solid #b91c1c' : '1px solid rgba(0, 0, 0, 0.1)',
+                    background: selectedModule === 'building_damage' ? 'rgba(185, 28, 28, 0.1)' : 'white',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (features?.mpcPro !== false && selectedModule !== 'building_damage') {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedModule !== 'building_damage') {
+                      e.currentTarget.style.background = 'white';
+                    }
+                  }}
+                >
+                  <div style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '4px' }}>
+                    Building Damage
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                    Assess structures from private before-and-after aerial imagery
+                  </div>
+                </button>
+
                 {/* Site Audit Module */}
                 <div
                   onClick={() => handleModuleSelect('foundation_change')}
@@ -6534,18 +7006,26 @@ const MapView: React.FC<MapViewProps> = ({
                 </div>
 
                 {/* Site Audit Module */}
-                <div
-                  onClick={() => handleModuleSelect('site_audit')}
+                <button
+                  type="button"
+                  disabled={features?.fabric === false}
+                  aria-disabled={features?.fabric === false}
+                  title={features?.fabric === false ? 'Site Intel requires Microsoft Fabric integration.' : undefined}
+                  onClick={() => features?.fabric !== false && handleModuleSelect('site_audit')}
                   style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
                     padding: '12px',
                     borderRadius: '8px',
-                    cursor: 'pointer',
+                    cursor: features?.fabric === false ? 'not-allowed' : 'pointer',
+                    opacity: features?.fabric === false ? 0.5 : 1,
                     border: selectedModule === 'site_audit' ? '2px solid #d97706' : '1px solid rgba(0, 0, 0, 0.1)',
                     background: selectedModule === 'site_audit' ? 'rgba(217, 119, 6, 0.1)' : 'white',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (selectedModule !== 'site_audit') {
+                    if (features?.fabric !== false && selectedModule !== 'site_audit') {
                       e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
                     }
                   }}
@@ -6561,21 +7041,29 @@ const MapView: React.FC<MapViewProps> = ({
                   <div style={{ fontSize: '12px', color: '#6b7280' }}>
                     Drop a pin on candidate site, then ask your question providing relevant details
                   </div>
-                </div>
+                </button>
 
                 {/* Resilience Module */}
-                <div
-                  onClick={() => handleModuleSelect('resilience')}
+                <button
+                  type="button"
+                  disabled={features?.resilience === false}
+                  aria-disabled={features?.resilience === false}
+                  title={features?.resilience === false ? 'Resilience is unavailable in this deployment.' : undefined}
+                  onClick={() => features?.resilience !== false && handleModuleSelect('resilience')}
                   style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
                     padding: '12px',
                     borderRadius: '8px',
-                    cursor: 'pointer',
+                    cursor: features?.resilience === false ? 'not-allowed' : 'pointer',
+                    opacity: features?.resilience === false ? 0.5 : 1,
                     border: selectedModule === 'resilience' ? '2px solid #dc2626' : '1px solid rgba(0, 0, 0, 0.1)',
                     background: selectedModule === 'resilience' ? 'rgba(220, 38, 38, 0.1)' : 'white',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (selectedModule !== 'resilience') {
+                    if (features?.resilience !== false && selectedModule !== 'resilience') {
                       e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
                     }
                   }}
@@ -6591,21 +7079,29 @@ const MapView: React.FC<MapViewProps> = ({
                   <div style={{ fontSize: '12px', color: '#6b7280' }}>
                     Monitor facilities and supply chains for climate & hazard disruption risk
                   </div>
-                </div>
+                </button>
 
                 {/* Extreme Weather Module */}
-                <div
-                  onClick={() => handleModuleSelect('forecast')}
+                <button
+                  type="button"
+                  disabled={features?.weather === false}
+                  aria-disabled={features?.weather === false}
+                  title={features?.weather === false ? 'Forecast requires a configured weather provider.' : undefined}
+                  onClick={() => features?.weather !== false && handleModuleSelect('forecast')}
                   style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
                     padding: '12px',
                     borderRadius: '8px',
-                    cursor: 'pointer',
+                    cursor: features?.weather === false ? 'not-allowed' : 'pointer',
+                    opacity: features?.weather === false ? 0.5 : 1,
                     border: selectedModule === 'forecast' ? '2px solid #2563eb' : '1px solid rgba(0, 0, 0, 0.1)',
                     background: selectedModule === 'forecast' ? 'rgba(37, 99, 235, 0.1)' : 'white',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (selectedModule !== 'forecast') {
+                    if (features?.weather !== false && selectedModule !== 'forecast') {
                       e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)';
                     }
                   }}
@@ -6619,9 +7115,9 @@ const MapView: React.FC<MapViewProps> = ({
                     Forecast
                   </div>
                   <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                    Aurora &amp; Earth-2 AI weather ensemble — global forecasts, cyclone tracks, model disagreement
+                    Configured AI weather ensemble — global forecasts, cyclone tracks, model disagreement
                   </div>
-                </div>
+                </button>
 
                 {/* Extreme Weather Module */}
                 <div
@@ -6730,6 +7226,7 @@ const MapView: React.FC<MapViewProps> = ({
                      selectedModule === 'terrain' ? 'Terrain Analysis' : 
                      selectedModule === 'mobility' ? 'Mobility Analysis' :
                      selectedModule === 'extreme_weather' ? 'Extreme Weather' :
+                     selectedModule === 'building_damage' ? 'Building Damage' :
                      selectedModule === 'forecast' ? 'Forecast' :
                      selectedModule === 'site_audit' ? 'Site Intel' :
                      selectedModule === 'resilience' ? 'Resilience' :
@@ -7079,6 +7576,13 @@ const MapView: React.FC<MapViewProps> = ({
               )}
             </svg>
           </div>
+
+          <MapLayerSelector
+            layers={selectableLayers}
+            open={layerSelectorOpen}
+            onOpenChange={setLayerSelectorOpen}
+            fallbackFocusRef={mapShellRef}
+          />
 
           {/* Pin coordinate indicator - show when pin is active */}
           {pinState.active && (

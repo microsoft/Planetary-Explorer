@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-09-02T14:02:51.737Z",
+  "app_url": "http://127.0.0.1:5174/",
+  "results": [
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over the Red River, Manitoba from 2026-03-01 to 2026-05-31",
+      "image_query": "Explain the radar colour composite and identify possible inundation.",
+      "outcome": "pass",
+      "elapsed_ms": 59833,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -97.45,
+        49,
+        -96.7,
+        50.2
+      ],
+      "expected_pin": {
+        "lat": 49.6,
+        "lng": -97.075
+      },
+      "submitted_pin": {
+        "lat": 49.60369166730047,
+        "lng": -97.07499999999956
+      },
+      "pin_distance_km": 0.41,
+      "map_zoom": 8,
+      "imagery_layer": "Sentinel-1 RTC",
+      "imagery_difference": {
+        "changedPixelRatio": 0.2666,
+        "meanAbsoluteDifference": 19.79
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-red-river-local\\payload-images\\01-all-weather-radar-observations-for-spring-flood-monitoring.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "**Radar composites use synthetic aperture radar (SAR) to detect inundation risks effectively.**\n\n### Observations:\n1. **Imagery Location:** \n   - Southern Manitoba near Winnipeg (49.599° N, -97.075° E). This region, including the Red River, is prone to flooding.\n\n2. **Radar Composite Explanation:**\n   - Sentinel-1 radar composites typically use polarization modes and acquisition dates to create detailed maps. Areas with water often appear dark due to weak radar interactions.\n\n3. **Possible Inundation Detection:**\n   - Look for dark, smooth regions in flooded areas, especially near rivers and floodplains. Sentinel-1 imagery must undergo specific processing (e.g., thresholding or time-series analysis) to distinguish water presence accurately.\n\n### Next Steps:\nFocused analysis of Sentinel-1 data is recommended for precise identification. Process the loaded `sentinel-1-rtc` collection to compare radar backscatter levels for flood detection.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-red-river-local\\browser-screenshots\\01-all-weather-radar-observations-for-spring-flood-monitoring.png"
+    }
+  ]
+}

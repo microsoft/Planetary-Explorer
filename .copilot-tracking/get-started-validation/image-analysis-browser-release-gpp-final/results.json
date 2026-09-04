@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-02T15:29:47.377Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "image_query": "Explain the productivity colour scale around this interior British Columbia location.",
+      "outcome": "pass",
+      "elapsed_ms": 32368,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -126.56,
+        54.14,
+        -126.54,
+        54.16
+      ],
+      "expected_pin": {
+        "lat": 54.15,
+        "lng": -126.55000000000001
+      },
+      "submitted_pin": {
+        "lat": 54.15000120775608,
+        "lng": -126.5499999999993
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Gross Primary Productivity 8-Day (500m)",
+      "imagery_difference": {
+        "changedPixelRatio": 0.999,
+        "meanAbsoluteDifference": 54.96
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 6329,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 1,
+        "meanLuminance": 20.31,
+        "luminanceVariance": 0,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-gpp-final\\payload-images\\01-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "The screenshot shows a productivity map based on the MODIS 17A2H product, which captures vegetation productivity, specifically Net Primary Production (NPP). The color scale represents varying levels of productivity:\n\n- **Dark colors (e.g., deep purple):** These areas signify extremely low productivity, often associated with either barren land, ice-covered surfaces, or regions experiencing minimal vegetation growth due to environmental stress.\n- **Gradients toward lighter shades (if present):** Indicate higher vegetation productivity, typically found in forested areas, agricultural lands, or regions with optimal growing conditions. \n\nGiven the interior British Columbia location:\n- This region has varying topography, ranging from mountains to valleys, potentially influencing NPP. \n- Dark zones likely correspond with areas of sparse vegetation (e.g., rocky terrain, high elevations) common in central British Columbia. Especially in winter or cooler seasons, when productivity declines.\n- If",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-gpp-final\\browser-screenshots\\01-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.png"
+    }
+  ]
+}

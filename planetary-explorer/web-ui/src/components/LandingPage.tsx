@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import HealthCheckInfo from './HealthCheckInfo';
 import STACInfoButton from './STACInfoButton';
-import GetStartedButton from './GetStartedButton';
+import GetStartedButton, { DeploymentFeatureFlags } from './GetStartedButton';
 import ModelSelector from './ModelSelector';
 import UserAccountMenu from './UserAccountMenu';
 import StacModeToggle, { StacMode } from './StacModeToggle';
@@ -25,6 +25,7 @@ interface LandingPageProps {
   /** Surfaced from /api/config.features.mpcPro. When false the toggle renders
    *  in a locked state with a "How to enable" link. */
   proEnabled?: boolean;
+  features?: DeploymentFeatureFlags;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
@@ -37,6 +38,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   stacMode,
   onStacModeChange,
   proEnabled,
+  features,
 }) => {
   const [query, setQuery] = useState('');
   const [showWelcomePopup, setShowWelcomePopup] = useState(true);
@@ -113,8 +115,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="landing-title" 
                style={{cursor:'pointer', transition:'opacity 0.2s ease'}} 
                onClick={handleLogoClick}
-               onMouseEnter={(e) => (e.target as HTMLElement).style.opacity = '0.8'}
-               onMouseLeave={(e) => (e.target as HTMLElement).style.opacity = '1'}>
+               onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.opacity = '0.8'}
+               onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.opacity = '1'}>
             {/* Brand mark: satellite-earth icon only. The Microsoft 4-color
                 square overlay was removed per product direction so the
                 brand reads as "Planetary Explorer" rather than a Microsoft
@@ -130,7 +132,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
         <div className="landing-top-right">
-          <GetStartedButton onQuerySelect={(query) => onEnter('all', query)} />
+          <GetStartedButton
+            onQuerySelect={(query, requestedStacMode) => {
+              if (requestedStacMode) onStacModeChange?.(requestedStacMode);
+              onEnter('all', query);
+            }}
+            features={features}
+          />
           <ModelSelector
             apiBaseUrl={API_BASE_URL}
             onModelChange={onModelChange}
@@ -190,12 +198,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)';
-                  e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)';
                 }}
               >
@@ -233,12 +239,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%)';
-                  e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.3)';
                 }}
               >

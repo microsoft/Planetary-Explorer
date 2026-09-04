@@ -21,12 +21,35 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from ..analyzer_protocol import Analyzer
 from ..contracts import AnalysisRequest, AnalyzerResult, Source
 
 logger = logging.getLogger(__name__)
+
+
+def _infer_raster_data_type(question: str) -> str:
+    """Infer the sampling operation from explicit terms in the question."""
+    normalized = question.casefold()
+    checks = (
+        (("sea surface temperature", "sst"), "sst"),
+        (("elevation", "height above ground"), "elevation"),
+        (("gross primary productivity", "gpp"), "gpp"),
+        (("evi", "vegetation index", "vegetation indices"), "vegetation"),
+        (("ndvi",), "ndvi"),
+        (("fire-confidence", "fire confidence", "thermal anomaly", "maxfrp", "firemask", "fire mask"), "fire"),
+        (("ndsi", "snow cover"), "snow"),
+        (("backscatter", " vv ", " vh ", "radar"), "sar"),
+        (("reflectance", "short-wave infrared", "swir", "near-infrared"), "reflectance"),
+        (("water occurrence",), "water"),
+        (("biomass",), "biomass"),
+    )
+    padded = f" {normalized} "
+    for markers, data_type in checks:
+        if any(marker in padded for marker in markers):
+            return data_type
+    return "auto"
 
 
 def _bounds_from_request(request: AnalysisRequest) -> dict[str, float]:
@@ -112,6 +135,8 @@ class RasterSamplingAnalyzer(Analyzer):
         # "layer2_clarifier_pick:<analyzer> kind=<kind>" — not a data_type.
         if data_type_raw.startswith("layer2_clarifier_pick"):
             data_type_raw = "auto"
+        if data_type_raw == "auto":
+            data_type_raw = _infer_raster_data_type(request.question)
         data_type = data_type_raw
 
         agent_input = RasterSamplingInput(

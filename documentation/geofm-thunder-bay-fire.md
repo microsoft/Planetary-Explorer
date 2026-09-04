@@ -12,7 +12,6 @@ keywords:
   - HLS
 estimated_reading_time: 10
 ---
-
 ## Understand the example
 
 This example examines a point inside the 2026 Thunder Bay 36 wildfire
@@ -28,16 +27,16 @@ THU036, so interpret it as early-event contextual change inside the final
 perimeter, not as the final fire footprint. A public THU036 burn-severity layer
 uses imagery as recent as August 17, 2026 for later comparison.
 
-| Input | Value |
-|-------|-------|
-| Collection | `hls2-s30` |
-| Baseline date | `2026-06-01` |
-| Later date | `2026-07-04` |
-| Analysis point | `50.2680, -89.8572` |
-| Expected HLS tile | `T15UYR` |
-| Display profile | `B12/B8A/B04` fire false colour |
-| Display stretch | Per-band item percentiles 2 to 98 |
-| GeoFM profile | `NRCan/Planaura-1.0` |
+| Input             | Value                             |
+| ----------------- | --------------------------------- |
+| Collection        | `hls2-s30`                      |
+| Baseline date     | `2026-06-01`                    |
+| Later date        | `2026-07-04`                    |
+| Analysis point    | `50.2680, -89.8572`             |
+| Expected HLS tile | `T15UYR`                        |
+| Display profile   | `B12/B8A/B04` fire false colour |
+| Display stretch   | Per-band item percentiles 2 to 98 |
+| GeoFM profile     | `NRCan/Planaura-1.0`            |
 
 The public catalog resolves these exact source items:
 
@@ -103,7 +102,6 @@ The **Foundation Models** panel must show **MCP connected**,
    ```text
    Show HLS S30 fire false-colour imagery at latitude 50.2680 and longitude -89.8572 on 2026-07-04
    ```
-
 2. Wait for the HLS fire false-colour image to load.
 3. Confirm the map is near `50.2680, -89.8572`, the response uses
    `2026-07-04`, and the displayed item is
@@ -118,6 +116,19 @@ The **Foundation Models** panel must show **MCP connected**,
 
 ![THU036 HLS fire false-colour area with the Foundation Change pin](images/geofm-thu036/01-thu036-area.png)
 
+## Control the map layers
+
+Select **Map layers** in the lower-left corner after imagery loads. The panel
+lists only layers that are currently available:
+
+* **HLS fire false colour** appears when the B12/B8A/B04 scene is loaded
+* **PlanAura contextual change** appears after a completed run returns polygons
+
+Use the eye control to show or hide a layer. Use its slider to adjust opacity
+while comparing the source imagery and model overlay. These controls update the
+map immediately; they do not search the catalog, submit a GeoFM run, or repeat
+GPU work.
+
 ## Review and approve the comparison
 
 1. Enter this prompt in chat:
@@ -125,7 +136,6 @@ The **Foundation Models** panel must show **MCP connected**,
    ```text
    Use PlanAura to compare HLS S30 on 2026-06-01 and 2026-07-04 at the pinned Thunder Bay 36 fire area. Use threshold 0.05 and return up to 10 change features.
    ```
-
 2. Expand **arguments** on the approval-required **WRITE action** card.
 3. Confirm the geometry encloses the pinned point near `50.2680, -89.8572`.
 4. Confirm both item identifiers contain `.T15UYR.` and match the source items
@@ -162,16 +172,16 @@ browser session after model capacity is available.
 
 The captured run completed on its first attempt with these durable results:
 
-| Output | Observed value |
-|--------|----------------|
-| Run ID | `756c1545-7164-46be-88f8-5175652097f1` |
-| Status | `complete` at `100%`, error `null` |
-| Valid / changed pixels | `857 / 857` |
-| Mean distance | `0.3110` |
-| Maximum distance | `0.4359` |
-| P95 distance | `0.4045` |
-| Changed area | `0.7713 km²` |
-| Returned evidence | 2 polygons and 4 artifacts |
+| Output                 | Observed value                           |
+| ---------------------- | ---------------------------------------- |
+| Run ID                 | `756c1545-7164-46be-88f8-5175652097f1` |
+| Status                 | `complete` at `100%`, error `null` |
+| Valid / changed pixels | `857 / 857`                            |
+| Mean distance          | `0.3110`                               |
+| Maximum distance       | `0.4359`                               |
+| P95 distance           | `0.4045`                               |
+| Changed area           | `0.7713 km²`                          |
+| Returned evidence      | 2 polygons and 4 artifacts               |
 
 The four evidence artifacts are the change-distance GeoTIFF, change-polygons
 GeoJSON, STAC item, and evidence manifest. The response provides a SHA-256 hash

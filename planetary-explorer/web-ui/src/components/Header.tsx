@@ -5,7 +5,7 @@ import React from 'react';
 import STACInfoButton from './STACInfoButton';
 import HealthCheckInfo from './HealthCheckInfo';
 import RestartButton from './RestartButton';
-import GetStartedButton from './GetStartedButton';
+import GetStartedButton, { DeploymentFeatureFlags } from './GetStartedButton';
 import ModelSelector from './ModelSelector';
 import UserAccountMenu from './UserAccountMenu';
 import StacModeToggle, { StacMode } from './StacModeToggle';
@@ -25,6 +25,7 @@ interface HeaderProps {
   /** Surfaced from /api/config.features.mpcPro. When false the toggle renders
    *  in a locked state with a "How to enable" link. */
   proEnabled?: boolean;
+  features?: DeploymentFeatureFlags;
 }
 
 // Identical to the landing page brand: 44x44 globe icon.
@@ -46,7 +47,7 @@ const GlobeLogo: React.FC = () => (
   </span>
 );
 
-const Header: React.FC<HeaderProps> = ({ onReturnToLanding, onRestartSession, onModelChange, selectedModel, onReasoningEffortChange, onModelAvailabilityChange, selectedReasoningEffort, stacMode, onStacModeChange, proEnabled }) => {
+const Header: React.FC<HeaderProps> = ({ onReturnToLanding, onRestartSession, onModelChange, selectedModel, onReasoningEffortChange, onModelAvailabilityChange, selectedReasoningEffort, stacMode, onStacModeChange, proEnabled, features }) => {
   return (
     <div className="top-header">
       <div style={{ padding: '0' }}>
@@ -58,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ onReturnToLanding, onRestartSession, on
         </div>
       </div>
       <div className="header-controls">
-        <GetStartedButton />
+        <GetStartedButton features={features} />
         <ModelSelector
           onModelChange={onModelChange}
           selectedModel={selectedModel}

@@ -52,21 +52,32 @@ def _ensemble_summary(bundles: list[ForecastBundle]) -> dict[str, Any]:
     """Per-variable center-value mean and spread across providers."""
     if len(bundles) < 1:
         return {}
-    by_var: dict[str, list[float]] = {}
+    by_var: dict[str, list[tuple[float, str | None]]] = {}
     for b in bundles:
         for v, arr in b.variables.items():
             c = _grid_center_value(arr)
             if c is not None:
-                by_var.setdefault(v, []).append(c)
+                by_var.setdefault(v, []).append((c, b.units.get(v)))
     out: dict[str, Any] = {"providers": [b.provider_id for b in bundles], "variables": {}}
-    for v, vals in by_var.items():
-        if not vals:
+    for v, samples in by_var.items():
+        if not samples:
+            continue
+        vals = [value for value, _unit in samples]
+        units = {unit for _value, unit in samples if unit}
+        missing_units = any(not unit for _value, unit in samples)
+        if len(units) != 1 or missing_units:
+            out["variables"][v] = {
+                "error": "mixed_units",
+                "units": sorted(units),
+                "samples": len(vals),
+            }
             continue
         entry: dict[str, Any] = {
             "mean": round(sum(vals) / len(vals), 3),
             "min": round(min(vals), 3),
             "max": round(max(vals), 3),
             "samples": len(vals),
+            "unit": next(iter(units)),
         }
         if len(vals) >= 2:
             entry["stdev"] = round(statistics.stdev(vals), 3)
@@ -89,11 +100,31 @@ def build_dossier(
     summary = _ensemble_summary([r.bundle for r in succeeded if r.bundle is not None])  # type: ignore[misc]
 
     note_parts = []
-    if any(b.stub for r in succeeded if (b := r.bundle)):
-        note_parts.append(
-            "One or more providers returned stub output (CPU mock). "
-            "Forecast values are synthetic. Swap to a real GPU endpoint when available."
+    adapter_bundles = [
+        bundle
+        for result in succeeded
+        if (bundle := result.bundle)
+        and bundle.extras.get("native_model_inference") is False
+    ]
+    if adapter_bundles:
+        sources = sorted(
+            {
+                str(bundle.extras.get("source"))
+                for bundle in adapter_bundles
+                if bundle.extras.get("source")
+            }
         )
+        note_parts.append(
+            "Provider contracts are backed by operational NWP adapters, not "
+            f"native Aurora or Earth-2 inference. Sources: {', '.join(sources)}."
+        )
+        if any(bundle.extras.get("synthetic_fallback_variables") for bundle in adapter_bundles):
+            note_parts.append(
+                "One or more variables used deterministic synthetic fallback values; "
+                "inspect each forecast's provenance before use."
+            )
+    elif any(b.stub for r in succeeded if (b := r.bundle)):
+        note_parts.append("One or more providers returned explicitly marked stub output.")
     if failed:
         note_parts.append(
             f"{len(failed)} provider(s) failed; ensemble computed from {len(succeeded)} remaining."

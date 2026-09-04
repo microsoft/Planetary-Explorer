@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-02T15:03:53.529Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "setup_query": "Show Landsat imagery over Halifax, Canada from 2026-01-01 to 2026-08-26",
+      "image_query": "Identify water, urban, forest, and shoreline features in this 2026 Halifax image.",
+      "outcome": "pass",
+      "elapsed_ms": 60632,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -63.85,
+        44.48,
+        -63.35,
+        44.82
+      ],
+      "expected_pin": {
+        "lat": 44.65,
+        "lng": -63.6
+      },
+      "submitted_pin": {
+        "lat": 44.65024913899066,
+        "lng": -63.60000000000056
+      },
+      "pin_distance_km": 0.03,
+      "map_zoom": 10,
+      "imagery_layer": "Landsat Collection 2 Level-2",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9978,
+        "meanAbsoluteDifference": 171.19
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 105747,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 92,
+        "meanLuminance": 220.65,
+        "luminanceVariance": 699.64,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-halifax\\payload-images\\01-landsat-collection-2-surface-reflectance-over-coastal-nova-scoti.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "**Analysis from the 2026 Halifax satellite image:**\n\n### **Water Features**\n- **Bedford Basin**: A large inlet northwest of Halifax city center connected to the Atlantic.\n- **Halifax Harbour**: Southeast of Halifax city, supports commercial and naval activity.\n- **Lakes**: Includes Lake Major (northeast near North Preston) and Otter Lake (southwest near Timberlea).\n\n### **Urban Features**\n- **Halifax Core**: Dense urban infrastructure near the harbor.\n- **Dartmouth**: Urban area across from Halifax with visible road networks.\n- **Eastern Passage**: Suburban zone near the shoreline southeast of Halifax.\n- **Bedford**: Residential and commercial clusters northeast of Halifax.\n\n### **Forest Features**\n- Dense forested areas surround urban zones, particularly near Sackville, Timberlea, and Waverley.\n\n### **Shoreline Features**\n- **Halifax Harbour shoreline**: Mix of urban development, industrial docks, and natural coastlines.\n- **Chebucto Head**: Rugged cliffs west of Halifax bordering the",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-halifax\\browser-screenshots\\01-landsat-collection-2-surface-reflectance-over-coastal-nova-scoti.png"
+    }
+  ]
+}

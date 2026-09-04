@@ -279,61 +279,66 @@ class AnalystAgent:
         set_session(sess)
 
         analyst_status: Optional[Dict[str, Any]] = None
-        invocation = AnalystInvocation(session_id=request.session_id)
-        invocation_task = asyncio.create_task(
-            self._invoke_serialized(request, invocation)
-        )
-        try:
-            done, _pending = await asyncio.wait(
-                {invocation_task},
-                timeout=self._run_timeout_seconds,
+        if request.analysis_type == "screenshot":
+            answer, evidence, analyst_status = await self._run_explicit_screenshot(
+                request
             )
-        except asyncio.CancelledError:
-            invocation.stop_requested = True
-            invocation.stop_event.set()
-            self._abandon_invocation_threads(invocation)
-            self._track_background_task(invocation_task, "cancelled invocation")
-            self._schedule_invocation_cleanup(invocation, invocation_task)
-            raise
-
-        if invocation_task not in done:
-            logger.warning(
-                "[ANALYST] run timed out after %.1fs, returning fallback response",
-                self._run_timeout_seconds,
-            )
-            invocation.stop_requested = True
-            invocation.stop_event.set()
-            self._abandon_invocation_threads(invocation)
-            self._track_background_task(invocation_task, "timed-out invocation")
-            self._schedule_invocation_cleanup(invocation, invocation_task)
-            answer = self._fallback_answer(
-                request,
-                f"timed out after {self._run_timeout_seconds:.1f}s",
-            )
-            evidence = []
-            analyst_status = {
-                "status": "timeout",
-                "timeout_seconds": self._run_timeout_seconds,
-            }
         else:
-            if invocation_task.cancelled():
-                answer = self._fallback_answer(request, "analysis was cancelled")
+            invocation = AnalystInvocation(session_id=request.session_id)
+            invocation_task = asyncio.create_task(
+                self._invoke_serialized(request, invocation)
+            )
+            try:
+                done, _pending = await asyncio.wait(
+                    {invocation_task},
+                    timeout=self._run_timeout_seconds,
+                )
+            except asyncio.CancelledError:
+                invocation.stop_requested = True
+                invocation.stop_event.set()
+                self._abandon_invocation_threads(invocation)
+                self._track_background_task(invocation_task, "cancelled invocation")
+                self._schedule_invocation_cleanup(invocation, invocation_task)
+                raise
+
+            if invocation_task not in done:
+                logger.warning(
+                    "[ANALYST] run timed out after %.1fs, returning fallback response",
+                    self._run_timeout_seconds,
+                )
+                invocation.stop_requested = True
+                invocation.stop_event.set()
+                self._abandon_invocation_threads(invocation)
+                self._track_background_task(invocation_task, "timed-out invocation")
+                self._schedule_invocation_cleanup(invocation, invocation_task)
+                answer = self._fallback_answer(
+                    request,
+                    f"timed out after {self._run_timeout_seconds:.1f}s",
+                )
                 evidence = []
                 analyst_status = {
-                    "status": "error",
-                    "error_type": "CancelledError",
+                    "status": "timeout",
+                    "timeout_seconds": self._run_timeout_seconds,
                 }
             else:
-                try:
-                    answer, _tool_calls, evidence = invocation_task.result()
-                except Exception as e:
-                    logger.exception("[ANALYST] run failed, returning fallback response")
-                    answer = self._fallback_answer(request, str(e))
+                if invocation_task.cancelled():
+                    answer = self._fallback_answer(request, "analysis was cancelled")
                     evidence = []
                     analyst_status = {
                         "status": "error",
-                        "error_type": type(e).__name__,
+                        "error_type": "CancelledError",
                     }
+                else:
+                    try:
+                        answer, _tool_calls, evidence = invocation_task.result()
+                    except Exception as e:
+                        logger.exception("[ANALYST] run failed, returning fallback response")
+                        answer = self._fallback_answer(request, str(e))
+                        evidence = []
+                        analyst_status = {
+                            "status": "error",
+                            "error_type": type(e).__name__,
+                        }
 
         # Aggregate sources from tool evidence
         sources: List[Source] = []
@@ -400,6 +405,37 @@ class AnalystAgent:
             plan=plan,
             elapsed_ms=elapsed_ms,
         )
+
+    async def _run_explicit_screenshot(self, request):
+        """Execute a Get Started Image Analysis request without an LLM routing round."""
+        from .session_context import get_session
+        from .tools import describe_map_screenshot
+
+        try:
+            payload = await asyncio.wait_for(
+                describe_map_screenshot(request.question),
+                timeout=self._run_timeout_seconds,
+            )
+        except asyncio.TimeoutError:
+            payload = {
+                "success": False,
+                "error": f"timed out after {self._run_timeout_seconds:.1f}s",
+            }
+        except Exception as error:
+            logger.exception("[ANALYST] explicit screenshot analysis failed")
+            payload = {"success": False, "error": str(error)}
+
+        evidence = list(get_session().evidence)
+        if not evidence:
+            evidence = [{"tool": "describe_map_screenshot", "payload": payload}]
+        if payload.get("success") and payload.get("answer"):
+            return str(payload["answer"]), evidence, None
+
+        error = str(payload.get("error") or "vision analysis failed")
+        return self._fallback_answer(request, error), evidence, {
+            "status": "timeout" if "timed out" in error else "error",
+            "error_type": "VisionTimeout" if "timed out" in error else "VisionError",
+        }
 
     def _track_background_task(self, task: asyncio.Task, label: str) -> None:
         """Keep detached cleanup alive and consume its terminal result."""
@@ -733,6 +769,10 @@ class AnalystAgent:
     ):
         """Send message, run, collect assistant text + tool-call evidence."""
         from azure.ai.agents.models import ListSortOrder  # type: ignore
+        from geoint.agent_retry import (
+            agent_retry_delay_seconds,
+            is_retryable_agent_error,
+        )
 
         await self._ensure_initialized()
         assert self._agents_client is not None and self._agent_id is not None
@@ -745,9 +785,10 @@ class AnalystAgent:
 
         run = None
         for attempt in range(3):
+            run_dispatch_started = False
             try:
                 if attempt > 0:
-                    await asyncio.sleep(2**attempt)
+                    await asyncio.sleep(agent_retry_delay_seconds(attempt))
                     if invocation.stop_requested:
                         raise asyncio.CancelledError
                     new_thread = await self._agents_client.threads.create()
@@ -771,6 +812,7 @@ class AnalystAgent:
                 )
                 if invocation.stop_requested:
                     raise asyncio.CancelledError
+                run_dispatch_started = True
                 run = await self._agents_client.runs.create_and_process(
                     thread_id=thread.thread_id,
                     agent_id=self._agent_id,
@@ -778,11 +820,33 @@ class AnalystAgent:
                 )
                 if invocation.stop_requested:
                     raise asyncio.CancelledError
+                if (
+                    run.status == "failed"
+                    and is_retryable_agent_error(run.last_error)
+                    and attempt < 2
+                ):
+                    if await self._run_has_tool_calls(thread.thread_id, run.id):
+                        logger.warning(
+                            "[ANALYST] transient run failure occurred after tool "
+                            "dispatch; automatic retry suppressed"
+                        )
+                        break
+                    logger.warning(
+                        "[ANALYST] run attempt %d returned transient failure: %s",
+                        attempt + 1,
+                        run.last_error,
+                    )
+                    continue
                 break
             except Exception as e:
                 if invocation.stop_requested:
                     raise asyncio.CancelledError from e
                 logger.warning("[ANALYST] run attempt %d failed: %s", attempt + 1, e)
+                if run_dispatch_started:
+                    raise RuntimeError(
+                        "Agent Service transport failed after run dispatch; "
+                        "automatic retry suppressed"
+                    ) from e
                 if attempt == 2:
                     raise
 
@@ -822,6 +886,27 @@ class AnalystAgent:
         from .session_context import get_session
         evidence = list(get_session().evidence)
         return answer, tool_calls, evidence
+
+    async def _run_has_tool_calls(self, thread_id: str, run_id: str) -> bool:
+        """Return whether a remote run dispatched any function tool."""
+        assert self._agents_client is not None
+        try:
+            run_steps = self._agents_client.run_steps.list(
+                thread_id=thread_id,
+                run_id=run_id,
+            )
+            async for step in run_steps:
+                details = getattr(step, "step_details", None)
+                if details and getattr(details, "tool_calls", None):
+                    return True
+            return False
+        except Exception:
+            logger.warning(
+                "[ANALYST] could not inspect failed run %s; automatic retry suppressed",
+                run_id,
+                exc_info=True,
+            )
+            return True
 
     # ------------------------------------------------------------------
     # Helpers

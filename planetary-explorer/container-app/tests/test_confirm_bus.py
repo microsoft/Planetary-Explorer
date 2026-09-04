@@ -281,6 +281,63 @@ async def test_disable_flag_autoapproves(monkeypatch):
     assert result == {"ok": True}
 
 
+@pytest.mark.asyncio
+async def test_given_disable_flag_when_geofm_write_is_denied_then_call_is_not_dispatched(
+    monkeypatch,
+):
+    # Arrange
+    from mcp_runtime import (
+        TracedMcpClient,
+        reset_confirm_bus_for_tests,
+        reset_listener,
+        resolve_confirmation,
+        set_listener,
+    )
+
+    await reset_confirm_bus_for_tests()
+    monkeypatch.setenv("MCP_REQUIRE_CONFIRM", "0")
+
+    class _Underlying:
+        def __init__(self) -> None:
+            self.calls: list[tuple] = []
+
+        async def call_raw(self, tool: str, args: dict) -> dict:
+            self.calls.append((tool, args))
+            return {"ok": True}
+
+    underlying = _Underlying()
+    client = TracedMcpClient(server_id="geofm", underlying=underlying)
+    captured: dict[str, str] = {}
+
+    async def _listener(event: dict) -> None:
+        if event.get("type") == "confirm_request":
+            captured["trace_id"] = event["trace_id"]
+
+    async def _deny_when_pending() -> None:
+        for _ in range(50):
+            if "trace_id" in captured:
+                await resolve_confirmation(
+                    trace_id=captured["trace_id"],
+                    approved=False,
+                )
+                return
+            await asyncio.sleep(0.01)
+
+    token = set_listener(_listener)
+
+    # Act
+    try:
+        deny_task = asyncio.create_task(_deny_when_pending())
+        with pytest.raises(PermissionError):
+            await client.call("geofm_compare_epochs", {"request": {}})
+    finally:
+        reset_listener(token)
+    await deny_task
+
+    # Assert
+    assert underlying.calls == []
+
+
 # --- FastAPI endpoint ---------------------------------------------------------
 
 

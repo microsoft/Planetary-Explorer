@@ -11,11 +11,12 @@ from pydantic import BaseModel, Field
 import json
 import logging
 import os
+import re
 import sys
 import traceback
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import AsyncIterator, Dict, Any, List, Optional, Tuple
 import aiohttp
 import sys
 import os
@@ -61,6 +62,17 @@ except ImportError:
 # No need to wait for Log Analytics - see exactly what each agent did
 # ============================================================================
 pipeline_traces: Dict[str, List[Dict]] = {}  # session_id -> list of trace entries
+
+
+def _pre_dispatch_retry_response(message: str) -> JSONResponse:
+    """Return a retry contract only for work rejected before dispatch."""
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": message,
+            "retry": {"safe": True, "stage": "pre_dispatch"},
+        },
+    )
 
 def get_pipeline_trace(session_id: str) -> List[Dict]:
     """Get all trace entries for a session"""
@@ -723,7 +735,7 @@ def _remap_collections_for_pro(
         # 4) token overlap on id/title/description
         if not candidates:
             req_tokens = set(_split_id_tokens(req_lower))
-            best: Optional[tuple[int, str]] = None
+            best_overlap = 0
             for cid, t, d in available:
                 tokens = (
                     set(_split_id_tokens(cid.lower()))
@@ -731,13 +743,23 @@ def _remap_collections_for_pro(
                     | set(_split_id_tokens(d))
                 )
                 overlap = len(req_tokens & tokens)
-                if overlap and (best is None or overlap > best[0]):
-                    best = (overlap, cid)
-            if best:
-                candidates = [best[1]]
-        for c in candidates:
-            if c not in seen:
-                out.append(c); seen.add(c)
+                if overlap > best_overlap:
+                    best_overlap = overlap
+                    candidates = [cid]
+                elif overlap and overlap == best_overlap:
+                    candidates.append(cid)
+        if candidates:
+            best_candidate = min(
+                candidates,
+                key=lambda candidate: (
+                    abs(len(candidate) - len(req)),
+                    len(candidate),
+                    candidate.casefold(),
+                ),
+            )
+            if best_candidate not in seen:
+                out.append(best_candidate)
+                seen.add(best_candidate)
     return out
 
 
@@ -757,8 +779,8 @@ def _normalize_stac_datetime(dt_str: Optional[str]) -> Optional[str]:
 
     Behavior:
       * ``None`` / empty / ``..`` (open bound) pass through unchanged.
-      * ``YYYY-MM-DD`` expands to ``YYYY-MM-DDT00:00:00Z`` (start) or
-        ``YYYY-MM-DDT23:59:59Z`` (end of a range).
+            * A single ``YYYY-MM-DD`` expands to a full-day interval.
+            * Date-only range bounds expand to start-of-day and end-of-day.
       * Already-RFC3339 (contains ``T``/``t``) passes through unchanged.
       * Any other shape passes through unchanged -- if the server still
         rejects it, the caller surfaces the error verbatim.
@@ -779,10 +801,160 @@ def _normalize_stac_datetime(dt_str: Optional[str]) -> Optional[str]:
     if "/" in dt_str:
         start, _, end = dt_str.partition("/")
         return f"{_one(start, end=False)}/{_one(end, end=True)}"
-    return _one(dt_str, end=False)
+    value = dt_str.strip()
+    if len(value) == 10 and value[4] == "-" and value[7] == "-":
+        return f"{_one(value, end=False)}/{_one(value, end=True)}"
+    return _one(value, end=False)
 
 
-async def execute_direct_stac_search(stac_query: Dict[str, Any], stac_endpoint: str = "planetary_computer", original_query: str = None) -> Dict[str, Any]:
+def _router_action_for_v2_load(req_body: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Return the authoritative legacy bridge action for a v2 LOAD turn."""
+    if not req_body.get("_v2_load_turn"):
+        return None
+    inspection = req_body.get("_v2_post_load_inspection")
+    collection_id = (
+        str(inspection.get("collection_id"))
+        if isinstance(inspection, dict) and inspection.get("collection_id")
+        else None
+    )
+    return {
+        "action_type": "stac_search",
+        "needs_stac_search": True,
+        "needs_vision_analysis": False,
+        "use_current_location": True,
+        "collection_hint": collection_id,
+        "routing_reason": "v2_load_authoritative",
+    }
+
+
+def _extract_stac_datetime_fallback(query: str) -> Optional[str]:
+    """Extract a deterministic date range when semantic translation misses it."""
+    import calendar
+    import re
+
+    query_lower = query.casefold()
+    iso_dates = re.findall(r"(?<!\d)((?:19|20)\d{2}-\d{2}-\d{2})(?!\d)", query_lower)
+    if len(iso_dates) >= 2:
+        return f"{iso_dates[0]}/{iso_dates[1]}"
+    if iso_dates:
+        return iso_dates[0]
+
+    month_names = {
+        "january": 1,
+        "february": 2,
+        "march": 3,
+        "april": 4,
+        "may": 5,
+        "june": 6,
+        "july": 7,
+        "august": 8,
+        "september": 9,
+        "october": 10,
+        "november": 11,
+        "december": 12,
+    }
+    month_year = re.search(
+        r"(?:from|in|for|of)?\s*"
+        r"(january|february|march|april|may|june|july|august|"
+        r"september|october|november|december)\s+((?:19|20)\d{2})",
+        query_lower,
+    )
+    if month_year:
+        month_name, year = month_year.groups()
+        month = month_names[month_name]
+        last_day = calendar.monthrange(int(year), month)[1]
+        return f"{year}-{month:02d}-01/{year}-{month:02d}-{last_day:02d}"
+
+    year_match = re.search(
+        r"(?:from|in|for)\s+((?:19|20)\d{2})(?!-\d{2})\b",
+        query_lower,
+    )
+    if year_match:
+        year = year_match.group(1)
+        return f"{year}-01-01/{year}-12-31"
+    return None
+
+
+def _requests_exact_stac_date(query: str) -> bool:
+    """Return whether the query explicitly requests one exact ISO date."""
+    iso_dates = re.findall(
+        r"(?<!\d)((?:19|20)\d{2}-\d{2}-\d{2})(?!\d)",
+        query.casefold(),
+    )
+    if len(iso_dates) != 1:
+        return False
+    date = re.escape(iso_dates[0])
+    non_exact_qualifier = re.search(
+        rf"\b(?:near|around|about|approximately|closest\s+to|before|after|"
+        rf"since|until|through|from|between|(?:up\s+)?to)\s+"
+        rf"(?:the\s+)?(?:date\s+)?{date}\b",
+        query,
+        re.IGNORECASE,
+    )
+    return non_exact_qualifier is None
+
+
+def _is_static_stac_collection(collection_id: str) -> bool:
+    """Return whether a collection profile has no temporal dimension."""
+    profile = _COLLECTION_PROFILES.get(collection_id) or {}
+    if profile.get("temporal", {}).get("static") is True:
+        return True
+    capabilities = (profile.get("query_rules") or {}).get("capabilities") or {}
+    return (
+        capabilities.get("temporal_filtering") is False
+        or capabilities.get("static_data") is True
+    )
+
+
+def _should_apply_stac_datetime_fallback(
+    stac_query: Dict[str, Any],
+    natural_query: str,
+) -> bool:
+    """Return whether prose dates should fill a missing STAC datetime."""
+    if stac_query.get("datetime") or not natural_query:
+        return False
+    collections = stac_query.get("collections") or []
+    return not (
+        collections
+        and all(_is_static_stac_collection(collection) for collection in collections)
+    )
+
+
+def _sanitize_static_stac_query(stac_query: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove temporal fields that static collection items do not expose."""
+    collections = stac_query.get("collections") or []
+    if not collections or not all(
+        _is_static_stac_collection(collection) for collection in collections
+    ):
+        return stac_query
+    sanitized = dict(stac_query)
+    sanitized.pop("datetime", None)
+    sortby = sanitized.get("sortby")
+    if isinstance(sortby, list):
+        retained = [
+            entry
+            for entry in sortby
+            if not (
+                isinstance(entry, dict)
+                and str(entry.get("field") or "")
+                .removeprefix("properties.")
+                .casefold()
+                == "datetime"
+            )
+        ]
+        if retained:
+            sanitized["sortby"] = retained
+        else:
+            sanitized.pop("sortby", None)
+    return sanitized
+
+
+async def execute_direct_stac_search(
+    stac_query: Dict[str, Any],
+    stac_endpoint: str = "planetary_computer",
+    original_query: str = None,
+    locked_collection: Optional[str] = None,
+) -> Dict[str, Any]:
     """Execute STAC search against specified endpoint (Planetary Computer or VEDA)
     
     Args:
@@ -792,6 +964,9 @@ async def execute_direct_stac_search(stac_query: Dict[str, Any], stac_endpoint: 
     """
     try:
         stac_url, stac_endpoint, is_pro = _resolve_stac_endpoint(stac_endpoint)
+        if locked_collection:
+            stac_query = dict(stac_query)
+            stac_query["collections"] = [locked_collection]
 
         # ------------------------------------------------------------------
         # v2 collection selector (Phase 3 wiring).
@@ -811,7 +986,7 @@ async def execute_direct_stac_search(stac_query: Dict[str, Any], stac_endpoint: 
         # safe to ship before flipping the env var.
         # ------------------------------------------------------------------
         v2_selection = None
-        if original_query:
+        if original_query and not locked_collection:
             try:
                 from collection_selector import selector_mode, select_collection
                 mode_flag = selector_mode()
@@ -831,6 +1006,8 @@ async def execute_direct_stac_search(stac_query: Dict[str, Any], stac_endpoint: 
             except Exception as exc:
                 logger.warning("[COLLECTION-SELECTOR] dispatch failed (continuing with v1): %s", exc)
                 v2_selection = None
+
+        stac_query = _sanitize_static_stac_query(stac_query)
 
         # Normalize datetime ONCE for every endpoint. Public PC tolerates
         # date-only shorthand; GeoCatalog (pgstac strict) rejects it with
@@ -969,6 +1146,12 @@ async def execute_direct_stac_search(stac_query: Dict[str, Any], stac_endpoint: 
                         "results": {"type": "FeatureCollection", "features": []},
                     }
                 pro_features = pro_payload.get('features', [])
+                from tile_selector import TileSelector
+
+                pro_features = TileSelector.prioritize_center_covering_features(
+                    pro_features,
+                    stac_query.get("bbox"),
+                )
                 logger.info(f"[OK] STAC RESULTS (Pro): {len(pro_features)} items")
                 return {
                     "success": True,
@@ -1550,7 +1733,8 @@ async def try_alternative_queries(
     original_stac_params: Dict[str, Any],
     translator: Any,
     stac_endpoint: str,
-    requested_bbox: Optional[List[float]]
+    requested_bbox: Optional[List[float]],
+    locked_collection: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     [NEW] Automatically try progressively relaxed queries to find available alternatives.
@@ -1606,7 +1790,11 @@ async def try_alternative_queries(
             
             # Try search
             try:
-                alt_response = await execute_direct_stac_search(alt_query, stac_endpoint)
+                alt_response = await execute_direct_stac_search(
+                    alt_query,
+                    stac_endpoint,
+                    locked_collection=locked_collection,
+                )
                 
                 if alt_response.get("success"):
                     alt_features = alt_response.get("results", {}).get("features", [])
@@ -1671,7 +1859,11 @@ async def try_alternative_queries(
     # RELAXATION 2: Try expanding date range
     datetime_str = original_stac_query.get("datetime", "")
     logger.info(f"[DATE] RELAXATION 2: Checking date range expansion for datetime='{datetime_str}'")
-    if datetime_str and "/" in datetime_str:
+    if (
+        datetime_str
+        and "/" in datetime_str
+        and not _requests_exact_stac_date(original_query)
+    ):
         try:
             from datetime import datetime as dt, timedelta
             start, end = datetime_str.split("/")
@@ -1697,7 +1889,11 @@ async def try_alternative_queries(
                 logger.info(f"[DATE] Alt query collections: {alt_query.get('collections')}, bbox: {alt_query.get('bbox')}")
                 
                 try:
-                    alt_response = await execute_direct_stac_search(alt_query, stac_endpoint)
+                    alt_response = await execute_direct_stac_search(
+                        alt_query,
+                        stac_endpoint,
+                        locked_collection=locked_collection,
+                    )
                     logger.info(f"[DATE] Alt response success: {alt_response.get('success')}, features: {len(alt_response.get('results', {}).get('features', []))}")
                     
                     if alt_response.get("success"):
@@ -1762,7 +1958,11 @@ async def try_alternative_queries(
     
     # Only fall back for Sentinel -> Landsat (same optical imagery category)
     # Do NOT fall back for HLS - user explicitly requested harmonized data
-    if any("sentinel" in c.lower() for c in original_collections) and not any("hls" in c.lower() for c in original_collections):
+    if (
+        not locked_collection
+        and any("sentinel" in c.lower() for c in original_collections)
+        and not any("hls" in c.lower() for c in original_collections)
+    ):
         alternative_collection_sets.append({
             "collections": ["landsat-c2-l2"],
             "name": "Landsat"
@@ -1775,7 +1975,11 @@ async def try_alternative_queries(
         alt_query["collections"] = alt_collections["collections"]
         
         try:
-            alt_response = await execute_direct_stac_search(alt_query, stac_endpoint)
+            alt_response = await execute_direct_stac_search(
+                alt_query,
+                stac_endpoint,
+                locked_collection=locked_collection,
+            )
             
             if alt_response.get("success"):
                 alt_features = alt_response.get("results", {}).get("features", [])
@@ -2148,12 +2352,17 @@ def build_stac_query(stac_params: Dict[str, Any]) -> Dict[str, Any]:
     # Add collections
     if stac_params.get('collections'):
         query['collections'] = stac_params['collections']
+
+    cols = stac_params.get('collections') or []
+    all_static = bool(cols) and all(_is_static_stac_collection(c) for c in cols)
     
     # Add temporal filter for ALL collections (including MODIS)
     # MODIS items use start_datetime/end_datetime but STAC API filters correctly
-    if stac_params.get('datetime'):
+    if stac_params.get('datetime') and not all_static:
         query['datetime'] = stac_params['datetime']
         logger.info(f"[DATE] Adding datetime filter to STAC query: {stac_params['datetime']}")
+    elif stac_params.get('datetime'):
+        logger.info(f"[DATE] Ignoring datetime for static collection(s): {cols}")
     
     # Add spatial filter (bbox) - required for MODIS!
     if stac_params.get('bbox'):
@@ -2176,16 +2385,6 @@ def build_stac_query(stac_params: Dict[str, Any]) -> Dict[str, Any]:
         # misleading "No tiles matched ... try a different time range" error.
         # Detect via the unified profile registry and skip sortby when the
         # collection(s) are flagged static or have temporal_filtering disabled.
-        cols = stac_params.get('collections') or []
-
-        def _is_static_col(cid: str) -> bool:
-            prof = _COLLECTION_PROFILES.get(cid) or {}
-            if prof.get('temporal', {}).get('static') is True:
-                return True
-            caps = (prof.get('query_rules') or {}).get('capabilities') or {}
-            return caps.get('temporal_filtering') is False or caps.get('static_data') is True
-
-        all_static = bool(cols) and all(_is_static_col(c) for c in cols)
         if all_static:
             logger.info(f"[CHART] Skipping default sortby for static collection(s): {cols}")
         else:
@@ -2363,6 +2562,9 @@ def clean_tilejson_urls(stac_results: Dict[str, Any], is_pro: bool = False, user
             feature_is_pro_flag = bool(is_pro) or _feature_is_pro(feature)
 
             cleaned_feature = feature.copy()
+            cleaned_feature["_planetary_explorer_stac_mode"] = (
+                "pro" if feature_is_pro_flag else "public"
+            )
             config = HybridRenderingSystem.get_render_config(
                 collection_id, query_context=user_query, is_pro=feature_is_pro_flag,
                 explicit_preset=explicit_preset,
@@ -2760,6 +2962,10 @@ async def get_config():
             "mpcPro": _env_flag("PE_FEATURE_MPC_PRO", default=False),
             "fabric": _env_flag("PE_FEATURE_FABRIC", default=False),
             "chatHistory": _env_flag("PE_FEATURE_CHAT_HISTORY", default=False),
+            "resilience": (
+                _env_flag("RESILIENCE_MVP", default=True)
+                and AGENT_FRAMEWORK_AVAILABLE
+            ),
             # Forecast agent is "available" when at least one weather
             # provider endpoint is configured (real Foundry endpoint or
             # the CPU weather stub). With none of these set the
@@ -3696,7 +3902,11 @@ async def pro_mosaic_tilejson_proxy(request: Request):
 
     upstream_minzoom: Optional[int] = None
     try:
-        from pro_stac_client import get_pro_data_base, _auth_headers as _pro_auth
+        from pro_stac_client import (
+            PRO_API_VERSION,
+            _auth_headers as _pro_auth,
+            get_pro_data_base,
+        )
         pro_data_base = get_pro_data_base()
         if pro_data_base:
             upstream_tj = (
@@ -5106,6 +5316,9 @@ async def unified_query_processor(request: Request):
                 req_body["_v2_load_stac_query"] = _agent_stac_query
             req_body["_v2_load_structured"] = v2_result.get("structured") or {}
             req_body["_v2_load_decision"] = v2_result.get("decision")
+            _post_load_inspection = v2_result.get("post_load_inspection")
+            if isinstance(_post_load_inspection, dict):
+                req_body["_v2_post_load_inspection"] = _post_load_inspection
             logger.info(
                 "[PIPELINE] LOAD → handing off to STAC tooling. agent_answer_len=%d "
                 "stac_query=%r",
@@ -5175,7 +5388,12 @@ async def unified_query_processor(request: Request):
             
             # Execute STAC search (the only step that MUST hit the network)
             qs_stac_endpoint = _apply_stac_mode_override("planetary_computer", req_body)
-            qs_stac_response = await execute_direct_stac_search(qs_stac_query, qs_stac_endpoint, original_query=natural_query)
+            qs_stac_response = await execute_direct_stac_search(
+                qs_stac_query,
+                qs_stac_endpoint,
+                original_query=natural_query,
+                locked_collection=qs_location['collections'][0],
+            )
             
             qs_features = []
             if qs_stac_response.get("success"):
@@ -5424,7 +5642,13 @@ async def unified_query_processor(request: Request):
                 logger.info(f"[PIN] EARLY BBOX OVERRIDE ({override_reason_early}): Using session bbox for {session_ctx.get('last_location')}: center=({corrected_bounds['center_lat']:.4f}, {corrected_bounds['center_lng']:.4f})")
         
         # Continue with regular STAC search flow
-        router_action = None
+        router_action = _router_action_for_v2_load(req_body)
+        if router_action:
+            logger.info(
+                "[PIPELINE-V2] LOAD owns legacy bridge -> stac_search "
+                "(collection=%r)",
+                router_action.get("collection_hint"),
+            )
         
         # ========================================================================
         # [ROUTE] ROUTER AGENT: Intelligent Query Classification and Routing
@@ -6607,7 +6831,14 @@ async def unified_query_processor(request: Request):
                 
                 # For contextual queries, skip STAC search and generate direct educational response
                 # intent_type = "contextual" for information/education queries (e.g., "How do hurricanes form?")
-                if intent_type == "contextual" and confidence > 0.8 and not classification.get('needs_satellite_data', False):
+                if (
+                    intent_type == "contextual"
+                    and confidence > 0.8
+                    and not classification.get('needs_satellite_data', False)
+                    and not isinstance(
+                        req_body.get("_v2_post_load_inspection"), dict
+                    )
+                ):
                     logger.info("[MSG] CONTEXTUAL REQUEST: Skipping STAC search, generating educational response...")
                     
                     # ================================================================
@@ -6688,6 +6919,8 @@ async def unified_query_processor(request: Request):
             if intent_type in ["vision", "contextual"]:
                 skip_collection_mapping = True
                 logger.info(f"[SKIP] Skipping collection mapping for {intent_type} query (no STAC search needed)")
+        if isinstance(req_body.get("_v2_post_load_inspection"), dict):
+            skip_collection_mapping = False
         
         if not skip_collection_mapping:
             if not AGENT_FRAMEWORK_AVAILABLE:
@@ -6700,6 +6933,23 @@ async def unified_query_processor(request: Request):
                     "limit": 20,  # PERFORMANCE: Reduced from 100 to 20 for faster queries (3-5s improvement)
                     "original_query": natural_query
                 }
+
+                _post_load_inspection = req_body.get(
+                    "_v2_post_load_inspection"
+                )
+                if isinstance(_post_load_inspection, dict):
+                    from pipeline.stac_inspection import (
+                        apply_collection_inspection_overrides,
+                    )
+
+                    stac_params = apply_collection_inspection_overrides(
+                        stac_params=stac_params,
+                        collection_id=str(
+                            _post_load_inspection.get("collection_id") or ""
+                        ),
+                        pin=pin,
+                    )
+                    collections = list(stac_params.get("collections") or [])
                 
                 if collections:
                     stac_query = build_stac_query(stac_params)
@@ -6781,6 +7031,31 @@ async def unified_query_processor(request: Request):
                     else:
                         # Use the semantic translator's translate_query method with pin and session_bbox fallback
                         stac_params = await translator.translate_query(natural_query, pin_location=pin, session_bbox=session_bbox)
+
+                    _post_load_inspection = req_body.get(
+                        "_v2_post_load_inspection"
+                    )
+                    if (
+                        isinstance(_post_load_inspection, dict)
+                        and isinstance(stac_params, dict)
+                    ):
+                        from pipeline.stac_inspection import (
+                            apply_collection_inspection_overrides,
+                        )
+
+                        stac_params = apply_collection_inspection_overrides(
+                            stac_params=stac_params,
+                            collection_id=str(
+                                _post_load_inspection.get("collection_id") or ""
+                            ),
+                            pin=pin,
+                        )
+                        logger.info(
+                            "[V2] post-load inspection pinned STAC translation "
+                            "to collection=%s bbox=%s",
+                            stac_params.get("collections"),
+                            stac_params.get("bbox"),
+                        )
                     
                     # ========================================================================
                     # [ALERT] LOCATION VALIDATION: Check if location is required but missing
@@ -6824,48 +7099,13 @@ async def unified_query_processor(request: Request):
                         # use regex extraction as a deterministic fallback. This catches cases
                         # where the GPT datetime_translation_agent returns None or fails.
                         # ========================================================================
-                        if not stac_query.get('datetime') and natural_query:
-                            import re, calendar as cal_mod
-                            query_lower = natural_query.lower()
-                            month_names = {
-                                'january': 1, 'february': 2, 'march': 3, 'april': 4,
-                                'may': 5, 'june': 6, 'july': 7, 'august': 8,
-                                'september': 9, 'october': 10, 'november': 11, 'december': 12
-                            }
-                            extracted_datetime = None
-                            
-                            # Pattern 1: "from/in/for MONTH YEAR" (e.g., "from December 2018")
-                            month_year_match = re.search(
-                                r'(?:from|in|for|of)\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})',
-                                query_lower
+                        if _should_apply_stac_datetime_fallback(
+                            stac_query,
+                            natural_query,
+                        ):
+                            extracted_datetime = _extract_stac_datetime_fallback(
+                                natural_query
                             )
-                            if month_year_match:
-                                m_name, y_str = month_year_match.group(1), month_year_match.group(2)
-                                m_num = month_names[m_name]
-                                y_num = int(y_str)
-                                last_day = cal_mod.monthrange(y_num, m_num)[1]
-                                extracted_datetime = f"{y_str}-{m_num:02d}-01/{y_str}-{m_num:02d}-{last_day:02d}"
-                            
-                            # Pattern 2: "MONTH YEAR" without preposition (e.g., "December 2018")
-                            if not extracted_datetime:
-                                month_year_match2 = re.search(
-                                    r'(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})',
-                                    query_lower
-                                )
-                                if month_year_match2:
-                                    m_name, y_str = month_year_match2.group(1), month_year_match2.group(2)
-                                    m_num = month_names[m_name]
-                                    y_num = int(y_str)
-                                    last_day = cal_mod.monthrange(y_num, m_num)[1]
-                                    extracted_datetime = f"{y_str}-{m_num:02d}-01/{y_str}-{m_num:02d}-{last_day:02d}"
-                            
-                            # Pattern 3: "from/in/for YEAR" (e.g., "from 2018")
-                            if not extracted_datetime:
-                                year_match = re.search(r'(?:from|in|for)\s+((?:19|20)\d{2})\b', query_lower)
-                                if year_match:
-                                    y_str = year_match.group(1)
-                                    extracted_datetime = f"{y_str}-01-01/{y_str}-12-31"
-                            
                             if extracted_datetime:
                                 stac_query['datetime'] = extracted_datetime
                                 stac_params['datetime'] = extracted_datetime
@@ -6934,6 +7174,7 @@ async def unified_query_processor(request: Request):
                 # live inventory lookup, so lookalike tokens (e.g.
                 # ``sentinel-2`` when only ``sentinel-2-l2a`` exists in
                 # the catalog) cannot clobber a correct SK pick.
+                _post_load_inspection = req_body.get("_v2_post_load_inspection")
                 try:
                     from collection_index import get_collection_index as _get_idx
                     from collection_selector import (
@@ -6983,12 +7224,16 @@ async def unified_query_processor(request: Request):
                         )
 
                     # ---- Full selector pipeline (shadow / v2 only) ----
-                    _v2_sel = await record_shadow_decision(
-                        natural_query,
-                        _v2_mode,
-                        stac_query.get("collections") or [],
-                        log_fn=log_pipeline_step,
-                        session_id=pipeline_session_id,
+                    _v2_sel = (
+                        None
+                        if isinstance(_post_load_inspection, dict)
+                        else await record_shadow_decision(
+                            natural_query,
+                            _v2_mode,
+                            stac_query.get("collections") or [],
+                            log_fn=log_pipeline_step,
+                            session_id=pipeline_session_id,
+                        )
                     )
                     if _sel_mode() == "v2" and _v2_sel and _v2_sel.collection_id:
                         logger.info(
@@ -7026,8 +7271,30 @@ async def unified_query_processor(request: Request):
                     # Selector failures must NEVER break the request path.
                     logger.warning("[COLLECTION-SELECTOR] integration error: %s", _sel_exc)
 
+                if isinstance(_post_load_inspection, dict):
+                    _inspection_collection = str(
+                        _post_load_inspection.get("collection_id") or ""
+                    )
+                    if _inspection_collection:
+                        stac_query["collections"] = [_inspection_collection]
+                        logger.info(
+                            "[V2] post-load inspection preserved collection=%s "
+                            "after selector routing",
+                            _inspection_collection,
+                        )
+
                 # Pass original_query for smart deduplication (removes duplicate grid cells)
-                stac_response = await execute_direct_stac_search(stac_query, stac_endpoint, original_query=natural_query)
+                stac_response = await execute_direct_stac_search(
+                    stac_query,
+                    stac_endpoint,
+                    original_query=natural_query,
+                    locked_collection=(
+                        str(_post_load_inspection.get("collection_id"))
+                        if isinstance(_post_load_inspection, dict)
+                        and _post_load_inspection.get("collection_id")
+                        else None
+                    ),
+                )
                 
                 if stac_response.get("success"):
                     raw_features = stac_response.get("results", {}).get("features", [])
@@ -7194,12 +7461,17 @@ async def unified_query_processor(request: Request):
                                 stac_params,
                                 translator,
                                 stac_endpoint,
-                                requested_bbox
+                                requested_bbox,
+                                locked_collection=(
+                                    str(_post_load_inspection.get("collection_id"))
+                                    if isinstance(_post_load_inspection, dict)
+                                    and _post_load_inspection.get("collection_id")
+                                    else None
+                                ),
                             )
                             logger.info(f"[SYNC] Alternative result: success={alternative_result.get('success')}, features={len(alternative_result.get('features', []))}")
                         except Exception as alt_ex:
                             logger.error(f"[SYNC] EXCEPTION in try_alternative_queries: {type(alt_ex).__name__}: {alt_ex}")
-                            import traceback
                             logger.error(f"[SYNC] Traceback: {traceback.format_exc()}")
                             alternative_result = {"success": False, "features": []}
                         
@@ -7798,6 +8070,11 @@ async def unified_query_processor(request: Request):
         # legacy/dispatch paths that pre-date the marker.
         _v2_load_turn = bool(req_body.get("_v2_load_turn") or req_body.get("_v2_load_answer"))
         if _v2_load_turn:
+            _render_stac_mode = (
+                "pro"
+                if stac_endpoint == "planetary_computer_pro"
+                else "public"
+            )
             _render_loc = (
                 (stac_params.get("location_name") if stac_params else None)
                 or (req_body.get("location_name") if isinstance(req_body, dict) else None)
@@ -7809,7 +8086,7 @@ async def unified_query_processor(request: Request):
                 collections=_render_cols,
                 location_name=_render_loc,
                 requested_collections=_render_cols,
-                stac_mode=(req_body.get("stac_mode") if isinstance(req_body, dict) else None),
+                stac_mode=_render_stac_mode,
             )
             logger.info(
                 "[V2] LOAD turn -> rebuilt response_message from rendered "
@@ -7819,6 +8096,27 @@ async def unified_query_processor(request: Request):
                 _render_cols,
                 len(response_message),
             )
+
+            _post_load_inspection = req_body.get("_v2_post_load_inspection")
+            if isinstance(_post_load_inspection, dict):
+                from pipeline.stac_inspection import (
+                    build_collection_asset_inspection_summary,
+                )
+
+                response_message = build_collection_asset_inspection_summary(
+                    features=features or [],
+                    collection_id=str(
+                        _post_load_inspection.get("collection_id") or collection_id
+                    ),
+                    render_assets=(render_profile or {}).get("assets"),
+                    render_summary=response_message,
+                    stac_mode=_render_stac_mode,
+                )
+                logger.info(
+                    "[V2] LOAD turn -> appended post-render asset inspection "
+                    "for collection=%s",
+                    _post_load_inspection.get("collection_id"),
+                )
 
         # Append MODIS zoom hint when any loaded collection is MODIS
         response_message = _append_modis_zoom_hint(
@@ -7973,6 +8271,11 @@ async def unified_query_processor(request: Request):
                 stac_items_for_vision.append({
                     "id": f.get("id"),
                     "collection": f.get("collection"),
+                    "_planetary_explorer_stac_mode": (
+                        "pro"
+                        if stac_endpoint == "planetary_computer_pro"
+                        else "public"
+                    ),
                     "bbox": f.get("bbox"),
                     "properties": {
                         "datetime": f.get("properties", {}).get("datetime"),
@@ -8523,6 +8826,11 @@ async def geoint_mobility_analysis(request: Request):
             )
         
         logger.info(f"Validated coordinates: ({latitude}, {longitude})")
+        if (latitude_b is None) != (longitude_b is None):
+            raise HTTPException(
+                status_code=400,
+                detail="latitude_b and longitude_b must be provided together.",
+            )
         if latitude_b is not None and longitude_b is not None:
             if not (-90 <= latitude_b <= 90):
                 raise HTTPException(status_code=400, detail=f"Invalid latitude_b: {latitude_b}. Must be between -90 and 90.")
@@ -8530,18 +8838,89 @@ async def geoint_mobility_analysis(request: Request):
                 raise HTTPException(status_code=400, detail=f"Invalid longitude_b: {longitude_b}. Must be between -180 and 180.")
             logger.info(f"Point B coordinates: ({latitude_b}, {longitude_b})")
         
-        # Call mobility_analysis_agent (new agent-based architecture)
-        from geoint.agents import mobility_analysis_agent
-        
-        analysis_result = await mobility_analysis_agent(
-            latitude=latitude,
-            longitude=longitude,
-            screenshot_base64=screenshot_base64,
-            user_query=user_query,
-            include_vision=True,
-            latitude_b=latitude_b,
-            longitude_b=longitude_b
-        )
+        if latitude_b is not None and longitude_b is not None:
+            import asyncio
+            from geoint.mobility_tools import analyze_two_point_traverse
+
+            timeout_seconds = min(
+                45.0,
+                max(5.0, float(os.getenv("MOBILITY_DIRECT_TIMEOUT_SECONDS", "45"))),
+            )
+            try:
+                raw_result = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        analyze_two_point_traverse,
+                        latitude,
+                        longitude,
+                        latitude_b,
+                        longitude_b,
+                    ),
+                    timeout=timeout_seconds,
+                )
+            except asyncio.TimeoutError:
+                raise HTTPException(
+                    status_code=504,
+                    detail=(
+                        "Two-point mobility analysis timed out before the ingress "
+                        "retry deadline. Try a shorter route or retry after STAC "
+                        "rate limits clear."
+                    ),
+                )
+            traverse = json.loads(raw_result)
+            if traverse.get("error"):
+                if traverse.get("retryable") is True:
+                    return _pre_dispatch_retry_response(traverse["error"])
+                raise HTTPException(status_code=502, detail=traverse["error"])
+            if traverse.get("complete") is not True:
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        "Two-point mobility analysis did not return complete "
+                        "geospatial coverage before its bounded deadline."
+                    ),
+                )
+            route = traverse.get("route") or {}
+            corridor = traverse.get("corridor") or {}
+            road_route = traverse.get("road_route") or {}
+            sources = sorted({
+                *(((traverse.get("origin") or {}).get("data_sources")) or []),
+                *(((traverse.get("destination") or {}).get("data_sources")) or []),
+            })
+            response_lines = [
+                "## Two-point mobility assessment",
+                "",
+                f"- Direct distance: {route.get('distance_km', 'unavailable')} km "
+                f"at {route.get('bearing_degrees', 'unavailable')} degrees.",
+                f"- Corridor classification: {corridor.get('overall_status', 'UNKNOWN')} "
+                f"across {corridor.get('waypoints_sampled', 0)} waypoint(s).",
+                f"- Road route: {'available' if road_route.get('road_route_available') else road_route.get('reason', 'unavailable')}.",
+                f"- Data sources: {', '.join(sources) if sources else 'partial public geospatial coverage'}.",
+                "",
+                "Use this as a planning aid; verify routes, hazards, weather, and access with authoritative local sources before travel.",
+            ]
+            analysis_result = {
+                "agent": "mobility_analysis_agent",
+                "analysis_type": "two_point_traverse",
+                "response": "\n".join(response_lines),
+                "summary": "\n".join(response_lines),
+                "tool_calls": [
+                    {"tool": "analyze_two_point_traverse", "result": traverse}
+                ],
+                "location": {"latitude": latitude, "longitude": longitude},
+                "destination": {"latitude": latitude_b, "longitude": longitude_b},
+                "data_sources": sources,
+            }
+        else:
+            # Keep the conversational agent for single-point exploratory use.
+            from geoint.agents import mobility_analysis_agent
+
+            analysis_result = await mobility_analysis_agent(
+                latitude=latitude,
+                longitude=longitude,
+                screenshot_base64=screenshot_base64,
+                user_query=user_query,
+                include_vision=True,
+            )
         
         logger.info(f"Mobility agent completed")
         
@@ -8721,19 +9100,8 @@ async def geoint_terrain_analysis(request: Request):
         if agent_result is None:
             logger.info(f"[MTN] [{request_id}] Using direct terrain tool fallback (PE lockdown)")
             from geoint.terrain_tools import get_elevation_analysis, get_slope_analysis, find_flat_areas, analyze_flood_risk, analyze_environmental_sensitivity
-            from openai import AsyncAzureOpenAI
-            from azure.identity import DefaultAzureCredential, get_bearer_token_provider as _gbt
-            _aoai_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
-            if not _aoai_endpoint:
-                raise ValueError("AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT environment variable is required")
-            _terrain_client = AsyncAzureOpenAI(
-                azure_endpoint=_aoai_endpoint,
-                api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-                azure_ad_token_provider=_gbt(
-                    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-                ) if not os.environ.get("AZURE_OPENAI_API_KEY") else None,
-                api_version="2024-12-01-preview",
-            )
+            from pipeline._aoai import get_aoai_client
+            _terrain_client = get_aoai_client()
             
             tool_results = {}
             tool_calls_made = []
@@ -8932,6 +9300,9 @@ async def geoint_terrain_chat(request: Request):
         if result is None:
             logger.info(f"[MSG] [{request_id}] Using direct terrain tool fallback (PE lockdown)")
             from geoint.terrain_tools import get_elevation_analysis, get_slope_analysis, find_flat_areas, analyze_flood_risk
+            from pipeline._aoai import get_aoai_client
+
+            terrain_client = get_aoai_client()
             
             tool_results = {}
             for name, fn in [("elevation", get_elevation_analysis), ("slope", get_slope_analysis),
@@ -8943,10 +9314,10 @@ async def geoint_terrain_chat(request: Request):
             
             tool_summary = "\n\n".join([f"### {k.replace('_', ' ').title()}\n{v}" for k, v in tool_results.items() if v])
             
-            # Synthesize with _terrain_client
+            # Synthesize the measured tool results.
             synthesis_prompt = f"User question: {message}\n\nTerrain data for ({latitude:.4f}, {longitude:.4f}):\n{tool_summary}"
             try:
-                synth_resp = await _terrain_client.chat.completions.create(
+                synth_resp = await terrain_client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5"),
                     messages=[
                         {"role": "system", "content": "You are a terrain analysis expert. Synthesize the provided DEM/terrain tool data into a clear, concise answer in <=6 short bullets."},
@@ -9399,6 +9770,142 @@ async def clear_vision_chat_session(session_id: str):
 # NOTE: Duplicate /api/geoint/mobility endpoint removed (was preventing terrain endpoint from registering)
 # The correct mobility endpoint is at line ~2266
 
+
+def _stac_item_covers_point(
+    item: dict[str, Any],
+    latitude: float,
+    longitude: float,
+) -> bool:
+    """Return whether a STAC item's server-provided bounds cover a point."""
+    bbox = item.get("bbox")
+    return (
+        isinstance(bbox, list)
+        and len(bbox) >= 4
+        and all(isinstance(value, (int, float)) for value in bbox[:4])
+        and float(bbox[0]) <= longitude <= float(bbox[2])
+        and float(bbox[1]) <= latitude <= float(bbox[3])
+    )
+
+
+async def _resolve_mpc_pro_scene_ref(
+    stac_items: Any,
+    latitude: float,
+    longitude: float,
+) -> dict[str, Any] | None:
+    """Resolve one client scene reference to a covering authenticated Pro item."""
+    from pro_stac_client import get_pro_stac_base, pro_get_item_sync
+
+    if (
+        not _env_flag("PE_FEATURE_MPC_PRO", default=False)
+        or not get_pro_stac_base()
+        or not isinstance(stac_items, list)
+        or not stac_items
+        or len(stac_items) > 20
+    ):
+        return None
+
+    scene_refs: list[tuple[str, str]] = []
+    for item in stac_items:
+        if not isinstance(item, dict):
+            return None
+        collection_id = str(item.get("collection") or "").strip()
+        item_id = str(item.get("id") or "").strip()
+        if not collection_id or not item_id:
+            return None
+        scene_refs.append((collection_id, item_id))
+
+    verified_items = await asyncio.gather(*(
+        asyncio.to_thread(pro_get_item_sync, collection_id, item_id)
+        for collection_id, item_id in scene_refs
+    ))
+    for (collection_id, item_id), item in zip(scene_refs, verified_items):
+        if (
+            isinstance(item, dict)
+            and str(item.get("id") or "") == item_id
+            and str(item.get("collection") or "") == collection_id
+            and _stac_item_covers_point(item, latitude, longitude)
+        ):
+            return item
+    return None
+
+
+async def _render_mpc_pro_scene_tile(
+    item: dict[str, Any],
+    latitude: float,
+    longitude: float,
+) -> tuple[str, str]:
+    """Render a trusted GeoCatalog item tile at a point and return base64 data."""
+    import base64
+    import math
+    from urllib.parse import quote, urlencode
+
+    import yarl
+
+    from pro_stac_client import (
+        PRO_API_VERSION,
+        _auth_headers,
+        get_pro_data_base,
+    )
+
+    collection_id = str(item.get("collection") or "")
+    item_id = str(item.get("id") or "")
+    pro_data_base = get_pro_data_base()
+    if not pro_data_base or not collection_id or not item_id:
+        raise RuntimeError("Verified MPC Pro scene cannot be rendered")
+
+    assets, asset_bidx, rescale, color_formula = _infer_pro_render_defaults(
+        collection_id=collection_id,
+        item_doc=item,
+    )
+    zoom = 17
+    tile_count = 2**zoom
+    safe_latitude = max(-85.05112878, min(85.05112878, latitude))
+    tile_x = int((longitude + 180.0) / 360.0 * tile_count)
+    latitude_radians = math.radians(safe_latitude)
+    tile_y = int(
+        (
+            1.0
+            - math.asinh(math.tan(latitude_radians)) / math.pi
+        )
+        / 2.0
+        * tile_count
+    )
+    tile_x = max(0, min(tile_count - 1, tile_x))
+    tile_y = max(0, min(tile_count - 1, tile_y))
+
+    query: list[tuple[str, str]] = [
+        ("api-version", PRO_API_VERSION),
+        *(("assets", asset) for asset in assets),
+        *(("asset_bidx", band) for band in asset_bidx),
+    ]
+    if rescale:
+        query.append(("rescale", rescale))
+    if color_formula:
+        query.append(("color_formula", color_formula))
+    tile_url = (
+        f"{pro_data_base.rstrip('/')}/collections/"
+        f"{quote(collection_id, safe='')}/items/{quote(item_id, safe='')}"
+        f"/tiles/WebMercatorQuad/{zoom}/{tile_x}/{tile_y}@2x"
+        f"?{urlencode(query)}"
+    )
+
+    headers = await _auth_headers()
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            yarl.URL(tile_url, encoded=True),
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=30.0),
+        ) as response:
+            image_bytes = await response.read()
+            media_type = response.headers.get("Content-Type", "").split(";", 1)[0]
+            if response.status != 200 or not media_type.startswith("image/"):
+                raise RuntimeError(
+                    f"MPC Pro tile render returned HTTP {response.status}"
+                )
+    if len(image_bytes) < 1_000:
+        raise RuntimeError("MPC Pro tile render returned an empty image")
+    return base64.b64encode(image_bytes).decode("ascii"), media_type
+
 @app.post("/api/geoint/building-damage")
 async def geoint_building_damage_analysis(request: Request):
     """
@@ -9406,10 +9913,10 @@ async def geoint_building_damage_analysis(request: Request):
     
     Structure damage assessment using GPT-5 Vision and satellite imagery.
     
-    When a screenshot is provided (user has loaded data on the map), analysis is
-    performed on the VISIBLE imagery—the loaded tiles—not independently-fetched
-    Sentinel-2.  When no screenshot is available the agent falls back to its own
-    satellite imagery retrieval via the Agent Service tools.
+    The client screenshot proves that the browser completed its map workflow,
+    but it is not trusted as analysis input. The server resolves a referenced
+    item through the configured GeoCatalog, verifies point coverage, renders
+    that exact Pro item with managed identity, and submits those bytes to vision.
     
     Request body:
     {
@@ -9417,7 +9924,9 @@ async def geoint_building_damage_analysis(request: Request):
         "longitude": float,
         "user_query": str (optional - user's question),
         "user_context": str (optional - legacy alias for user_query),
-        "screenshot": str (optional - base64 map screenshot),
+        "screenshot": str (required browser-readiness evidence; not analyzed),
+        "stac_mode": "pro",
+        "stac_items": list (MPC Pro items currently rendered on the map),
         "radius_miles": float (optional, default 5.0)
     }
     """
@@ -9426,7 +9935,9 @@ async def geoint_building_damage_analysis(request: Request):
         latitude = body.get("latitude")
         longitude = body.get("longitude")
         user_query = body.get("user_query") or body.get("user_context") or ""
-        screenshot = body.get("screenshot")
+        client_screenshot = body.get("screenshot")
+        stac_mode = str(body.get("stac_mode") or "").casefold()
+        stac_items = body.get("stac_items") or []
         radius_miles = body.get("radius_miles", 5.0)
         
         # Validation
@@ -9441,32 +9952,51 @@ async def geoint_building_damage_analysis(request: Request):
         
         if not (-180 <= longitude <= 180):
             raise HTTPException(status_code=400, detail=f"Invalid longitude: {longitude}")
+
+        verified_scene = None
+        if stac_mode == "pro" and isinstance(client_screenshot, str) and client_screenshot:
+            verified_scene = await _resolve_mpc_pro_scene_ref(
+                stac_items,
+                latitude,
+                longitude,
+            )
+        if verified_scene is None:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "Building Damage requires a rendered screenshot backed "
+                    "exclusively by loaded MPC Pro imagery."
+                ),
+            )
+        try:
+            screenshot, screenshot_media_type = await _render_mpc_pro_scene_tile(
+                verified_scene,
+                latitude,
+                longitude,
+            )
+        except Exception as render_error:
+            logger.warning("Building Damage: trusted Pro render failed: %s", render_error)
+            raise HTTPException(
+                status_code=502,
+                detail="Verified MPC Pro imagery could not be rendered for analysis.",
+            ) from render_error
         
         logger.info(f"Building Damage endpoint: ({latitude}, {longitude})")
-        logger.info(f"Building Damage: screenshot={'yes' if screenshot else 'no'}, query='{user_query[:100]}'" if user_query else "Building Damage: no query")
+        logger.info(
+            "Building Damage: trusted_scene=%s/%s, query=%r",
+            verified_scene.get("collection"),
+            verified_scene.get("id"),
+            user_query[:100],
+        )
         
         import time
         agent_start = time.time()
         
         # Create vision client for GPT-5 screenshot analysis
-        from openai import AsyncAzureOpenAI
-        from azure.identity import DefaultAzureCredential, get_bearer_token_provider as _gbt
-        _aoai_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
-        if not _aoai_endpoint:
-            raise ValueError("AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT environment variable is required")
-        _vision_client = AsyncAzureOpenAI(
-            azure_endpoint=_aoai_endpoint,
-            api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-            azure_ad_token_provider=_gbt(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-            ) if not os.environ.get("AZURE_OPENAI_API_KEY") else None,
-            api_version="2024-12-01-preview",
-        )
+        from pipeline._aoai import get_aoai_client
+        _vision_client = get_aoai_client()
         
-        # ── PATH 1: Screenshot provided — analyze the loaded map imagery ──
-        # When the user has loaded data (NAIP, Sentinel-2, Landsat, etc.) and
-        # the frontend captured a screenshot, analyze THAT imagery directly via
-        # GPT-5 Vision.  Do NOT fetch independent Sentinel-2 tiles.
+        # ── PATH 1: Analyze the trusted server-rendered MPC Pro tile ──
         if screenshot:
             logger.info("Building Damage: Analyzing loaded map imagery via screenshot")
             
@@ -9514,7 +10044,7 @@ async def geoint_building_damage_analysis(request: Request):
                         {"role": "system", "content": "You are a GEOINT Building Damage Assessment expert. Analyze the provided imagery and give structured damage assessments. Keep the response concise."},
                         {"role": "user", "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{clean_b64}", "detail": "low"}}
+                            {"type": "image_url", "image_url": {"url": f"data:{screenshot_media_type};base64,{clean_b64}", "detail": "low"}}
                         ]}
                     ],
                     temperature=1.0,
@@ -9533,17 +10063,26 @@ async def geoint_building_damage_analysis(request: Request):
                         "summary": response_text[:500],
                         "tool_calls": [{"tool": "gpt_vision_analysis"}],
                         "location": {"latitude": latitude, "longitude": longitude},
+                        "imagery_metadata": {
+                            "source": "MPC Pro server-rendered tile",
+                            "collection": verified_scene.get("collection"),
+                            "item_id": verified_scene.get("id"),
+                            "media_type": screenshot_media_type,
+                        },
                         "radius_miles": radius_miles,
                         "timestamp": datetime.utcnow().isoformat()
                     },
                     "timestamp": datetime.utcnow().isoformat()
                 }
             except Exception as vis_err:
-                logger.warning(f"Building Damage: Screenshot vision analysis failed: {vis_err}, falling back to Agent Service")
-                # Fall through to Agent Service path
+                logger.warning("Building Damage: trusted Pro vision analysis failed: %s", vis_err)
+                raise HTTPException(
+                    status_code=502,
+                    detail="Verified MPC Pro imagery could not be analyzed.",
+                ) from vis_err
         
-        # ── PATH 2: No screenshot — use Agent Service to fetch and analyze imagery ──
-        logger.info("Building Damage: No screenshot, using Agent Service with tool-based imagery fetch")
+        # ── PATH 2: Vision-call failure fallback ──
+        logger.info("Building Damage: Using Agent Service fallback after vision failure")
         analysis_result = None
         try:
             from geoint.agents import building_damage_agent
@@ -9584,7 +10123,7 @@ async def geoint_building_damage_analysis(request: Request):
             assess_result = await _assess_damage_async(latitude, longitude, radius_miles)
             classify_result = await _classify_severity_async(latitude, longitude)
             
-            # 2) If screenshot provided, analyze it with _vision_client
+            # 2) Analyze the same trusted server-rendered tile with _vision_client
             visual_analysis = None
             if screenshot:
                 try:
@@ -9601,7 +10140,7 @@ async def geoint_building_damage_analysis(request: Request):
                                  f"Look for: collapsed structures, debris fields, burn scars, water damage, infrastructure impact. "
                                  f"Classify severity as: No Damage, Minor Damage, Major Damage, or Destroyed. "
                                  f"{'Additional context: ' + user_query if user_query else ''}"},
-                                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{clean_b64}", "detail": "low"}}
+                                {"type": "image_url", "image_url": {"url": f"data:{screenshot_media_type};base64,{clean_b64}", "detail": "low"}}
                             ]}
                         ],
                         temperature=1.0,
@@ -9714,6 +10253,131 @@ async def geoint_extreme_weather_analysis(request: Request):
             logger.info(f"[STORM] [{request_id}] Created new session: {session_id}")
         
         message = user_query or "Provide a comprehensive climate projection overview for this location."
+
+        # Monthly/seasonal questions need the full time series, not annual
+        # summary statistics. Keep this deterministic so the requested 12
+        # periods and extremum cannot be dropped by agent tool selection.
+        _monthly_lower = message.casefold()
+        is_monthly_query = (
+            "monthly" in _monthly_lower
+            or "wettest month" in _monthly_lower
+            or "driest month" in _monthly_lower
+            or "hottest month" in _monthly_lower
+            or "coldest month" in _monthly_lower
+        )
+        if is_monthly_query:
+            from geoint.netcdf_computation_tools import sample_timeseries
+
+            requested_variables = set()
+            if any(
+                token in _monthly_lower
+                for token in ("precip", "rain", "wettest", "driest")
+            ):
+                requested_variables.add("pr")
+            if any(
+                token in _monthly_lower
+                for token in ("temperature", "tasmax", "hottest", "coldest")
+            ):
+                requested_variables.add("tasmax")
+            if len(requested_variables) > 1:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        "Monthly analysis supports one variable per request. "
+                        "Ask for temperature and precipitation separately."
+                    ),
+                )
+            variable = next(iter(requested_variables), "tasmax")
+
+            requested_scenarios = set()
+            if any(
+                token in _monthly_lower
+                for token in ("ssp245", "ssp2-4.5", "moderate")
+            ):
+                requested_scenarios.add("ssp245")
+            if any(
+                token in _monthly_lower
+                for token in ("ssp585", "ssp5-8.5", "worst")
+            ):
+                requested_scenarios.add("ssp585")
+            if len(requested_scenarios) > 1:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        "Monthly analysis supports one SSP per request. "
+                        "Ask for SSP2-4.5 and SSP5-8.5 separately."
+                    ),
+                )
+            scenario = next(iter(requested_scenarios), "ssp585")
+            year_match = re.search(r"\b(201[5-9]|20[2-9]\d|2100)\b", message)
+            target_year = int(year_match.group()) if year_match else 2030
+            loop = asyncio.get_event_loop()
+            try:
+                raw_result = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        sample_timeseries,
+                        latitude,
+                        longitude,
+                        variable,
+                        scenario,
+                        target_year,
+                        "monthly",
+                    ),
+                    timeout=55.0,
+                )
+            except asyncio.TimeoutError:
+                raise HTTPException(
+                    status_code=504,
+                    detail="Monthly climate sampling timed out before the ingress deadline.",
+                )
+            timeseries_data = json.loads(raw_result)
+            periods = timeseries_data.get("periods") or []
+            numeric_periods = [
+                period
+                for period in periods
+                if isinstance(period, dict)
+                and isinstance(period.get("mean"), (int, float))
+            ]
+            if timeseries_data.get("error") or len(numeric_periods) != 12:
+                raise HTTPException(
+                    status_code=502,
+                    detail=(
+                        timeseries_data.get("error")
+                        or f"Expected 12 monthly values; received {len(numeric_periods)}."
+                    ),
+                )
+            wants_minimum = "driest" in _monthly_lower or "coldest" in _monthly_lower
+            extreme = (min if wants_minimum else max)(
+                numeric_periods,
+                key=lambda period: period["mean"],
+            )
+            metric_name = timeseries_data.get("variable_name") or variable
+            lines = [
+                f"## Monthly {metric_name} for {target_year}",
+                "",
+                *[
+                    f"- {period['period']}: {period['mean']} {period.get('unit') or ''}".rstrip()
+                    for period in numeric_periods
+                ],
+                "",
+                f"**{'Minimum' if wants_minimum else 'Maximum'} month:** "
+                f"{extreme['period']} at {extreme['mean']} {extreme.get('unit') or ''}".rstrip(),
+                "",
+                "Data source: NASA NEX-GDDP-CMIP6.",
+            ]
+            return {
+                "status": "success",
+                "result": {
+                    "analysis": "\n".join(lines),
+                    "tool_calls": [
+                        {"tool": "sample_timeseries", "result": timeseries_data}
+                    ],
+                    "message_count": 1,
+                },
+                "session_id": session_id,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
         
         # ====================================================================
         # FAST PATH: Direct tool call for overview queries
@@ -9724,7 +10388,18 @@ async def geoint_extreme_weather_analysis(request: Request):
         # directly and format the results with a single LLM call.
         # This saves ~8-20s per overview query.
         # Only for new sessions with no custom query or the default overview query.
-        is_overview_query = (
+        _msg_lower = message.casefold()
+        is_comparison_query = (
+            ("compare" in _msg_lower and ("scenario" in _msg_lower or "ssp" in _msg_lower))
+            or ("ssp245" in _msg_lower and "ssp585" in _msg_lower)
+            or ("ssp2" in _msg_lower and "ssp5" in _msg_lower)
+            or (
+                "moderate" in _msg_lower
+                and "worst" in _msg_lower
+                and any(term in _msg_lower for term in ("scenario", "emission", "climate"))
+            )
+        )
+        is_overview_query = not is_comparison_query and (
             not user_query
             or "overview" in message.lower()
             or ("climate" in message.lower() and "projection" in message.lower())
@@ -9770,19 +10445,8 @@ async def geoint_extreme_weather_analysis(request: Request):
                             location_name = f"({latitude:.4f}, {longitude:.4f})"
                     
                     # Single LLM call to format the raw data into prose
-                    from openai import AsyncAzureOpenAI
-                    from azure.identity import DefaultAzureCredential, get_bearer_token_provider as _gbt
-                    _aoai_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
-                    if not _aoai_endpoint:
-                        raise ValueError("AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT environment variable is required")
-                    _fmt_client = AsyncAzureOpenAI(
-                        azure_endpoint=_aoai_endpoint,
-                        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-                        azure_ad_token_provider=_gbt(
-                            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-                        ) if not os.environ.get("AZURE_OPENAI_API_KEY") else None,
-                        api_version="2024-12-01-preview",
-                    )
+                    from pipeline._aoai import get_aoai_client
+                    _fmt_client = get_aoai_client()
                     
                     fmt_resp = await _fmt_client.chat.completions.create(
                         model=os.environ.get("AZURE_OPENAI_FAST_DEPLOYMENT", "gpt-4o-mini"),
@@ -9832,15 +10496,6 @@ async def geoint_extreme_weather_analysis(request: Request):
         # compare_climate_scenarios directly, saving 2 LLM round-trips (~8-15s).
         # Works for both new and follow-up sessions.
         import re as _re
-        _msg_lower = message.lower()
-        is_comparison_query = (
-            ("compare" in _msg_lower and ("scenario" in _msg_lower or "ssp" in _msg_lower))
-            or ("ssp245" in _msg_lower and "ssp585" in _msg_lower)
-            or ("ssp2" in _msg_lower and "ssp5" in _msg_lower)
-            or ("moderate" in _msg_lower and "worst" in _msg_lower
-                and ("scenario" in _msg_lower or "emission" in _msg_lower or "climate" in _msg_lower))
-        )
-        
         if is_comparison_query:
             try:
                 logger.info(f"[STORM] [{request_id}] FAST PATH COMPARE: Direct compare_climate_scenarios call")
@@ -9848,7 +10503,7 @@ async def geoint_extreme_weather_analysis(request: Request):
                 from geoint.extreme_weather_agent import _reverse_geocode_cache
                 
                 # Extract year from query if mentioned (e.g. "by 2050", "in 2060")
-                year_match = _re.search(r'\b(20[2-9]\d|2100)\b', message)
+                year_match = _re.search(r'\b(201[5-9]|20[2-9]\d|2100)\b', message)
                 target_year = int(year_match.group()) if year_match else 2030
                 
                 loop = asyncio.get_event_loop()
@@ -9860,7 +10515,25 @@ async def geoint_extreme_weather_analysis(request: Request):
                 comparison_data = json.loads(raw_result)
                 fast_elapsed = time.time() - agent_start
                 logger.info(f"[STORM] [{request_id}] FAST PATH COMPARE: Data fetched in {fast_elapsed:.1f}s")
-                
+
+                if comparison_data.get("error"):
+                    if comparison_data.get("retryable") is True:
+                        return _pre_dispatch_retry_response(
+                            comparison_data["error"]
+                        )
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"Climate comparison failed: {comparison_data['error']}",
+                    )
+                if comparison_data.get("complete") is not True:
+                    raise HTTPException(
+                        status_code=504,
+                        detail=(
+                            "Climate comparison did not return all temperature and "
+                            "precipitation values for SSP245 and SSP585 before the "
+                            "bounded data deadline."
+                        ),
+                    )
                 if "error" not in comparison_data:
                     # Resolve location name (cached)
                     geo_key = f"{latitude:.4f}:{longitude:.4f}"
@@ -9883,19 +10556,8 @@ async def geoint_extreme_weather_analysis(request: Request):
                             location_name = f"({latitude:.4f}, {longitude:.4f})"
                     
                     # Single LLM call to format comparison data into prose
-                    from openai import AsyncAzureOpenAI
-                    from azure.identity import DefaultAzureCredential, get_bearer_token_provider as _gbt
-                    _aoai_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
-                    if not _aoai_endpoint:
-                        raise ValueError("AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT environment variable is required")
-                    _fmt_client = AsyncAzureOpenAI(
-                        azure_endpoint=_aoai_endpoint,
-                        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-                        azure_ad_token_provider=_gbt(
-                            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-                        ) if not os.environ.get("AZURE_OPENAI_API_KEY") else None,
-                        api_version="2024-12-01-preview",
-                    )
+                    from pipeline._aoai import get_aoai_client
+                    _fmt_client = get_aoai_client()
                     
                     fmt_resp = await _fmt_client.chat.completions.create(
                         model=os.environ.get("AZURE_OPENAI_FAST_DEPLOYMENT", "gpt-4o-mini"),
@@ -9905,6 +10567,7 @@ async def geoint_extreme_weather_analysis(request: Request):
                                 "into a clear, informative analysis. Compare the moderate (SSP2-4.5) and worst-case "
                                 "(SSP5-8.5) scenarios side by side. Highlight the temperature and precipitation "
                                 "differences and their real-world implications for the region. "
+                                "Do not infer missing values; explicitly identify any unavailable comparison cell. "
                                 "Use the same style and formatting as your normal extreme weather analysis responses."
                             )},
                             {"role": "user", "content": (
@@ -9931,9 +10594,19 @@ async def geoint_extreme_weather_analysis(request: Request):
                         "timestamp": datetime.utcnow().isoformat()
                     }
             except asyncio.TimeoutError:
-                logger.warning(f"[STORM] [{request_id}] FAST PATH COMPARE timed out, falling back to agent")
+                logger.warning(f"[STORM] [{request_id}] FAST PATH COMPARE timed out")
+                raise HTTPException(
+                    status_code=504,
+                    detail="Climate comparison timed out before the ingress deadline.",
+                )
+            except HTTPException:
+                raise
             except Exception as e:
-                logger.warning(f"[STORM] [{request_id}] FAST PATH COMPARE failed ({e}), falling back to agent")
+                logger.warning(f"[STORM] [{request_id}] FAST PATH COMPARE failed ({e})")
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Climate comparison failed: {e}",
+                )
         
         # ====================================================================
         # FAST PATH 3: Direct tool call for specific variable queries
@@ -9992,7 +10665,7 @@ async def geoint_extreme_weather_analysis(request: Request):
                     scenario = "ssp585"
                 
                 # Extract year from query
-                year_match = _re.search(r'\b(20[2-9]\d|2100)\b', message)
+                year_match = _re.search(r'\b(201[5-9]|20[2-9]\d|2100)\b', message)
                 target_year = int(year_match.group()) if year_match else 2030
                 
                 loop = asyncio.get_event_loop()
@@ -10015,19 +10688,8 @@ async def geoint_extreme_weather_analysis(request: Request):
                     geo_key = f"{latitude:.4f}:{longitude:.4f}"
                     location_name = _reverse_geocode_cache.get(geo_key, f"({latitude:.4f}, {longitude:.4f})")
                     
-                    from openai import AsyncAzureOpenAI
-                    from azure.identity import DefaultAzureCredential, get_bearer_token_provider as _gbt
-                    _aoai_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AZURE_OPENAI_ENDPOINT")
-                    if not _aoai_endpoint:
-                        raise ValueError("AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT environment variable is required")
-                    _fmt_client = AsyncAzureOpenAI(
-                        azure_endpoint=_aoai_endpoint,
-                        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-                        azure_ad_token_provider=_gbt(
-                            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-                        ) if not os.environ.get("AZURE_OPENAI_API_KEY") else None,
-                        api_version="2024-12-01-preview",
-                    )
+                    from pipeline._aoai import get_aoai_client
+                    _fmt_client = get_aoai_client()
                     
                     scenario_desc = "SSP2-4.5 (moderate)" if scenario == "ssp245" else "SSP5-8.5 (worst-case)"
                     fmt_resp = await _fmt_client.chat.completions.create(

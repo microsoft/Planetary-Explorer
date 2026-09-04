@@ -1,0 +1,83 @@
+{
+  "generated_at": "2026-09-02T21:52:01.258Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-final-0902-1712",
+    "api_image_digest": "sha256:5d965aa56428878090a2a3c3715983390029385cb6d588ab4f7eded42e1a7cba",
+    "frontend_deployment_id": "f6b6e21d-6a5f-4176-9ef2-b8566be1b338",
+    "frontend_bundle": "index-BJm1lgNE.js",
+    "frontend_bundle_sha256": "925ba2059fffdc272df8a467425d843cc52b43f9f1391118daa99f229d6b8873",
+    "verification": {
+      "verified_at": "2026-09-02T21:51:33.360051+00:00",
+      "azure_subscription": "a0c62bdd-d642-4fdb-b372-ae041cf83ce3",
+      "azure_tenant": "711a9076-1115-4c36-b7b4-82b4f3a05f6f",
+      "api_fqdn": "ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+      "api_health": "healthy",
+      "api_revision_health": "Healthy",
+      "api_revision_running": "Running",
+      "api_traffic_weight": 100,
+      "frontend_deployment_active": true,
+      "frontend_bundle_live_sha256": "925ba2059fffdc272df8a467425d843cc52b43f9f1391118daa99f229d6b8873",
+      "geofm_worker_min_replicas": 0,
+      "geofm_worker_active_replicas": 0
+    }
+  },
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "setup_query": "Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colours actually visible in this 2026 MODIS thermal-anomaly image and whether any clusters are visible, then explain only those visible colours at this Alberta location.",
+      "outcome": "pass",
+      "elapsed_ms": 25498,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -115.01,
+        54.49,
+        -114.99,
+        54.51
+      ],
+      "expected_pin": {
+        "lat": 54.5,
+        "lng": -115
+      },
+      "submitted_pin": {
+        "lat": 54.50000122343144,
+        "lng": -115.00000000000034
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Thermal Anomalies Daily",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9989,
+        "meanAbsoluteDifference": 69.18
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 44220,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 10,
+        "meanRgb": [
+          118.89,
+          121.03,
+          118.31
+        ],
+        "meanLuminance": 120.38,
+        "luminanceVariance": 15.75,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-targeted-fire-final-release\\payload-images\\01-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-14A1-061",
+      "response_excerpt": "In this 2026 MODIS thermal-anomaly image of Alberta (54.5000°N, 115.0000°W), the visible colours are predominantly:\n\n1. **Muted Gray**: This is the dominant colour across a significant portion of the image, likely indicating areas of no significant thermal anomalies, or regions covered by thermal-indifference zones or data gaps.\n   \n2. **Faint Green (label)**: This colour specifically corresponds to the text for \"Centre of Alberta Natural Area,\" signifying a marked regional location, distinct from the thermal anomalies.\n\n3. **Pale Earth Tones**: Some scattered beige and light-brown patches are visible, potentially reflecting natural geographic features, such as vegetation, wetlands, or terrain-specific variations.\n\nClusters of thermal anomalies (typified by higher-temperature zones often illustrated in red, orange, or bright white in thermal maps) are **not visibly apparent** in this image. Therefore, the muted colour palette and lack of bright anomaly indicators suggest that the area ",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-targeted-fire-final-release\\browser-screenshots\\01-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.png"
+    }
+  ]
+}

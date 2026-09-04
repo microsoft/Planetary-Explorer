@@ -26,8 +26,16 @@ const workflowExamples = [
 ];
 
 describe('Canadian starter examples', () => {
-  it('keeps every primary workflow prompt in 2026', () => {
-    expect(workflowExamples.every(({ prompt }) => prompt.includes('2026'))).toBe(true);
+  it('keeps every primary workflow prompt time-bounded', () => {
+    expect(workflowExamples.every(({ prompt }) => (
+      /202[56]|next \d+|next (?:one|two|three|four|five|six|seven|\w+)|(?:\d+|one|two|three|four|five|six|seven)[-\s]day|this week/i.test(prompt)
+    ))).toBe(true);
+  });
+
+  it('does not retain stale fixed-date forecast or resilience prompts', () => {
+    const allText = workflowExamples.map(({ prompt }) => prompt).join('\n');
+
+    expect(allText).not.toMatch(/August 2[6-9](?:-31)?, 2026/i);
   });
 
   it('keeps every workflow example in a Canadian context', () => {
@@ -38,5 +46,15 @@ describe('Canadian starter examples', () => {
     const allText = workflowExamples.map(({ context, prompt }) => `${context} ${prompt}`).join('\n');
 
     expect(allText).not.toMatch(legacyPlace);
+  });
+
+  it('keeps the MODIS fire screenshot prompt grounded in visible pixels', () => {
+    const fireExample = exampleQueries
+      .flatMap((category) => category.examples)
+      .find((example) => example.dataset === 'MODIS 14A1');
+
+    expect(fireExample?.screenshotQuery).toContain('colours actually visible');
+    expect(fireExample?.screenshotQuery).toContain('whether any clusters are visible');
+    expect(fireExample?.screenshotQuery).toContain('only those visible colours');
   });
 });

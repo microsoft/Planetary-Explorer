@@ -1,0 +1,2920 @@
+{
+  "generated_at": "2026-09-02T15:53:05.589200+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "resilience": true,
+    "weather": true
+  },
+  "scenario_count": 32,
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "question": "Sample the 2026 red and near-infrared reflectance values at this pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11901,
+      "attempts": 1,
+      "pin": [
+        43.72,
+        -79.38
+      ],
+      "collection": "sentinel-2-l2a",
+      "item_id": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+          "date": "2026-08-05"
+        }
+      ],
+      "sampled_item_ids": [
+        "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712"
+      ],
+      "sampled_dates": [
+        "2026-08-05"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the pin, red reflectance is **0.15** and near-infrared reflectance is **0.34**.\n\n**Samples**\n- **Red** \u2014 `B04`: raw **1451.00 scaled** \u2192 **0.15 reflectance**\n- **Near-infrared** \u2014 `B08`: raw **3380.00 scaled** \u2192 **0.34 reflectance**\n  - Narrow NIR `B8A`: raw **3076.00 scaled** \u2192 **0.31 reflectance**\n- Scene: `S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712`, acquired **2026-08-05**\n\n**Data source:** Public Planetary Computer \u2014 Sentinel-2 Level-2A (`sentinel-2-l2a`)\n\n**Takeaway:** NIR exceeds red reflectance, consistent with vegetated cover at the sampled pixel."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "question": "What is the 2026 NDVI value at this Calgary pin?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 8901,
+      "attempts": 1,
+      "pin": [
+        51.03,
+        -114.08
+      ],
+      "collection": "hls2-s30",
+      "item_id": "HLS.S30.T11UQS.2026235T183919.v2.0",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "HLS.S30.T11UQS.2026235T183919.v2.0",
+          "date": "2026-08-23"
+        }
+      ],
+      "sampled_item_ids": [
+        "HLS.S30.T11UQS.2026235T183919.v2.0"
+      ],
+      "sampled_dates": [
+        "2026-08-23"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "The 2026 NDVI at the Calgary pin is **0.723**, indicating dense, healthy vegetation.\n\n**Sample**\n- Location: `51.0300\u00b0, -114.0800\u00b0`\n- Acquisition date: **2026-08-23**\n- Red (`B04`): **511**\n- NIR (`B08`): **3183**\n- Scene: `HLS.S30.T11UQS.2026235T183919.v2.0`\n\n**Data source:** Public Planetary Computer \u2014 Harmonized Landsat Sentinel-2 (`hls2-s30`)\n\n**Takeaway:** strong vegetation greenness at this point on the sampled date."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "question": "Sample the 2026 coastal surface-reflectance bands at this location.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 12672,
+      "attempts": 1,
+      "pin": [
+        44.65,
+        -63.58
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC08_L2SP_007029_20260807_02_T1",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "LC08_L2SP_007029_20260807_02_T1",
+          "date": "2026-08-07"
+        }
+      ],
+      "sampled_item_ids": [
+        "LC08_L2SP_007029_20260807_02_T1"
+      ],
+      "sampled_dates": [
+        "2026-08-07"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the pin, 2026 Landsat surface reflectance ranges from **0.12\u20130.19** across the sampled bands.\n\n**Sample \u2014 2026-08-07**\n- Green: raw **12547.00 scaled** \u2192 **0.15 reflectance**\n- Red: raw **12594.00 scaled** \u2192 **0.15 reflectance**\n- `nir08`: raw **14118.00 scaled** \u2192 **0.19 reflectance**\n- `swir16`: raw **12941.00 scaled** \u2192 **0.16 reflectance**\n- `swir22`: raw **11565.00 scaled** \u2192 **0.12 reflectance**\n- Scene: `LC08_L2SP_007029_20260807_02_T1`\n\n**Data source:** Public Planetary Computer \u2014 Landsat Collection 2 Level-2 (`landsat-c2-l2`)  \n**Takeaway:** NIR is highest (**0.19 reflectance**), with lower SWIR2 (**0.12 reflectance**)."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "question": "What are the 2026 MaxFRP and FireMask values at this Alberta pixel?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 8800,
+      "attempts": 1,
+      "pin": [
+        54.5,
+        -115.0
+      ],
+      "collection": "modis-14A1-061",
+      "item_id": "MYD14A1.A2026225.h11v03.061.2026234002613",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "MYD14A1.A2026225.h11v03.061.2026234002613",
+          "date": "2026-08-13"
+        }
+      ],
+      "sampled_item_ids": [
+        "MYD14A1.A2026225.h11v03.061.2026234002613"
+      ],
+      "sampled_dates": [
+        "2026-08-13"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At this pixel, `FireMask` is **5 \u2014 non-fire land** on **2026-08-13**; no `MaxFRP` value was returned by the loaded raster sample.\n\n**Sample**\n- Location: 54.50000\u00b0, \u2212115.00000\u00b0\n- `FireMask`: **5** (non-fire land)\n- Scene: `MYD14A1.A2026225.h11v03.061.2026234002613`\n- Acquisition date: **2026-08-13**\n\n**Data source:** Public Planetary Computer \u2014 MODIS `modis-14A1-061`  \n**Takeaway:** The sampled 2026 observation does not indicate an active fire at this pixel."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "question": "Sample the 2026 NDVI and EVI values at this Regina cropland pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 8200,
+      "attempts": 1,
+      "pin": [
+        50.35,
+        -104.6
+      ],
+      "collection": "modis-13Q1-061",
+      "item_id": "MYD13Q1.A2026217.h11v03.061.2026234002622",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "MYD13Q1.A2026217.h11v03.061.2026234002622",
+          "date": "2026-08-05"
+        }
+      ],
+      "sampled_item_ids": [
+        "MYD13Q1.A2026217.h11v03.061.2026234002622"
+      ],
+      "sampled_dates": [
+        "2026-08-05"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the Regina cropland pin, the sampled 2026 vegetation indices are **NDVI 0.52** and **EVI 0.39**.\n\n**Sample**\n- Location: `50.35000\u00b0, -104.60000\u00b0`\n- Acquisition date: **2026-08-05**\n- NDVI: raw `5205` (scaled) \u2192 **0.52**\n- EVI: raw `3891` (scaled) \u2192 **0.39**\n- Scene: `MYD13Q1.A2026217.h11v03.061.2026234002622`\n\n**Data source:** MODIS Vegetation Indices (`modis-13Q1-061`)\n\n**Takeaway:** moderately vigorous green vegetation at the sampled cropland pixel."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "question": "What is the 2026 gross primary productivity value at this interior BC pin?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 14867,
+      "attempts": 1,
+      "pin": [
+        54.15,
+        -126.55
+      ],
+      "collection": "modis-17A2H-061",
+      "item_id": "MYD17A2H.A2026225.h10v03.061.2026234050640",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "MYD17A2H.A2026225.h10v03.061.2026234050640",
+          "date": "2026-08-13"
+        }
+      ],
+      "sampled_item_ids": [
+        "MYD17A2H.A2026225.h10v03.061.2026234050640"
+      ],
+      "sampled_dates": [
+        "2026-08-13"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "The sampled 2026 GPP value at the BC pin is **0.05** (raw value **473.00 scaled**).\n\n**Sample**\n- Location: `54.1500\u00b0, -126.5500\u00b0`\n- Acquisition date: **2026-08-13**\n- Scene: `MYD17A2H.A2026225.h10v03.061.2026234050640`\n\n**Data source:** MODIS Gross Primary Productivity \u2014 `modis-17A2H-061`"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "question": "Sample the February 2025 NDSI value at this Quebec City pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 19137,
+      "attempts": 1,
+      "pin": [
+        46.8139,
+        -71.208
+      ],
+      "collection": "modis-10A1-061",
+      "item_id": "MYD10A1.A2025059.h13v04.061.2025063044635",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "MYD10A1.A2025059.h13v04.061.2025063044635",
+          "date": "2025-02-28"
+        }
+      ],
+      "sampled_item_ids": [
+        "MYD10A1.A2025059.h13v04.061.2025063044635"
+      ],
+      "sampled_dates": [
+        "2025-02-28"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the Quebec City pin, the February 2025 NDSI/snow-cover value was **48.00%**.\n\n**Sample**\n- Location: `46.81390\u00b0, -71.20800\u00b0`\n- Acquisition date: **2025-02-28**\n- Scene: `MYD10A1.A2025059.h13v04.061.2025063044635`\n- Interpretation: **moderate snow cover**\n\n**Data source:** Public Planetary Computer \u2014 MODIS Snow Cover (`modis-10A1-061`)\n\n**Takeaway:** the sampled MODIS pixel was about half snow-covered."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m spring river and ice observations near Norman Wells",
+      "question": "Sample 2026 Sentinel-2 green, near-infrared, and short-wave infrared reflectance at this Mackenzie River pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 21891,
+      "attempts": 1,
+      "pin": [
+        65.282,
+        -126.832
+      ],
+      "collection": "sentinel-2-l2a",
+      "item_id": "S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226",
+          "date": "2026-06-21"
+        }
+      ],
+      "sampled_item_ids": [
+        "S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226"
+      ],
+      "sampled_dates": [
+        "2026-06-21"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the Mackenzie River pin, the sampled 2026 Sentinel\u20112 surface reflectance is green `0.18`, NIR `0.41`, and SWIR `0.32\u20130.25`.\n\n**Samples \u2014 21 June 2026**\n- Green `B03`: raw `1778` scaled \u2192 **0.18 reflectance**\n- Near-infrared `B08`: raw `4052` scaled \u2192 **0.41 reflectance**\n  - Narrow NIR `B8A`: raw `3930` scaled \u2192 **0.39 reflectance**\n- Short-wave infrared `B11`: raw `3215` scaled \u2192 **0.32 reflectance**\n  - SWIR-2 `B12`: raw `2495` scaled \u2192 **0.25 reflectance**\n\n**Scene**\n- `S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226`\n\n**Data source:** Public Planetary Computer \u2014 Sentinel\u20112 Level\u20112A (`sentinel-2-l2a`)  \n**Takeaway:** NIR exceeds visible and SWIR reflectance at this pixel, consistent with vegetated land cover."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal observations at a verified Churchill pixel",
+      "question": "Sample the 2026 green, near-infrared, and short-wave infrared bands at this Churchill pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 21708,
+      "attempts": 1,
+      "pin": [
+        58.7684,
+        -94.165
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC09_L2SP_032019_20260814_02_T1",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "LC09_L2SP_032019_20260814_02_T1",
+          "date": "2026-08-14"
+        }
+      ],
+      "sampled_item_ids": [
+        "LC09_L2SP_032019_20260814_02_T1"
+      ],
+      "sampled_dates": [
+        "2026-08-14"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the Churchill pin, the sampled 2026 Landsat surface reflectance is green `0.14`, NIR `0.23`, and SWIR `0.21`\u2013`0.16`.\n\n**Sample**\n- Scene: `LC09_L2SP_032019_20260814_02_T1` \u2014 2026-08-14\n- Green: raw `12298.00` scaled \u2192 `0.14` reflectance\n- Near-infrared (`nir08`): raw `15783.00` scaled \u2192 `0.23` reflectance\n- Short-wave infrared `swir16`: raw `14855.00` scaled \u2192 `0.21` reflectance\n- Short-wave infrared `swir22`: raw `13135.00` scaled \u2192 `0.16` reflectance\n\n**Data source:** Public Planetary Computer \u2014 Landsat Collection 2 Level-2 (`landsat-c2-l2`)\n\n**Takeaway:** NIR exceeds both SWIR bands, consistent with some vegetation or moist surface influence at the pin."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "question": "Sample the exact Copernicus DEM pixel elevation in metres at this Banff pin; do not return an area mean or range.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 21383,
+      "attempts": 1,
+      "pin": [
+        51.23,
+        -115.58
+      ],
+      "collection": "cop-dem-glo-30",
+      "item_id": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+          "date": "2021-04-22"
+        }
+      ],
+      "sampled_item_ids": [
+        "Copernicus_DSM_COG_10_N51_00_W116_00_DEM"
+      ],
+      "sampled_dates": [
+        "2021-04-22"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "The exact DEM pixel elevation at the Banff pin is **2210.64 m**.\n\n**Sample**\n- Location: `51.23000\u00b0, -115.58000\u00b0`\n- Elevation: **2210.64 m**\n- DEM item: `Copernicus_DSM_COG_10_N51_00_W116_00_DEM`\n- Item date: `2021-04-22`\n\n**Data source:** Copernicus DEM Global 30 m (`cop-dem-glo-30`)"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "question": "What are the 2026 VV and VH backscatter values in dB?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 20912,
+      "attempts": 1,
+      "pin": [
+        49.2,
+        -123.05
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+          "date": "2026-08-23"
+        }
+      ],
+      "sampled_item_ids": [
+        "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc"
+      ],
+      "sampled_dates": [
+        "2026-08-23"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the pin, the 2026 Sentinel\u20111 RTC backscatter is **VV 10.79 dB** and **VH \u221211.51 dB**.\n\n**Sample details**\n- Location: `49.20000\u00b0, -123.05000\u00b0`\n- Acquisition: `2026-08-23`\n- Scene: `S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc`\n- Raw linear values: VV `12.01`; VH `0.07`\n\n**Data source:** Public Planetary Computer \u2014 Sentinel\u20111 RTC (`sentinel-1-rtc`)"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "question": "Sample the 2026 radar backscatter at this Red River pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 22003,
+      "attempts": 1,
+      "pin": [
+        49.6,
+        -97.08
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "sampled_scenes": [
+        {
+          "item_id": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+          "date": "2026-05-22"
+        }
+      ],
+      "sampled_item_ids": [
+        "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc"
+      ],
+      "sampled_dates": [
+        "2026-05-22"
+      ],
+      "item_matches": true,
+      "date_matches": true,
+      "scene_matches": true,
+      "evidence_error": null,
+      "response": "At the Red River pin, 2026 Sentinel\u20111 RTC backscatter is **\u221214.03 dB (VV)** and **\u221223.18 dB (VH)**.\n\n**Sample**\n- Location: `49.60000\u00b0, -97.08000\u00b0`\n- Acquisition date: `2026-05-22`\n- Scene: `S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc`\n- `VV`: `0.04` linear \u2192 **\u221214.03 dB**\n- `VH`: `0.00` linear \u2192 **\u221223.18 dB**\n\n**Data source:** Public Planetary Computer \u2014 Sentinel\u20111 RTC (`sentinel-1-rtc`)"
+    },
+    {
+      "family": "Terrain",
+      "location": "Vancouver, British Columbia",
+      "question": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 15166,
+      "attempts": 1,
+      "request": {
+        "message": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview: Metro Vancouver Area\n\nThe Vancouver site, within a 5 km analysis radius, exhibits mixed terrain with a significant proportion of flat areas. Some areas have steep slopes and historical issues with flooding.\n\n---\n\n### **Slope & Traversability**\n- **Slope Data**:\n  - Minimum slope: **0.0\u00b0**\n  - Maximum slope: **59.7\u00b0**\n  - Mean slope: **4.1\u00b0**\n- **Slope Distribution**:\n  - Flat terrain: **67.8%**\n  - Moderate slopes: **28.5%**\n  - Steep areas: **3.8%**\n- **Traversability**: The terrain offers **easy traversability**, ideal for construction.\n\n---\n\n### **Flood Risk Analysis**\n- **Flood Exposure**:\n  - Mean historical water occurrence: **30.9%**\n  - Maximum water occurrence: **99.0%**\n  - Flooded areas: **33.1%**\n  - Frequently flooded areas: **32.2%**\n- **Flood Risk Level**: **HIGH**\n- **Permitting Recommendation**: **NOT RECOMMENDED** due to significant historical flooding in portions of the area. This may conflict with construction safety and zoning regulations.\n\n---\n\n### **Flat Areas Analysis**\n- **Flat Area Percentage**: **67.8%** of the analyzed radius satisfies flatness criteria (\u22645\u00b0 slope).\n- **Suitability for Construction**: **Excellent**, as there are abundant flat areas suitable for building foundations.\n\n---\n\n### **Summary Conclusion**\nThe Metro Vancouver site exhibits strong potential due to its flat terrain (67.8%), which can easily support construction. However, the **HIGH flood risk** poses significant challenges, especially in areas with frequent historical flooding (32.2%). Based on these observations, the location is **NOT SUITABLE for construction permitting** without extensive flood mitigation planning.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_slope_analysis",
+          "result": null
+        },
+        {
+          "tool": "analyze_flood_risk",
+          "result": null
+        },
+        {
+          "tool": "find_flat_areas",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Terrain",
+      "location": "Calgary, Alberta",
+      "question": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 11700,
+      "attempts": 1,
+      "request": {
+        "message": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+        "latitude": 51.0447,
+        "longitude": -114.0719,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview near Calgary\nThe area around Calgary (51.0447N, 114.0719W) features gently rolling hills, as indicated by elevation, slope, and aspect data:\n\n#### Elevation & Topography\n- **Min Elevation**: 1,022 meters\n- **Max Elevation**: 1,142.4 meters\n- **Mean Elevation**: 1,074.1 meters\n- **Elevation Range**: 120.4 meters\n- **Terrain Type**: Gently rolling hills\n\n#### Slope & Traversability\n- **Min Slope**: 0\u00b0 (flat terrain)\n- **Max Slope**: 37.2\u00b0 (steepest areas)\n- **Mean Slope**: 3.7\u00b0 (gentle slopes overall)\n- **Flat Areas**: 76.9% (highly traversable)\n- **Moderately Sloping Areas**: 21.8%\n- **Steep Areas**: 1.3% (negligible steep zones)\n- **Traversability**: Easy across most of the terrain\n\n#### Aspect & Line-of-Sight Information\n- **Dominant Slope Direction**: East (14.6%)\n- **Direction Distribution**:\n  - North: 12.5%, South: 13.8%\n  - Lesser amounts face Northwest (9.5%) and West (11%).\n- **Flat Terrain**: 0.7% of the area\n- **Sun Exposure**: Moderate overall, with significant south-facing slopes (39%).\n\n### Summary\nThe area near Calgary is dominated by gently rolling terrain with almost three-quarters flat terrain, making it easy to traverse. Line-of-sight and slope direction are primarily east-facing, with other directions distributed relatively evenly. Sun exposure is moderate due to dominant south-facing slopes and limited flat terrain.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_elevation_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_slope_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_aspect_analysis",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Terrain",
+      "location": "Halifax, Nova Scotia",
+      "question": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 12461,
+      "attempts": 1,
+      "request": {
+        "message": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+        "latitude": 44.6488,
+        "longitude": -63.5752,
+        "radius_km": 5.0
+      },
+      "response": "### Assessment for the Halifax Site:\n**Flood Risk Analysis**:  \n- **Mean water occurrence**: 26%  \n- **Maximum water occurrence**: 99%  \n- **Area ever flooded**: 28.4%  \n- **Area frequently flooded**: 27.4%  \n- **Flood risk level**: HIGH, due to significant historical flooding observed.  \n- **Permitting status**: NOT RECOMMENDED for coastal or flood-exposed development.  \n- **Source**: JRC Global Surface Water (1984-2021)\n\n**Environmental Sensitivity Analysis**:  \n- **Land cover breakdown**:  \n  - Tree cover: 36.5%  \n  - Built-up area: 27.1%  \n  - Permanent water: 28.8%  \n  - Grassland: 6.6%  \n  - Bare/Sparse vegetation: 0.8%  \n- **Dominant land cover**: Tree cover (36.5%)  \n- **Sensitive area percentage**: HIGH (65.5%)  \n- **Environmental constraints**:  \n  - Forests (36.5%) may require deforestation permits.  \n  - Water bodies (28.8%) mandate setback requirements for development near coastal zones.  \n- **Permitting status**: NOT RECOMMENDED due to substantial environmental sensitivity.  \n- **Source**: ESA WorldCover 2021 (10m resolution)\n\n### Summary:\nThe Halifax site exhibits **high flood risk** (27.4% frequently flooded) and **environmental sensitivity**, including significant forest cover (36.5%) and coastal water proximity (28.8%). Permitting constraints related to deforestation and coastal setbacks strongly limit development suitability. Current analysis indicates the site is **NOT SUITABLE** for activities with environmental or flood risk mitigation dependencies.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "analyze_flood_risk",
+          "result": null
+        },
+        {
+          "tool": "analyze_environmental_sensitivity",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Mobility",
+      "location": "Kananaskis, Alberta",
+      "question": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 6281,
+      "attempts": 1,
+      "request": {
+        "latitude": 50.7,
+        "longitude": -115.0,
+        "latitude_b": 50.735,
+        "longitude_b": -114.95,
+        "user_query": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers."
+      },
+      "response": "## Two-point mobility assessment\n\n- Direct distance: 5.25 km at 42.1 degrees.\n- Corridor classification: NO-GO across 1 waypoint(s).\n- Road route: API error 400.\n- Data sources: cop-dem-glo-30, esa-worldcover, jrc-gsw, modis-14A1-061, sentinel-1-rtc, sentinel-2-l2a.\n\nUse this as a planning aid; verify routes, hazards, weather, and access with authoritative local sources before travel.",
+      "errors": [],
+      "analysis_type": "two_point_traverse",
+      "tools": [
+        {
+          "tool": "analyze_two_point_traverse",
+          "result": {
+            "complete": true,
+            "elapsed_ms": 5240,
+            "coverage": {
+              "origin_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "destination_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "waypoints_with_data": 1,
+              "waypoints_expected": 1
+            },
+            "route": {
+              "distance_miles": 3.26,
+              "distance_km": 5.25,
+              "bearing_degrees": 42.1
+            },
+            "road_route": {
+              "road_route_available": false,
+              "reason": "API error 400"
+            },
+            "weather": {
+              "origin": {
+                "phrase": "Cloudy",
+                "temperature_c": 9.2,
+                "humidity_pct": 54,
+                "wind_speed_kmh": 7.7,
+                "wind_direction": "WSW",
+                "visibility_km": 43.5,
+                "cloud_cover_pct": 92,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T09:37:00-06:00"
+              },
+              "destination": {
+                "phrase": "Cloudy",
+                "temperature_c": 9.2,
+                "humidity_pct": 54,
+                "wind_speed_kmh": 7.7,
+                "wind_direction": "WSW",
+                "visibility_km": 43.5,
+                "cloud_cover_pct": 92,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T09:37:00-06:00"
+              }
+            },
+            "elevation_transect": {
+              "profile": [
+                {
+                  "index": 0,
+                  "latitude": 50.7,
+                  "longitude": -115.0,
+                  "elevation_m": 2243.6,
+                  "fraction": 0.0
+                },
+                {
+                  "index": 1,
+                  "latitude": 50.70875,
+                  "longitude": -114.9875,
+                  "elevation_m": 2220.2,
+                  "fraction": 0.25
+                },
+                {
+                  "index": 2,
+                  "latitude": 50.7175,
+                  "longitude": -114.975,
+                  "elevation_m": 2495.0,
+                  "fraction": 0.5
+                },
+                {
+                  "index": 3,
+                  "latitude": 50.72625,
+                  "longitude": -114.9625,
+                  "elevation_m": 2355.4,
+                  "fraction": 0.75
+                },
+                {
+                  "index": 4,
+                  "latitude": 50.735,
+                  "longitude": -114.95,
+                  "elevation_m": 2649.6,
+                  "fraction": 1.0
+                }
+              ],
+              "summary": {
+                "total_ascent_m": 569.1,
+                "total_descent_m": 163.0,
+                "max_elevation_m": 2649.6,
+                "min_elevation_m": 2220.2,
+                "elevation_range_m": 429.4,
+                "start_elevation_m": 2243.6,
+                "end_elevation_m": 2649.6
+              }
+            },
+            "corridor": {
+              "waypoints_sampled": 1,
+              "overall_status": "NO-GO",
+              "waypoints": [
+                {
+                  "latitude": 50.7175,
+                  "longitude": -114.975,
+                  "status": "NO-GO",
+                  "hazards": [
+                    "Steep terrain: 47.8% > 30 deg slopes (max 73.6 deg)"
+                  ],
+                  "data": {
+                    "elevation": {
+                      "avg": 28.4,
+                      "max": 73.6,
+                      "gentle_pct": 14.1,
+                      "moderate_pct": 38.1,
+                      "steep_pct": 47.8
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 30.7,
+                        "Grassland": 2.1,
+                        "Bare / sparse vegetation": 63.7,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.1,
+                        "Moss and lichen": 3.3
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                }
+              ]
+            },
+            "origin": {
+              "location": {
+                "latitude": 50.7,
+                "longitude": -115.0
+              },
+              "radius_miles": 5,
+              "directions": {
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Steep terrain: 51.9% > 30 deg slopes (max 71.5 deg)",
+                    "Dominant: Bare / sparse vegetation (61%)"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 46.8
+                    },
+                    "elevation": {
+                      "avg": 28.9,
+                      "max": 71.5,
+                      "gentle_pct": 14.8,
+                      "moderate_pct": 33.4,
+                      "steep_pct": 51.9
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 33.3,
+                        "Grassland": 2.4,
+                        "Bare / sparse vegetation": 61.3,
+                        "Snow and ice": 0.1,
+                        "Permanent water bodies": 0.1,
+                        "Moss and lichen": 2.9
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.1% coverage",
+                    "Moderate terrain: 33.3% slopes 15-30 deg (avg 18.6 deg)",
+                    "Challenging terrain: 47% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.1,
+                      "permanent_pct": 0.1,
+                      "avg_occurrence": 53.8
+                    },
+                    "elevation": {
+                      "avg": 18.6,
+                      "max": 65.4,
+                      "gentle_pct": 45.6,
+                      "moderate_pct": 33.3,
+                      "steep_pct": 21.1
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 47.3,
+                        "Grassland": 6.6,
+                        "Built-up": 0.0,
+                        "Bare / sparse vegetation": 42.9,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.3,
+                        "Moss and lichen": 2.9
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.2% coverage",
+                    "Steep terrain: 36.5% > 30 deg slopes (max 71.5 deg)",
+                    "Challenging terrain: 48% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.2,
+                      "permanent_pct": 0.1,
+                      "avg_occurrence": 54.8
+                    },
+                    "elevation": {
+                      "avg": 23.7,
+                      "max": 71.5,
+                      "gentle_pct": 30.1,
+                      "moderate_pct": 33.4,
+                      "steep_pct": 36.5
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 48.3,
+                        "Grassland": 4.2,
+                        "Bare / sparse vegetation": 45.0,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.3,
+                        "Moss and lichen": 2.2
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Light vegetation: 99.5% sparse (avg NDVI 0.17)",
+                    "Dominant: Bare / sparse vegetation (59%)"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 28.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.17,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 32.2,
+                        "Grassland": 4.8,
+                        "Built-up": 0.0,
+                        "Bare / sparse vegetation": 59.2,
+                        "Snow and ice": 0.1,
+                        "Permanent water bodies": 0.0,
+                        "Moss and lichen": 3.7
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            },
+            "destination": {
+              "location": {
+                "latitude": 50.735,
+                "longitude": -114.95
+              },
+              "radius_miles": 5,
+              "directions": {
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Steep terrain: 51.8% > 30 deg slopes (max 72.3 deg)",
+                    "Dominant: Bare / sparse vegetation (72%)"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 52.0
+                    },
+                    "elevation": {
+                      "avg": 29.4,
+                      "max": 72.3,
+                      "gentle_pct": 13.4,
+                      "moderate_pct": 34.8,
+                      "steep_pct": 51.8
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 23.2,
+                        "Grassland": 1.6,
+                        "Bare / sparse vegetation": 71.5,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.1,
+                        "Moss and lichen": 3.6
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Steep terrain: 47.9% > 30 deg slopes (max 75.0 deg)",
+                    "Dominant: Bare / sparse vegetation (57%)"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 21.9
+                    },
+                    "elevation": {
+                      "avg": 28.3,
+                      "max": 75.0,
+                      "gentle_pct": 15.3,
+                      "moderate_pct": 36.8,
+                      "steep_pct": 47.9
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 37.5,
+                        "Grassland": 1.3,
+                        "Bare / sparse vegetation": 56.7,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.0,
+                        "Moss and lichen": 4.5
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Steep terrain: 52.4% > 30 deg slopes (max 75.0 deg)",
+                    "Dominant: Bare / sparse vegetation (80%)"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 24.7
+                    },
+                    "elevation": {
+                      "avg": 30.5,
+                      "max": 75.0,
+                      "gentle_pct": 11.2,
+                      "moderate_pct": 36.5,
+                      "steep_pct": 52.4
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 13.8,
+                        "Grassland": 1.8,
+                        "Bare / sparse vegetation": 79.6,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.0,
+                        "Moss and lichen": 4.8
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.0% coverage",
+                    "Steep terrain: 46.9% > 30 deg slopes (max 73.6 deg)",
+                    "Challenging terrain: 47% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 50.7
+                    },
+                    "elevation": {
+                      "avg": 27.0,
+                      "max": 73.6,
+                      "gentle_pct": 18.2,
+                      "moderate_pct": 35.0,
+                      "steep_pct": 46.9
+                    },
+                    "landcover": {
+                      "dominant_class": "Bare / sparse vegetation",
+                      "class_percentages": {
+                        "Tree cover": 46.9,
+                        "Grassland": 1.0,
+                        "Bare / sparse vegetation": 48.6,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 0.1,
+                        "Moss and lichen": 3.3
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            }
+          }
+        }
+      ],
+      "traverse_evidence": {
+        "distance_km": 5.25,
+        "corridor_status": "NO-GO",
+        "waypoints_sampled": 1,
+        "has_origin": true,
+        "has_destination": true,
+        "origin_source_count": 6,
+        "destination_source_count": 6,
+        "waypoints_with_data": 1
+      },
+      "within_ingress_retry_window": true
+    },
+    {
+      "family": "Mobility",
+      "location": "North Shore Mountains, British Columbia",
+      "question": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 7511,
+      "attempts": 1,
+      "request": {
+        "latitude": 49.32,
+        "longitude": -123.07,
+        "latitude_b": 49.355,
+        "longitude_b": -123.02,
+        "user_query": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints."
+      },
+      "response": "## Two-point mobility assessment\n\n- Direct distance: 5.32 km at 42.9 degrees.\n- Corridor classification: SLOW-GO across 1 waypoint(s).\n- Road route: available.\n- Data sources: cop-dem-glo-30, esa-worldcover, jrc-gsw, modis-14A1-061, sentinel-1-rtc, sentinel-2-l2a.\n\nUse this as a planning aid; verify routes, hazards, weather, and access with authoritative local sources before travel.",
+      "errors": [],
+      "analysis_type": "two_point_traverse",
+      "tools": [
+        {
+          "tool": "analyze_two_point_traverse",
+          "result": {
+            "complete": true,
+            "elapsed_ms": 5939,
+            "coverage": {
+              "origin_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "destination_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "waypoints_with_data": 1,
+              "waypoints_expected": 1
+            },
+            "route": {
+              "distance_miles": 3.3,
+              "distance_km": 5.32,
+              "bearing_degrees": 42.9
+            },
+            "road_route": {
+              "road_route_available": true,
+              "travel_time_seconds": 1698,
+              "travel_time_minutes": 28.3,
+              "road_distance_km": 9.49,
+              "road_distance_miles": 5.9,
+              "traffic_delay_seconds": 0,
+              "departure_time": "2026-09-02T08:47:26-07:00",
+              "arrival_time": "2026-09-02T09:15:44-07:00"
+            },
+            "weather": {
+              "origin": {
+                "phrase": "Cloudy",
+                "temperature_c": 15.6,
+                "humidity_pct": 87,
+                "wind_speed_kmh": 9.4,
+                "wind_direction": "ENE",
+                "visibility_km": 25.7,
+                "cloud_cover_pct": 100,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T08:32:00-07:00"
+              },
+              "destination": {
+                "phrase": "Cloudy",
+                "temperature_c": 13.9,
+                "humidity_pct": 93,
+                "wind_speed_kmh": 5.6,
+                "wind_direction": "ENE",
+                "visibility_km": 24.1,
+                "cloud_cover_pct": 99,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T08:42:00-07:00"
+              }
+            },
+            "elevation_transect": {
+              "profile": [
+                {
+                  "index": 0,
+                  "latitude": 49.32,
+                  "longitude": -123.07,
+                  "elevation_m": 94.7,
+                  "fraction": 0.0
+                },
+                {
+                  "index": 1,
+                  "latitude": 49.32875,
+                  "longitude": -123.0575,
+                  "elevation_m": 142.1,
+                  "fraction": 0.25
+                },
+                {
+                  "index": 2,
+                  "latitude": 49.3375,
+                  "longitude": -123.045,
+                  "elevation_m": 154.6,
+                  "fraction": 0.5
+                },
+                {
+                  "index": 3,
+                  "latitude": 49.34625,
+                  "longitude": -123.0325,
+                  "elevation_m": 181.3,
+                  "fraction": 0.75
+                },
+                {
+                  "index": 4,
+                  "latitude": 49.355,
+                  "longitude": -123.02,
+                  "elevation_m": 225.3,
+                  "fraction": 1.0
+                }
+              ],
+              "summary": {
+                "total_ascent_m": 130.7,
+                "total_descent_m": 0,
+                "max_elevation_m": 225.3,
+                "min_elevation_m": 94.7,
+                "elevation_range_m": 130.7,
+                "start_elevation_m": 94.7,
+                "end_elevation_m": 225.3
+              }
+            },
+            "corridor": {
+              "waypoints_sampled": 1,
+              "overall_status": "SLOW-GO",
+              "waypoints": [
+                {
+                  "latitude": 49.3375,
+                  "longitude": -123.045,
+                  "status": "SLOW-GO",
+                  "hazards": [
+                    "Challenging terrain: 74% tree cover/wetland"
+                  ],
+                  "data": {
+                    "elevation": {
+                      "avg": 9.5,
+                      "max": 49.1,
+                      "gentle_pct": 78.9,
+                      "moderate_pct": 19.4,
+                      "steep_pct": 1.7
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 74.3,
+                        "Grassland": 2.2,
+                        "Cropland": 0.0,
+                        "Built-up": 22.6,
+                        "Bare / sparse vegetation": 0.1,
+                        "Permanent water bodies": 0.8
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              ]
+            },
+            "origin": {
+              "location": {
+                "latitude": 49.32,
+                "longitude": -123.07
+              },
+              "radius_miles": 5,
+              "directions": {
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Minimal water: 0.0% coverage",
+                    "Gentle terrain: 86.7% < 15 deg slopes (avg 7.7 deg)",
+                    "Light vegetation: 88.9% sparse (avg NDVI 0.32)",
+                    "Challenging terrain: 72% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 15.5
+                    },
+                    "elevation": {
+                      "avg": 7.7,
+                      "max": 49.0,
+                      "gentle_pct": 86.7,
+                      "moderate_pct": 12.3,
+                      "steep_pct": 1.1
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.32,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 71.8,
+                        "Grassland": 2.9,
+                        "Cropland": 0.0,
+                        "Built-up": 24.9,
+                        "Bare / sparse vegetation": 0.1,
+                        "Permanent water bodies": 0.3
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Major water bodies: 43.1% coverage (41.6% permanent)",
+                    "Impassable land cover: 43% (Permanent water bodies)"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 43.1,
+                      "permanent_pct": 41.6,
+                      "avg_occurrence": 90.4
+                    },
+                    "landcover": {
+                      "dominant_class": "Permanent water bodies",
+                      "class_percentages": {
+                        "Tree cover": 15.7,
+                        "Grassland": 2.9,
+                        "Cropland": 0.0,
+                        "Built-up": 35.6,
+                        "Bare / sparse vegetation": 2.7,
+                        "Permanent water bodies": 43.1,
+                        "Herbaceous wetland": 0.0
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Moderate water coverage: 12.9% (avg occurrence 89%)",
+                    "Challenging terrain: 51% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 12.9,
+                      "permanent_pct": 12.2,
+                      "avg_occurrence": 88.9
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 50.7,
+                        "Grassland": 3.4,
+                        "Cropland": 0.0,
+                        "Built-up": 31.0,
+                        "Bare / sparse vegetation": 1.6,
+                        "Permanent water bodies": 13.2
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "NO-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Major water bodies: 30.3% coverage (29.3% permanent)",
+                    "Impassable land cover: 30% (Permanent water bodies)"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 30.3,
+                      "permanent_pct": 29.3,
+                      "avg_occurrence": 91.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 36.8,
+                        "Grassland": 2.3,
+                        "Cropland": 0.0,
+                        "Built-up": 29.5,
+                        "Bare / sparse vegetation": 1.2,
+                        "Permanent water bodies": 30.2,
+                        "Herbaceous wetland": 0.0
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            },
+            "destination": {
+              "location": {
+                "latitude": 49.355,
+                "longitude": -123.02
+              },
+              "radius_miles": 5,
+              "directions": {
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Minimal water: 0.0% coverage",
+                    "Moderate terrain: 48.5% slopes 15-30 deg (avg 19.0 deg)",
+                    "Challenging terrain: 99% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 31.1
+                    },
+                    "elevation": {
+                      "avg": 19.0,
+                      "max": 58.8,
+                      "gentle_pct": 37.9,
+                      "moderate_pct": 48.5,
+                      "steep_pct": 13.7
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 98.6,
+                        "Grassland": 0.9,
+                        "Built-up": 0.1,
+                        "Bare / sparse vegetation": 0.0,
+                        "Permanent water bodies": 0.3,
+                        "Moss and lichen": 0.0
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Minimal water: 0.0% coverage",
+                    "Gentle terrain: 80.5% < 15 deg slopes (avg 9.1 deg)",
+                    "Light vegetation: 90.3% sparse (avg NDVI 0.32)",
+                    "Challenging terrain: 76% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 22.5
+                    },
+                    "elevation": {
+                      "avg": 9.1,
+                      "max": 49.1,
+                      "gentle_pct": 80.5,
+                      "moderate_pct": 17.8,
+                      "steep_pct": 1.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.32,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 76.2,
+                        "Grassland": 2.5,
+                        "Cropland": 0.0,
+                        "Built-up": 20.8,
+                        "Bare / sparse vegetation": 0.1,
+                        "Permanent water bodies": 0.4
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Minimal water: 0.0% coverage",
+                    "Gentle terrain: 54.3% < 15 deg slopes (avg 15.3 deg)",
+                    "Light vegetation: 86.4% sparse (avg NDVI 0.36)",
+                    "Challenging terrain: 95% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 30.1
+                    },
+                    "elevation": {
+                      "avg": 15.3,
+                      "max": 55.4,
+                      "gentle_pct": 54.3,
+                      "moderate_pct": 36.4,
+                      "steep_pct": 9.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.36,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 95.0,
+                        "Grassland": 1.2,
+                        "Cropland": 0.0,
+                        "Built-up": 2.5,
+                        "Bare / sparse vegetation": 0.1,
+                        "Permanent water bodies": 1.2
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No fire data available",
+                    "Minimal water: 0.0% coverage",
+                    "Gentle terrain: 60.9% < 15 deg slopes (avg 13.6 deg)",
+                    "Light vegetation: 90.4% sparse (avg NDVI 0.31)",
+                    "Challenging terrain: 85% tree cover/wetland"
+                  ],
+                  "confidence": "low",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {},
+                    "water": {
+                      "water_pct": 0.0,
+                      "permanent_pct": 0.0,
+                      "avg_occurrence": 0.0
+                    },
+                    "elevation": {
+                      "avg": 13.6,
+                      "max": 58.8,
+                      "gentle_pct": 60.9,
+                      "moderate_pct": 32.1,
+                      "steep_pct": 7.0
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.31,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 84.7,
+                        "Grassland": 1.9,
+                        "Cropland": 0.0,
+                        "Built-up": 13.3,
+                        "Bare / sparse vegetation": 0.0,
+                        "Permanent water bodies": 0.0,
+                        "Moss and lichen": 0.0
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            }
+          }
+        }
+      ],
+      "traverse_evidence": {
+        "distance_km": 5.32,
+        "corridor_status": "SLOW-GO",
+        "waypoints_sampled": 1,
+        "has_origin": true,
+        "has_destination": true,
+        "origin_source_count": 6,
+        "destination_source_count": 6,
+        "waypoints_with_data": 1
+      },
+      "within_ingress_retry_window": true
+    },
+    {
+      "family": "Mobility",
+      "location": "Yukon River corridor, Yukon",
+      "question": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 6844,
+      "attempts": 1,
+      "request": {
+        "latitude": 60.7212,
+        "longitude": -135.0568,
+        "latitude_b": 60.7562,
+        "longitude_b": -135.0068,
+        "user_query": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility."
+      },
+      "response": "## Two-point mobility assessment\n\n- Direct distance: 4.75 km at 34.9 degrees.\n- Corridor classification: SLOW-GO across 1 waypoint(s).\n- Road route: available.\n- Data sources: cop-dem-glo-30, esa-worldcover, jrc-gsw, modis-14A1-061, sentinel-1-rtc, sentinel-2-l2a.\n\nUse this as a planning aid; verify routes, hazards, weather, and access with authoritative local sources before travel.",
+      "errors": [],
+      "analysis_type": "two_point_traverse",
+      "tools": [
+        {
+          "tool": "analyze_two_point_traverse",
+          "result": {
+            "complete": true,
+            "elapsed_ms": 6141,
+            "coverage": {
+              "origin_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "destination_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "waypoints_with_data": 1,
+              "waypoints_expected": 1
+            },
+            "route": {
+              "distance_miles": 2.95,
+              "distance_km": 4.75,
+              "bearing_degrees": 34.9
+            },
+            "road_route": {
+              "road_route_available": true,
+              "travel_time_seconds": 1843,
+              "travel_time_minutes": 30.7,
+              "road_distance_km": 7.35,
+              "road_distance_miles": 4.57,
+              "traffic_delay_seconds": 0,
+              "departure_time": "2026-09-02T08:47:43-07:00",
+              "arrival_time": "2026-09-02T09:18:26-07:00"
+            },
+            "weather": {
+              "origin": {
+                "phrase": "Light rain shower",
+                "temperature_c": 7.2,
+                "humidity_pct": 87,
+                "wind_speed_kmh": 5.6,
+                "wind_direction": "NW",
+                "visibility_km": 64.4,
+                "cloud_cover_pct": 90,
+                "has_precipitation": true,
+                "precipitation_type": "Rain",
+                "observation_time": "2026-09-02T08:35:00-07:00"
+              },
+              "destination": {
+                "phrase": "Light rain shower",
+                "temperature_c": 7.2,
+                "humidity_pct": 87,
+                "wind_speed_kmh": 5.6,
+                "wind_direction": "NW",
+                "visibility_km": 64.4,
+                "cloud_cover_pct": 90,
+                "has_precipitation": true,
+                "precipitation_type": "Rain",
+                "observation_time": "2026-09-02T08:35:00-07:00"
+              }
+            },
+            "elevation_transect": {
+              "profile": [
+                {
+                  "index": 0,
+                  "latitude": 60.7212,
+                  "longitude": -135.0568,
+                  "elevation_m": 638.4,
+                  "fraction": 0.0
+                },
+                {
+                  "index": 1,
+                  "latitude": 60.72995,
+                  "longitude": -135.0443,
+                  "elevation_m": 650.3,
+                  "fraction": 0.25
+                },
+                {
+                  "index": 2,
+                  "latitude": 60.7387,
+                  "longitude": -135.0318,
+                  "elevation_m": 681.5,
+                  "fraction": 0.5
+                },
+                {
+                  "index": 3,
+                  "latitude": 60.74745,
+                  "longitude": -135.0193,
+                  "elevation_m": 738.7,
+                  "fraction": 0.75
+                },
+                {
+                  "index": 4,
+                  "latitude": 60.7562,
+                  "longitude": -135.0068,
+                  "elevation_m": 743.4,
+                  "fraction": 1.0
+                }
+              ],
+              "summary": {
+                "total_ascent_m": 104.9,
+                "total_descent_m": 0,
+                "max_elevation_m": 743.4,
+                "min_elevation_m": 638.4,
+                "elevation_range_m": 104.9,
+                "start_elevation_m": 638.4,
+                "end_elevation_m": 743.4
+              }
+            },
+            "corridor": {
+              "waypoints_sampled": 1,
+              "overall_status": "SLOW-GO",
+              "waypoints": [
+                {
+                  "latitude": 60.7387,
+                  "longitude": -135.0318,
+                  "status": "SLOW-GO",
+                  "hazards": [
+                    "Challenging terrain: 70% tree cover/wetland"
+                  ],
+                  "data": {
+                    "elevation": {
+                      "avg": 6.2,
+                      "max": 42.1,
+                      "gentle_pct": 90.6,
+                      "moderate_pct": 9.0,
+                      "steep_pct": 0.4
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 69.9,
+                        "Grassland": 6.2,
+                        "Cropland": 0.0,
+                        "Built-up": 10.1,
+                        "Bare / sparse vegetation": 3.3,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.5,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 4.0
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              ]
+            },
+            "origin": {
+              "location": {
+                "latitude": 60.7212,
+                "longitude": -135.0568
+              },
+              "radius_miles": 5,
+              "directions": {
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.1% coverage",
+                    "Gentle terrain: 90.6% < 15 deg slopes (avg 5.9 deg)",
+                    "Light vegetation: 99.8% sparse (avg NDVI 0.14)",
+                    "Challenging terrain: 62% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.1,
+                      "permanent_pct": 4.4,
+                      "avg_occurrence": 77.6
+                    },
+                    "elevation": {
+                      "avg": 5.9,
+                      "max": 43.3,
+                      "gentle_pct": 90.6,
+                      "moderate_pct": 8.7,
+                      "steep_pct": 0.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.14,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 62.5,
+                        "Grassland": 7.6,
+                        "Cropland": 0.0,
+                        "Built-up": 14.9,
+                        "Bare / sparse vegetation": 2.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.7,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 6.1
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.8% coverage",
+                    "Gentle terrain: 90.5% < 15 deg slopes (avg 6.7 deg)",
+                    "Light vegetation: 98.2% sparse (avg NDVI 0.25)",
+                    "Challenging terrain: 76% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.8,
+                      "permanent_pct": 2.3,
+                      "avg_occurrence": 73.7
+                    },
+                    "elevation": {
+                      "avg": 6.7,
+                      "max": 42.1,
+                      "gentle_pct": 90.5,
+                      "moderate_pct": 9.1,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.25,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 75.8,
+                        "Grassland": 4.8,
+                        "Cropland": 0.0,
+                        "Built-up": 8.5,
+                        "Bare / sparse vegetation": 3.5,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 4.2,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 3.1
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.2% coverage",
+                    "Gentle terrain: 93.0% < 15 deg slopes (avg 5.6 deg)",
+                    "Light vegetation: 98.4% sparse (avg NDVI 0.19)",
+                    "Challenging terrain: 64% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.2,
+                      "permanent_pct": 1.8,
+                      "avg_occurrence": 70.6
+                    },
+                    "elevation": {
+                      "avg": 5.6,
+                      "max": 42.1,
+                      "gentle_pct": 93.0,
+                      "moderate_pct": 6.6,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.19,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 63.8,
+                        "Grassland": 7.0,
+                        "Cropland": 0.0,
+                        "Built-up": 16.4,
+                        "Bare / sparse vegetation": 4.3,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 3.0,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 5.5
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.7% coverage",
+                    "Gentle terrain: 87.4% < 15 deg slopes (avg 7.2 deg)",
+                    "Light vegetation: 99.5% sparse (avg NDVI 0.20)",
+                    "Challenging terrain: 76% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.7,
+                      "permanent_pct": 4.9,
+                      "avg_occurrence": 78.6
+                    },
+                    "elevation": {
+                      "avg": 7.2,
+                      "max": 45.9,
+                      "gentle_pct": 87.4,
+                      "moderate_pct": 11.9,
+                      "steep_pct": 0.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.2,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 76.1,
+                        "Grassland": 5.2,
+                        "Cropland": 0.0,
+                        "Built-up": 5.7,
+                        "Bare / sparse vegetation": 0.9,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 8.7,
+                        "Moss and lichen": 3.4
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            },
+            "destination": {
+              "location": {
+                "latitude": 60.7562,
+                "longitude": -135.0068
+              },
+              "radius_miles": 5,
+              "directions": {
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 3.0% coverage",
+                    "Gentle terrain: 95.8% < 15 deg slopes (avg 5.1 deg)",
+                    "Light vegetation: 98.7% sparse (avg NDVI 0.25)",
+                    "Challenging terrain: 90% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 3.0,
+                      "permanent_pct": 2.6,
+                      "avg_occurrence": 80.7
+                    },
+                    "elevation": {
+                      "avg": 5.1,
+                      "max": 38.5,
+                      "gentle_pct": 95.8,
+                      "moderate_pct": 4.0,
+                      "steep_pct": 0.2
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.25,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 89.9,
+                        "Grassland": 2.3,
+                        "Built-up": 0.2,
+                        "Bare / sparse vegetation": 0.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 5.4,
+                        "Herbaceous wetland": 0.1,
+                        "Moss and lichen": 1.8
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.8% coverage",
+                    "Gentle terrain: 88.8% < 15 deg slopes (avg 6.8 deg)",
+                    "Light vegetation: 99.6% sparse (avg NDVI 0.21)",
+                    "Challenging terrain: 75% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.8,
+                      "permanent_pct": 2.3,
+                      "avg_occurrence": 72.9
+                    },
+                    "elevation": {
+                      "avg": 6.8,
+                      "max": 45.9,
+                      "gentle_pct": 88.8,
+                      "moderate_pct": 10.7,
+                      "steep_pct": 0.5
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.21,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 74.6,
+                        "Grassland": 4.8,
+                        "Cropland": 0.0,
+                        "Built-up": 8.3,
+                        "Bare / sparse vegetation": 3.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.7,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 2.4
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.5% coverage",
+                    "Gentle terrain: 97.5% < 15 deg slopes (avg 4.7 deg)",
+                    "Light vegetation: 98.8% sparse (avg NDVI 0.28)",
+                    "Challenging terrain: 94% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.5,
+                      "permanent_pct": 0.4,
+                      "avg_occurrence": 62.4
+                    },
+                    "elevation": {
+                      "avg": 4.7,
+                      "max": 26.9,
+                      "gentle_pct": 97.5,
+                      "moderate_pct": 2.5,
+                      "steep_pct": 0.0
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.28,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 93.8,
+                        "Grassland": 3.1,
+                        "Permanent water bodies": 2.7,
+                        "Moss and lichen": 0.5
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.3% coverage",
+                    "Gentle terrain: 91.9% < 15 deg slopes (avg 6.0 deg)",
+                    "Light vegetation: 99.6% sparse (avg NDVI 0.18)",
+                    "Challenging terrain: 81% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.3,
+                      "permanent_pct": 4.5,
+                      "avg_occurrence": 78.3
+                    },
+                    "elevation": {
+                      "avg": 6.0,
+                      "max": 42.1,
+                      "gentle_pct": 91.9,
+                      "moderate_pct": 7.7,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.18,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 81.2,
+                        "Grassland": 3.6,
+                        "Cropland": 0.0,
+                        "Built-up": 4.6,
+                        "Bare / sparse vegetation": 1.9,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.4,
+                        "Herbaceous wetland": 0.1,
+                        "Moss and lichen": 2.3
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            }
+          }
+        }
+      ],
+      "traverse_evidence": {
+        "distance_km": 4.75,
+        "corridor_status": "SLOW-GO",
+        "waypoints_sampled": 1,
+        "has_origin": true,
+        "has_destination": true,
+        "origin_source_count": 6,
+        "destination_source_count": 6,
+        "waypoints_with_data": 1
+      },
+      "within_ingress_retry_window": true
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Vancouver, British Columbia",
+      "question": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 32959,
+      "attempts": 1,
+      "request": {
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "user_query": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?"
+      },
+      "response": "### Location & Context\nFor Vancouver, in the SSP5-8.5 (worst-case emissions) scenario for the year 2026, the precipitation projections from NASA NEX-GDDP-CMIP6 are as follows:\n\n### Climate Projections\n- **Annual Total Precipitation**: Approximately **1,525.7 mm** of rainfall throughout the year.\n- **Peak Daily Rainfall**: A maximum daily rainfall of **31.23 mm**.\n\n### Interpretation\n1. The annual precipitation of ~1,525.7 mm suggests that Vancouver will continue to experience significant rainfall, in line with its wet climate.\n2. A peak daily rainfall of over 31 mm could potentially lead to localized flooding or drainage concerns, depending on the specific conditions.\n\n### Scenario Context\nThis projection under SSP5-8.5 reflects the worst-case emissions trajectory, with potential amplification of wet conditions in this region compared to milder scenarios like SSP2-4.5.\n\n### Caveats\n- The reported values are based on the closest valid land-based grid cell (10 km away from the requested coordinates). This is typical for coastal areas like Vancouver.\n- These are climate projections using models and do not predict specific daily weather events.\n\n### Summary\nBy 2026, in the SSP5-8.5 scenario, Vancouver is projected to experience **1,525.7 mm of annual rainfall** and a **peak daily rainfall of 31.23 mm**, highlighting the city's wet climate and potential risks of localized flooding during intense storm events.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_precipitation_projection",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Toronto, Ontario",
+      "question": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 24384,
+      "attempts": 1,
+      "request": {
+        "latitude": 43.6532,
+        "longitude": -79.3832,
+        "user_query": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month."
+      },
+      "response": "## Monthly Precipitation for 2026\n\n- Jan: 2.88 mm/day\n- Feb: 1.53 mm/day\n- Mar: 5.26 mm/day\n- Apr: 2.81 mm/day\n- May: 2.36 mm/day\n- Jun: 3.65 mm/day\n- Jul: 2.46 mm/day\n- Aug: 2.58 mm/day\n- Sep: 3.55 mm/day\n- Oct: 3.53 mm/day\n- Nov: 1.82 mm/day\n- Dec: 0.81 mm/day\n\n**Maximum month:** Mar at 5.26 mm/day\n\nData source: NASA NEX-GDDP-CMIP6.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "sample_timeseries",
+          "result": {
+            "location": {
+              "latitude": 43.6532,
+              "longitude": -79.3832
+            },
+            "actual_sampled_location": {
+              "latitude": 43.625,
+              "longitude": 280.625,
+              "offset_km": 3.2
+            },
+            "variable": "pr",
+            "variable_name": "Precipitation",
+            "scenario": "ssp585",
+            "year": 2026,
+            "model": "UKESM1-0-LL",
+            "aggregation": "monthly",
+            "periods": [
+              {
+                "period": "Jan",
+                "mean": 2.88,
+                "max": 14.08,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Feb",
+                "mean": 1.53,
+                "max": 10.03,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Mar",
+                "mean": 5.26,
+                "max": 30.43,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Apr",
+                "mean": 2.81,
+                "max": 12.69,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "May",
+                "mean": 2.36,
+                "max": 11.98,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Jun",
+                "mean": 3.65,
+                "max": 15.52,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Jul",
+                "mean": 2.46,
+                "max": 20.64,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Aug",
+                "mean": 2.58,
+                "max": 11.56,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Sep",
+                "mean": 3.55,
+                "max": 23.12,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Oct",
+                "mean": 3.53,
+                "max": 24.49,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Nov",
+                "mean": 1.82,
+                "max": 14.85,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Dec",
+                "mean": 0.81,
+                "max": 5.0,
+                "min": 0.0,
+                "unit": "mm/day"
+              }
+            ],
+            "annual_summary": {
+              "annual_mean": 2.77,
+              "annual_max": 30.43,
+              "annual_min": 0.0,
+              "unit": "mm/day",
+              "days_sampled": 360,
+              "total_days": 360
+            },
+            "data_source": "NASA NEX-GDDP-CMIP6",
+            "grid_resolution": "0.25\u00b0 \u00d7 0.25\u00b0"
+          }
+        }
+      ],
+      "monthly_period_count": 12
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Montreal, Quebec",
+      "question": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 55029,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.5019,
+        "longitude": -73.5674,
+        "user_query": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?"
+      },
+      "response": "**Climate Scenario Comparison for Montreal in 2026: SSP2-4.5 vs. SSP5-8.5**\n\n**Location:** Montreal (Latitude 45.5019, Longitude -73.5674)  \n**Data Source:** NASA NEX-GDDP-CMIP6  \n**Year:** 2026\n\n---\n\n### Emissions Scenarios Overview\n- **SSP2-4.5 (Moderate Emissions):** Represents a sustainable development path with moderate greenhouse gas emissions.\n- **SSP5-8.5 (Worst-Case Emissions):** Reflects a fossil fuel-intensive trajectory with high emissions and limited mitigation.\n\n---\n\n### Temperature Trends (Maximum Daily Temperature - tasmax)\n| Scenario  | Maximum Temperature | Unit  |\n|-----------|---------------------|-------|\n| SSP2-4.5  | 28.0                | \u00b0F    |\n| SSP5-8.5  | 21.9                | \u00b0F    |\n| **Difference (SSP5-8.5 minus SSP2-4.5)** | **-6.1** | \u00b0F |\n\n**Analysis:**  \nContrary to typical expectations, the worst-case scenario (SSP5-8.5) projects a maximum daily temperature that is 6.1\u00b0F lower than the moderate emissions scenario (SSP2-4.5) for Montreal in 2026. This negative difference indicates cooler maximum temperatures under the high emissions pathway for this specific year and location, which may reflect model variability or regional climate dynamics. Such a result suggests that near-term temperature projections can exhibit complex patterns and should be interpreted with caution.\n\n---\n\n### Precipitation Trends (Daily Precipitation - pr)\n| Scenario  | Precipitation Rate | Unit    |\n|-----------|--------------------|---------|\n| SSP2-4.5  | 4.17               | mm/day  |\n| SSP5-8.5  | 3.62               | mm/day  |\n| **Difference (SSP5-8.5 minus SSP2-4.5)** | **-0.55** | mm/day |\n\n**Analysis:**  \nPrecipitation under the worst-case emissions scenario is projected to be 0.55 mm/day less than under the moderate scenario. This decrease suggests drier conditions in Montreal during 2026 if the high emissions pathway materializes, potentially impacting water resources and increasing drought risk.\n\n---\n\n### Implications for Montreal\n- **Temperature:** The unexpected cooler maximum temperature under SSP5-8.5 may indicate localized or short-term climate variability. It highlights the importance of considering multiple models and longer time horizons for robust climate projections.\n- **Precipitation:** Reduced precipitation in the worst-case scenario could stress local ecosystems and water supply, emphasizing the need for adaptive water management strategies.\n\n---\n\n### Summary\nFor Montreal in 2026, the moderate emissions scenario (SSP2-4.5) pro",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "compare_climate_scenarios",
+          "result": {
+            "location": {
+              "latitude": 45.5019,
+              "longitude": -73.5674
+            },
+            "year": 2026,
+            "data_source": "NASA NEX-GDDP-CMIP6",
+            "scenarios": {
+              "ssp245": "SSP2-4.5 \u2014 Moderate emissions (sustainable development path)",
+              "ssp585": "SSP5-8.5 \u2014 Worst-case emissions (fossil fuel intensive)"
+            },
+            "comparison": {
+              "tasmax": {
+                "ssp245": {
+                  "value": 28.0,
+                  "unit": "\u00b0F"
+                },
+                "ssp585": {
+                  "value": 21.9,
+                  "unit": "\u00b0F"
+                }
+              },
+              "pr": {
+                "ssp585": {
+                  "value": 3.62,
+                  "unit": "mm/day"
+                },
+                "ssp245": {
+                  "value": 4.17,
+                  "unit": "mm/day"
+                }
+              }
+            },
+            "scenario_difference": {
+              "tasmax": {
+                "difference": -6.1,
+                "unit": "\u00b0F",
+                "description": "SSP5-8.5 minus SSP2-4.5"
+              },
+              "pr": {
+                "difference": -0.55,
+                "unit": "mm/day",
+                "description": "SSP5-8.5 minus SSP2-4.5"
+              }
+            },
+            "complete": true,
+            "note": "Positive difference = worse conditions under high emissions"
+          }
+        }
+      ],
+      "comparison_cells": {
+        "tasmax.ssp245": 28.0,
+        "tasmax.ssp585": 21.9,
+        "pr.ssp245": 4.17,
+        "pr.ssp585": 3.62
+      }
+    },
+    {
+      "family": "Building Damage",
+      "location": "Jasper, Alberta",
+      "question": "Using the 2026 before-and-after tenant imagery, assess potential building damage and distinguish destroyed, major-damage, and unaffected structures.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Building Damage",
+      "location": "Lytton, British Columbia",
+      "question": "Using the 2026 before-and-after tenant imagery, assess structural damage and identify blocks requiring field verification.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Calgary region, Alberta - Data centre",
+      "question": "For 2026, score our candidate data-centre sites near Calgary for power, water, competition, wildfire, flood, and heat exposure.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Montreal region, Quebec - Industrial parcels",
+      "question": "Which 2026 candidate parcels near Montreal clear slope, flood, heat, and grid-proximity thresholds?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Edmonton region, Alberta - Grid expansion",
+      "question": "Rank the top three 2026 sites near Edmonton with permitting precedent and grid proximity weighted highest.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Resilience",
+      "location": "Seven-day Canadian facility outlook",
+      "question": "Over the next seven days, which Canadian facilities are most at risk and what is the supply-chain blast radius?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Resilience",
+      "location": "Vancouver distribution disruption",
+      "question": "If our Vancouver distribution centre goes offline for 48 hours in 2026, which downstream Canadian facilities are exposed?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Resilience",
+      "location": "Western Canada weekly review",
+      "question": "Show 2026 heat and wildfire risk for all Western Canada facilities this week, ranked by severity with a response playbook.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Sign-in is required for the Resilience workflow."
+    },
+    {
+      "family": "Forecast",
+      "location": "Great Lakes five-day ensemble",
+      "question": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 34554,
+      "attempts": 1,
+      "request": {
+        "latitude": 43.75,
+        "longitude": -77.9,
+        "lead_hours": 120,
+        "grid_size": 8,
+        "user_query": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+        "location_label": "Great Lakes five-day ensemble"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 293.201,
+            "min": 291.51,
+            "max": 294.891,
+            "samples": 2,
+            "stdev": 2.391,
+            "spread": 3.381
+          },
+          "precip": {
+            "mean": 0.005,
+            "min": 0.003,
+            "max": 0.007,
+            "samples": 2,
+            "stdev": 0.003,
+            "spread": 0.004
+          },
+          "u10": {
+            "mean": 2.246,
+            "min": 1.989,
+            "max": 2.503,
+            "samples": 2,
+            "stdev": 0.363,
+            "spread": 0.514
+          },
+          "v10": {
+            "mean": 1.296,
+            "min": 0.904,
+            "max": 1.688,
+            "samples": 2,
+            "stdev": 0.554,
+            "spread": 0.784
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Prairie temperature and wind",
+      "question": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 11210,
+      "attempts": 1,
+      "request": {
+        "latitude": 52.94,
+        "longitude": -106.45,
+        "lead_hours": 72,
+        "grid_size": 8,
+        "user_query": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+        "location_label": "Prairie temperature and wind"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 286.698,
+            "min": 286.067,
+            "max": 287.33,
+            "samples": 2,
+            "stdev": 0.893,
+            "spread": 1.263
+          },
+          "precip": {
+            "mean": 0.807,
+            "min": 0.779,
+            "max": 0.836,
+            "samples": 2,
+            "stdev": 0.04,
+            "spread": 0.057
+          },
+          "u10": {
+            "mean": 3.139,
+            "min": 2.453,
+            "max": 3.825,
+            "samples": 2,
+            "stdev": 0.97,
+            "spread": 1.372
+          },
+          "v10": {
+            "mean": 1.784,
+            "min": 0.241,
+            "max": 3.327,
+            "samples": 2,
+            "stdev": 2.182,
+            "spread": 3.086
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Atlantic Canada precipitation comparison",
+      "question": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 10998,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.0,
+        "longitude": -63.0,
+        "lead_hours": 24,
+        "grid_size": 8,
+        "user_query": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+        "location_label": "Atlantic Canada precipitation comparison"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 290.42,
+            "min": 288.424,
+            "max": 292.417,
+            "samples": 2,
+            "stdev": 2.823,
+            "spread": 3.993
+          },
+          "precip": {
+            "mean": 0.369,
+            "min": 0.003,
+            "max": 0.735,
+            "samples": 2,
+            "stdev": 0.518,
+            "spread": 0.732
+          },
+          "u10": {
+            "mean": 0.22,
+            "min": -1.891,
+            "max": 2.33,
+            "samples": 2,
+            "stdev": 2.985,
+            "spread": 4.221
+          },
+          "v10": {
+            "mean": 2.258,
+            "min": 0.618,
+            "max": 3.898,
+            "samples": 2,
+            "stdev": 2.319,
+            "spread": 3.28
+          }
+        }
+      }
+    }
+  ]
+}

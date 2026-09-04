@@ -162,3 +162,29 @@ def test_given_canadian_province_when_normalizing_then_it_remains_administrative
     resolver = object.__new__(EnhancedLocationResolver)
 
     assert resolver._normalize_location_type("Saskatchewan, Canada", "country") == "state"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("location", "expected_bbox"),
+    [
+        ("Calgary, Alberta, Canada", [-114.32, 50.84, -113.83, 51.21]),
+        ("Lake Ontario, Canada", [-79.80, 43.10, -76.00, 44.30]),
+        ("Western Canada", [-139.06, 48.30, -101.36, 60.00]),
+        ("Lytton, British Columbia, Canada", [-121.65, 50.18, -121.50, 50.28]),
+    ],
+)
+async def test_given_get_started_place_when_resolving_then_stored_bounds_win(
+    location,
+    expected_bbox,
+) -> None:
+    # Arrange
+    resolver = object.__new__(EnhancedLocationResolver)
+    resolver.logger = logging.getLogger(__name__)
+    resolver.cache = LocationCache()
+
+    # Act
+    bbox = await resolver.resolve_location_to_bbox(location, "region")
+
+    # Assert
+    assert bbox == expected_bbox

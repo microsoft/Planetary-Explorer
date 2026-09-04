@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-09-02T17:40:55.665Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-final-0902-1740",
+    "api_image_digest": "sha256:964309d69b9eb7b6d77b8efd662c1df065a7a054ee25f42ee43c9d3fccb6bfda",
+    "frontend_deployment_id": "1533607c-9013-422d-9da3-b7ce866bc0b3",
+    "frontend_bundle": "index-3oS0w6fY.js",
+    "frontend_bundle_sha256": "3f50594463b840278476374d3c73949381e059a781102335486cb7280a09bd50"
+  },
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colour actually visible in this 2026 GPP image and whether it varies, then explain only that visible productivity colour at this interior British Columbia location.",
+      "outcome": "pass",
+      "elapsed_ms": 41982,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -126.56,
+        54.14,
+        -126.54,
+        54.16
+      ],
+      "expected_pin": {
+        "lat": 54.15,
+        "lng": -126.55000000000001
+      },
+      "submitted_pin": {
+        "lat": 54.15000120775608,
+        "lng": -126.5499999999993
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Gross Primary Productivity 8-Day (500m)",
+      "imagery_difference": {
+        "changedPixelRatio": 0.999,
+        "meanAbsoluteDifference": 54.96
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 6329,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 1,
+        "meanRgb": [
+          24,
+          15,
+          62
+        ],
+        "meanLuminance": 20.31,
+        "luminanceVariance": 0,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-final-grounding-gpp\\payload-images\\01-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-17A2H-061",
+      "uniform_image_grounded": true,
+      "uniform_grounding_sentence": "The visible colour in this MODIS GPP imagery of interior British Columbia is a uniform dark purple across the entire image.",
+      "response_excerpt": "The visible colour in this MODIS GPP imagery of interior British Columbia is a uniform dark purple across the entire image. There appears to be no variation in the colour, suggesting consistent coding for Gross Primary Productivity (GPP) within this location at the time of collection.\n\nIn the context of GPP maps, purple shades often represent very low productivity levels. This could indicate sparse vegetation, seasonal dormancy, or conditions unfavourable to photosynthetic activity in this area, such as a winter season or high altitude terrain with limited plant growth capacity.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-final-grounding-gpp\\browser-screenshots\\01-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.png"
+    }
+  ]
+}

@@ -1,8 +1,24 @@
-# weather-stub-server
+---
+title: Weather provider contract adapter
+description: Run CPU-only Aurora, Earth-2 FCN, and MAI Weather contracts over operational NWP data
+ms.date: 2026-09-02
+ms.topic: reference
+---
 
-A tiny **CPU-only** FastAPI service that mimics the scoring contracts of
-Microsoft Aurora and NVIDIA Earth-2 FCN. Lets the Planetary Explorer
-Forecast Agent be built, tested, and demoed end-to-end without GPU quota.
+## Overview
+
+This CPU-only FastAPI service implements the scoring contracts expected for
+Microsoft Aurora, NVIDIA Earth-2 FCN, and MAI Weather. It does not run those
+native models. The configured contract routes use operational NWP fields from
+Open-Meteo:
+
+* `aurora-1.x` contract: ECMWF IFS 0.25
+* `earth2-fcn` contract: NOAA GFS
+* `mai-weather-1.x` contract: DWD ICON
+
+When Open-Meteo or a requested field is unavailable, the response identifies
+which variables used deterministic synthetic fallback values. Do not present
+adapter results as native Aurora, Earth-2, or MAI Weather inference.
 
 ## Endpoints
 
@@ -10,8 +26,9 @@ Forecast Agent be built, tested, and demoed end-to-end without GPU quota.
 |--------|----------------------|---------------------------------|
 | GET    | `/health`            | liveness                        |
 | GET    | `/info`              | model card                      |
-| POST   | `/aurora/score`      | Microsoft Aurora 1.x            |
-| POST   | `/earth2/fcn/score`  | NVIDIA Earth-2 FourCastNet v2   |
+| POST   | `/aurora/score`      | Aurora contract over ECMWF IFS  |
+| POST   | `/earth2/fcn/score`  | Earth-2 contract over NOAA GFS  |
+| POST   | `/mai-weather/score` | MAI contract over DWD ICON      |
 
 ### Request
 
@@ -36,35 +53,44 @@ Forecast Agent be built, tested, and demoed end-to-end without GPU quota.
   "grid": { "lat": [...], "lon": [...] },
   "variables": { "t2m": [[...]], "precip": [[...]] },
   "units": { "t2m": "K", "precip": "mm/hr" },
-  "stub": true
+  "stub": true,
+  "provider_contract": "earth2-fcn",
+  "native_model_inference": false,
+  "source": "NOAA GFS",
+  "real_variables": ["precip", "t2m"],
+  "synthetic_fallback_variables": [],
+  "data_source_note": "earth2-fcn contract backed by NOAA GFS via Open-Meteo; this is not native model inference"
 }
 ```
+
+Precipitation values are clamped to zero or greater after spatial perturbation.
+The normalized Forecast dossier preserves units and all provenance fields.
 
 Aurora additionally returns `cyclone_tracks` when `"cyclone"` is included
 in `variables`.
 
-## Auth
+## Configure authentication
 
 If env `STUB_API_KEY` is set, requests must send
 `Authorization: Bearer <STUB_API_KEY>`. Unset = open (local dev only).
 
 ## Run locally
 
-```pwsh
-pip install -r requirements.txt
-uvicorn app:app --reload --port 8080
+```powershell
+uv run --with-requirements requirements.txt uvicorn app:app --reload --port 8080
 ```
 
 ## Run in Docker
 
-```pwsh
+```powershell
 docker build -t weather-stub .
 docker run -p 8080:8080 -e STUB_API_KEY=dev weather-stub
 ```
 
-## Swap to a real GPU endpoint
+## Swap to a native model endpoint
 
-When A100 quota lands, deploy the real Aurora / Earth-2 NIM endpoints
-and point the Forecast Agent's `AURORA_ENDPOINT_URL` and
-`EARTH2_FCN_ENDPOINT_URL` env vars at them. The request/response shape
-is the same — no agent code changes.
+Deploy the native model endpoints and point `AURORA_ENDPOINT_URL`,
+`EARTH2_FCN_ENDPOINT_URL`, or `MAI_WEATHER_ENDPOINT_URL` at them. Native
+endpoints must omit the adapter marker or return
+`native_model_inference: true`. The request and response shape remains the
+same, so the Forecast Agent does not require code changes.

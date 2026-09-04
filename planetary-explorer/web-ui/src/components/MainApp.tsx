@@ -11,6 +11,7 @@ import ResizablePanel from './ResizablePanel';
 import { AppState } from '../App';
 import { ChatHistoryMapRestore, restorableHistoryModule } from '../utils/mapHistory';
 import { normalizeRestoredChatContext } from '../utils/chatHistory';
+import type { DeploymentFeatureFlags } from './GetStartedButton';
 
 interface MainAppProps {
   appState: AppState;
@@ -27,9 +28,10 @@ interface MainAppProps {
   stacMode?: 'public' | 'pro';
   onStacModeChange?: (mode: 'public' | 'pro') => void;
   onHistorySaveRiskChange?: (hasUnsavedSnapshot: boolean) => void;
+  features: DeploymentFeatureFlags;
 }
 
-const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnToLanding, onRestartSession, geointMode, onGeointToggle, selectedModel, reasoningEffort, chatHistoryEnabled, onRestoreChatContext, stacMode, onStacModeChange, onHistorySaveRiskChange, proEnabled = false }) => {
+const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnToLanding, onRestartSession, geointMode, onGeointToggle, selectedModel, reasoningEffort, chatHistoryEnabled, onRestoreChatContext, stacMode, onStacModeChange, onHistorySaveRiskChange, proEnabled = false, features }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lastChatResponse, setLastChatResponse] = useState<any>(null);
   const [chatPanelWidth, setChatPanelWidth] = useState(420);
@@ -139,7 +141,7 @@ const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnTo
 
   const handleRestoreChatContext = useCallback((context: ChatHistoryContext) => {
     const normalizedContext = normalizeRestoredChatContext(context, proEnabled);
-    const restoredModule = restorableHistoryModule(normalizedContext.selectedModule);
+    const restoredModule = restorableHistoryModule(normalizedContext.selectedModule, features);
     const effectiveContext = {
       ...normalizedContext,
       selectedModule: restoredModule || undefined,
@@ -161,50 +163,43 @@ const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnTo
     });
     onRestoreChatContext?.(effectiveContext);
     return effectiveContext;
-  }, [onGeointToggle, onRestoreChatContext, proEnabled]);
+  }, [features, onGeointToggle, onRestoreChatContext, proEnabled]);
 
   const handleHistoryRestoreSettled = useCallback(() => {
     setHistoryRestorePending(false);
   }, []);
   
-  // Clear ALL GEOINT sessions (called when starting a new STAC search)
-  //
-  // NOTE: Resilience is intentionally NOT cleared here. It's a region-scoped
-  // module (no pin, no STAC dependency) so navigating the map / running a
-  // STAC search shouldn't silently deactivate it. Previously this reset
-  // selectedModule to null while leaving the "Resilience module active"
-  // banner on screen — the next chat message would then fall through to
-  // /api/query instead of /api/resilience/assess and produce a generic
-  // clarifier response. Anyone clearing Resilience must do it explicitly.
+  // Clear every analysis context before a Get Started Setup turn. The Setup
+  // query owns its location, so stale pins, map data, or a region-scoped
+  // module such as Resilience must not redirect it.
   const clearAllGeointSessions = useCallback(() => {
     console.log('[DEL] MainApp: Clearing ALL GEOINT sessions for new STAC search');
-    // Clear terrain session
     setTerrainSession(null);
-    // Clear pin
     setCurrentPin(null);
+    setMapContext(null);
     setMobilityAnalysisResult(null);
+    setMobilityPinCoords(null);
     setComparisonUserQuery(null);
     setAwaitingComparisonQuery(false);
     setComparisonResult(null);
-    // Resilience survives map-nav / STAC searches; everything else gets
-    // cleared. Use the functional form so we read the latest module value
-    // even if multiple events fire in the same React batch.
-    setSelectedModule(prev => {
-      if (prev === 'resilience') {
-        return prev;
-      }
-      onGeointToggle(false);
-      setSystemMessage(null);
-      return null;
-    });
+    setSelectedModule(null);
+    onGeointToggle(false);
+    setSystemMessage(null);
   }, [onGeointToggle]);
   
   // Listen for STAC query events from GetStartedButton (clears all sessions)
   useEffect(() => {
-    const handleStacQueryEvent = (event: CustomEvent<{ query: string; clearSessions: boolean }>) => {
+    const handleStacQueryEvent = (event: CustomEvent<{
+      query: string;
+      clearSessions: boolean;
+      stacMode?: 'public' | 'pro';
+    }>) => {
       if (event.detail.clearSessions) {
         console.log('[SYNC] MainApp: Received STAC query event - clearing all GEOINT sessions');
         clearAllGeointSessions();
+      }
+      if (event.detail.stacMode) {
+        onStacModeChange?.(event.detail.stacMode);
       }
     };
 
@@ -227,7 +222,7 @@ const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnTo
       window.removeEventListener('planetaryexplorer-stac-query' as any, handleStacQueryEvent as any);
       window.removeEventListener('planetaryexplorer-comparison-query' as any, handleComparisonQueryEvent as any);
     };
-  }, [clearAllGeointSessions]);
+  }, [clearAllGeointSessions, onStacModeChange]);
   
   // Handle mobility analysis result (when pin is dropped and analysis completes)
   const handleMobilityAnalysisResult = (result: any) => {
@@ -453,6 +448,7 @@ const MainApp: React.FC<MainAppProps> = ({ appState, onDatasetSelect, onReturnTo
           onAnalysisStateChange={setMapAnalysisInProgress}
           onHistoryRestoreSettled={handleHistoryRestoreSettled}
           stacMode={stacMode}
+          features={features}
         />
       </div>
 

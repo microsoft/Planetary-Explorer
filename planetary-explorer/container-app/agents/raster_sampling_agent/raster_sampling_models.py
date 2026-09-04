@@ -35,6 +35,7 @@ class RasterSamplingInput(BaseModel):
     data_type: Literal[
         "auto", "sst", "temperature", "elevation", "ndvi", "burn", "fire",
         "water", "snow", "sar", "biomass", "reflectance", "climate",
+        "vegetation", "gpp", "npp",
     ] = Field("auto", description="Hint that disambiguates raster bands.")
 
 

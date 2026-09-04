@@ -138,6 +138,48 @@ async def test_given_slow_analyst_when_timeout_expires_then_fallback_is_returned
 
 
 @pytest.mark.asyncio
+async def test_given_explicit_screenshot_when_running_then_provider_router_is_skipped(
+    monkeypatch,
+) -> None:
+    # Arrange
+    agent = AnalystAgent()
+    request = AnalysisRequest(
+        question="Describe the visible vegetation colours.",
+        session_id="screenshot-session",
+        loaded_collections=["modis-13Q1-061"],
+        has_screenshot=True,
+        screenshot_b64="image-data",
+        analysis_type="screenshot",
+    )
+
+    async def fail_provider(*_args, **_kwargs):
+        raise AssertionError("explicit screenshot must not invoke the provider router")
+
+    async def describe(_question):
+        return {
+            "success": True,
+            "answer": "Visible vegetation ranges from low to high vigour.",
+            "structured": {"type": "screenshot_analysis"},
+        }
+
+    monkeypatch.setattr(agent, "_invoke_serialized", fail_provider)
+    monkeypatch.setattr(
+        "agents.analyst_agent.tools.describe_map_screenshot",
+        describe,
+    )
+
+    # Act
+    result = await agent.run(request)
+
+    # Assert
+    assert result.answer == "Visible vegetation ranges from low to high vigour."
+    assert [step.analyzer for step in result.plan.steps] == [
+        "describe_map_screenshot"
+    ]
+    assert result.structured["describe_map_screenshot"]["success"] is True
+
+
+@pytest.mark.asyncio
 async def test_given_slow_gpt_56_responses_when_timeout_expires_then_fallback_is_returned(
     monkeypatch,
 ) -> None:
@@ -162,6 +204,84 @@ async def test_given_slow_gpt_56_responses_when_timeout_expires_then_fallback_is
         "timeout_seconds": 0.01,
     }
     assert get_session().session_id == "default"
+
+
+@pytest.mark.asyncio
+async def test_given_transient_failure_after_tool_dispatch_when_invoking_then_not_retried(
+    monkeypatch,
+) -> None:
+    # Arrange
+    agent = AnalystAgent()
+    agent._initialized = True
+    agent._agent_id = "analyst-agent"
+    agent._threads["session-1"] = AnalystThread(
+        session_id="session-1",
+        thread_id="thread-1",
+    )
+    run_calls = 0
+
+    async def create_message(**_kwargs):
+        return None
+
+    async def create_run(**_kwargs):
+        nonlocal run_calls
+        run_calls += 1
+        return SimpleNamespace(
+            id="run-with-tool",
+            status="failed",
+            last_error={"code": "rate_limit_exceeded"},
+        )
+
+    async def run_steps():
+        yield SimpleNamespace(
+            step_details=SimpleNamespace(tool_calls=[SimpleNamespace()])
+        )
+
+    agent._agents_client = SimpleNamespace(
+        messages=SimpleNamespace(create=create_message),
+        runs=SimpleNamespace(create_and_process=create_run),
+        run_steps=SimpleNamespace(list=lambda **_kwargs: run_steps()),
+    )
+    invocation = AnalystInvocation(session_id="session-1")
+
+    # Act and Assert
+    with pytest.raises(RuntimeError, match="rate_limit_exceeded"):
+        await agent._invoke_agent_service(_request(), invocation)
+    assert run_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_given_transport_failure_after_run_dispatch_when_invoking_then_not_retried(
+    monkeypatch,
+) -> None:
+    # Arrange
+    agent = AnalystAgent()
+    agent._initialized = True
+    agent._agent_id = "analyst-agent"
+    agent._threads["session-1"] = AnalystThread(
+        session_id="session-1",
+        thread_id="thread-1",
+    )
+    run_calls = 0
+
+    async def create_message(**_kwargs):
+        return None
+
+    async def create_run(**_kwargs):
+        nonlocal run_calls
+        run_calls += 1
+        raise ConnectionError("polling connection reset")
+
+    agent._agents_client = SimpleNamespace(
+        messages=SimpleNamespace(create=create_message),
+        runs=SimpleNamespace(create_and_process=create_run),
+    )
+    invocation = AnalystInvocation(session_id="session-1")
+
+    # Act and Assert
+    with pytest.raises(RuntimeError, match="after run dispatch"):
+        await agent._invoke_agent_service(_request(), invocation)
+    assert run_calls == 1
 
 
 @pytest.mark.asyncio

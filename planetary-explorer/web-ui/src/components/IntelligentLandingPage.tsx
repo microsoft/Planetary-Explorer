@@ -18,7 +18,12 @@ const IntelligentLandingPage: React.FC<IntelligentLandingPageProps> = ({ onRoute
     mutationFn: async (query: string) => {
       console.log('Routing mutation starting with query:', query);
       try {
-        const result = await apiService.routeQuery(query);
+        const response = await apiService.sendChatMessage(query);
+        const result = {
+          ...response,
+          redirect_url: response?.redirect_url
+            || `/geocopilot?source=planetary_computer&query=${encodeURIComponent(query)}`,
+        };
         console.log('Routing mutation API response:', result);
         return result;
       } catch (error) {

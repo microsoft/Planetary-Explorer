@@ -1,6 +1,7 @@
 import { ChatHistoryContext, ChatHistorySession, ChatHistorySnapshot, ChatMessage, MapContext } from '../services/api';
 
 export const MAX_HISTORY_TILE_URLS = 50;
+export const MAX_HISTORY_SCENE_REFS = 50;
 
 export function persistedChatMessages(messages: ChatMessage[]): ChatMessage[] {
   return messages.filter((message) => !message.isThinking);
@@ -63,7 +64,10 @@ export function normalizeRestoredChatContext(
   context: ChatHistoryContext,
   proEnabled: boolean,
 ): ChatHistoryContext {
-  const hasProState = context.stacMode === 'pro' || context.map?.stac_mode === 'pro';
+  const hasProState = context.stacMode === 'pro'
+    || context.map?.stac_mode === 'pro'
+    || context.map?.tile_urls?.some((tile) => tile.stac_mode === 'pro')
+    || context.map?.scene_refs?.some((scene) => scene.stac_mode === 'pro');
   if (!hasProState || proEnabled) return context;
   return {
     ...context,
@@ -104,4 +108,18 @@ export function boundedHistoryTileUrls(
   tileUrls: MapContext['tile_urls'],
 ): MapContext['tile_urls'] {
   return tileUrls?.slice(0, MAX_HISTORY_TILE_URLS);
+}
+
+export function boundedHistorySceneRefs(
+  stacItems: MapContext['stac_items'],
+): MapContext['scene_refs'] {
+  return stacItems?.slice(0, MAX_HISTORY_SCENE_REFS).map((item) => ({
+    id: item.id,
+    collection: item.collection,
+    stac_mode: item.stac_mode,
+    bbox: item.bbox,
+    datetime: typeof item.properties?.datetime === 'string'
+      ? item.properties.datetime
+      : undefined,
+  }));
 }

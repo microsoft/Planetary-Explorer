@@ -1,0 +1,813 @@
+{
+  "generated_at": "2026-09-03T00:13:23.957Z",
+  "app_url": "http://127.0.0.1:5175/",
+  "release": {},
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "setup_query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the colours in this 2026 Toronto image and identify visible land-cover types.",
+      "outcome": "pass",
+      "elapsed_ms": 33517,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+        "latitude": 51.03,
+        "longitude": -114.08,
+        "session_id": "web-session-1788394031229-25aq5tuh9"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -79.64,
+        43.58,
+        -79.12,
+        43.86
+      ],
+      "expected_pin": {
+        "lat": 43.72,
+        "lng": -79.38
+      },
+      "submitted_pin": {
+        "lat": 43.72016356643846,
+        "lng": -79.380000000001
+      },
+      "pin_distance_km": 0.02,
+      "map_zoom": 10,
+      "imagery_layer": "Sentinel-2 Level-2A",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9699,
+        "meanAbsoluteDifference": 18.96
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.03,
+      "evidence_collection": "sentinel-2-l2a",
+      "response_excerpt": "The image provided does not appear to be zoomed into Toronto specifically but instead spans much of North America, including Canada, the United States, and surrounding regions.\n\n### **Colours in the Image:**\n1. **Green:** Represents areas of dense vegetation and forests.\n   - Noticeable in regions such as British Columbia, parts of Ontario, Quebec, and the eastern U.S.\n2. **Brown/Tan:** Indicates sparsely vegetated areas or dry terrain.\n   - Prominent in northern and western Canada, as well as the central U.S.\n3. **White:** Represents snow or ice cover. \n   - Visible in northern regions of Canada, especially the Arctic territories (e.g., Nunavut and the Northwest Territories).\n4. **Blue:** Indicates water bodies like oceans, bays, rivers, and lakes.\n   - Clearly visible in the Hudson Bay, Great Lakes, Pacific Ocean, and Gulf of Alaska.\n\n### **Land-Cover Types Identified:**\n1. **Urban Areas:**\n   - Located in major cities such as Toronto and Montreal in Ontario, showing small dense clus",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.png"
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "setup_query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+      "image_query": "Describe urban growth and vegetation patterns visible around Calgary in 2026.",
+      "outcome": "pass",
+      "elapsed_ms": 30736,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394065038-9x33cnyd5"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -114.09,
+        51.02,
+        -114.07,
+        51.04
+      ],
+      "expected_pin": {
+        "lat": 51.03,
+        "lng": -114.08
+      },
+      "submitted_pin": {
+        "lat": 51.03000107880587,
+        "lng": -114.08000000000038
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "hls2-s30",
+      "imagery_difference": {
+        "changedPixelRatio": 0.835,
+        "meanAbsoluteDifference": 34.2
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 208912,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 476,
+        "meanRgb": [
+          68.51,
+          67.76,
+          52.56
+        ],
+        "meanLuminance": 66.82,
+        "luminanceVariance": 836.26,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\02-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "hls2-s30",
+      "response_excerpt": "In this imagery of Calgary, Alberta, dated August 23, 2026, the patterns of urban growth and vegetation are distinctive. Here's a breakdown of the features:\n\n### **Urban Growth**\n1. **Densely Built Areas:**\n   - To the north and northwest, areas like Connaught, Beltline, and parts of Mission show concentrated development with dense arrays of city blocks and infrastructure.\n   - These neighborhoods emphasize an uptick in urbanization, with clear subdivisions and established road grids.\n\n2. **Expansion:**\n   - Surrounding Mount Royal and Roxboro, transitions occur from dense urban zones into slightly more open suburban or semi-urban landscapes, indicating considerable urban spread.\n   - Some bright, isolated structures visible within Mount Royal and Rideau suggest new or expanded buildings, indicating recent construction.\n\n3. **Road Infrastructure:**\n   - The road grid connects various regions seamlessly, suggesting stable infrastructure development facilitating access and urban connecti",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\02-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.png"
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "setup_query": "Show Landsat imagery over Halifax, Canada from 2026-01-01 to 2026-08-26",
+      "image_query": "Identify water, urban, forest, and shoreline features in this 2026 Halifax image.",
+      "outcome": "pass",
+      "elapsed_ms": 33071,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394095967-04cyq01bk"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -63.85,
+        44.48,
+        -63.35,
+        44.82
+      ],
+      "expected_pin": {
+        "lat": 44.65,
+        "lng": -63.6
+      },
+      "submitted_pin": {
+        "lat": 44.65024913899077,
+        "lng": -63.600000000001074
+      },
+      "pin_distance_km": 0.03,
+      "map_zoom": 10,
+      "imagery_layer": "Landsat Collection 2 Level-2",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9978,
+        "meanAbsoluteDifference": 171.19
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\03-landsat-collection-2-surface-reflectance-over-coastal-nova-scoti.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.03,
+      "evidence_collection": "landsat-c2-l2",
+      "response_excerpt": "The image provided depicts a large-scale map of North America, including Canada and parts of the United States. This image covers a wide area and does not focus on Halifax specifically. A closer, detailed view of Halifax, Nova Scotia, at the specified location (44.6499°N, 63.6000°W) would be needed to identify specific features such as water bodies, urban areas, forests, and shorelines.\n\nFor the current large-scale map:\n\n1. **Water Features:**  \n   - Large water bodies such as Hudson Bay, the Gulf of Alaska, and the Atlantic Ocean are visible.  \n   - The Great Lakes (e.g., Lake Superior, Lake Michigan) and numerous rivers across Canada and the U.S. are identifiable.\n\n2. **Urban Areas:**  \n   - Cities are marked textually, but urban areas themselves are not visually distinguishable in this scale imagery.\n\n3. **Forest Features:**  \n   - Green and darker areas across Canada and parts of the U.S. indicate forested regions, particularly the boreal forest across northern Canada.\n\n4. **Shorel",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\03-landsat-collection-2-surface-reflectance-over-coastal-nova-scoti.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "setup_query": "Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colours actually visible in this 2026 MODIS thermal-anomaly image and whether any clusters are visible, then explain only those visible colours at this Alberta location.",
+      "outcome": "pass",
+      "elapsed_ms": 33689,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394129368-yefv75mxc"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -115.01,
+        54.49,
+        -114.99,
+        54.51
+      ],
+      "expected_pin": {
+        "lat": 54.5,
+        "lng": -115
+      },
+      "submitted_pin": {
+        "lat": 54.50000122343087,
+        "lng": -115.00000000000047
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Thermal Anomalies Daily",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9989,
+        "meanAbsoluteDifference": 69.18
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\04-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-14A1-061",
+      "response_excerpt": "The provided MODIS thermal-anomaly image displays Alberta, Canada (centered at 54.5000°N, 115.0000°W), within a broader map of North America. Here's the analysis based on your request:\n\n### **Colours Visible**\n1. **Green**: Represents vegetated land areas prevalent across Alberta, such as forests and grasslands in the boreal region.\n2. **Brown**: Indicates non-vegetated regions, such as exposed soil, hills, and possibly agricultural areas.\n3. **White**: Appears in regions covered by snow or ice, mostly noticeable at higher elevations in the western provinces near Alberta's mountains.\n4. **Dark Blue**: Represents water bodies, such as lakes and rivers. Example: Lesser Slave Lake is visible within Alberta.\n5. **Gray/Urban**: Small clusters of urbanized areas are faintly visible, such as portions near Edmonton or Calgary likely indicated by gray tones.\n\n### **Clusters of Thermal Anomalies**\nNo distinct thermal anomaly clusters stand out in the provided screenshot at this zoom level. MODIS",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\04-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "setup_query": "Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26",
+      "image_query": "Explain the vegetation colours and identify lower-vigour areas near Regina in 2026.",
+      "outcome": "pass",
+      "elapsed_ms": 32709,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394163321-n426ialv4"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -104.61,
+        50.34,
+        -104.59,
+        50.36
+      ],
+      "expected_pin": {
+        "lat": 50.35,
+        "lng": -104.6
+      },
+      "submitted_pin": {
+        "lat": 50.35000105299804,
+        "lng": -104.59999999999964
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Vegetation Indices 16-Day (250m)",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9978,
+        "meanAbsoluteDifference": 76.19
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\05-250m-ndvi-and-evi-composites-at-verified-regina-cropland.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-13Q1-061",
+      "response_excerpt": "This imagery provides an overview of North America, showing the regions in Canada, including Saskatchewan, and parts of the United States at a broad scale. However, it does not display specific MODIS Vegetation Index data for lower-vigour analysis near Regina, Saskatchewan, in 2026. \n\nHere’s how vegetation colours are typically interpreted in MODIS vegetation index imagery when zoomed to appropriate detail:\n\n- **Greens** indicate healthy vegetation and robust photosynthetic activity, typically seen in forests, agricultural land, and well-maintained grasslands.\n- **Yellows or tans** signify sparse vegetation or areas in transition, possibly due to seasonal changes, drought stress, or agricultural activity.\n- **Browns** or **grays** often represent barren land, urban zones, or low vigour due to limited vegetation coverage.\n\nFor identifying lower-vigour regions near Regina, the context demands high-resolution imagery and a focused zoom on the area combined with the actual vegetation index",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\05-250m-ndvi-and-evi-composites-at-verified-regina-cropland.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colour actually visible in this 2026 GPP image and whether it varies, then explain only that visible productivity colour at this interior British Columbia location.",
+      "outcome": "pass",
+      "elapsed_ms": 27052,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394196735-brc1o8w2q"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -126.56,
+        54.14,
+        -126.54,
+        54.16
+      ],
+      "expected_pin": {
+        "lat": 54.15,
+        "lng": -126.55000000000001
+      },
+      "submitted_pin": {
+        "lat": 54.15000120775633,
+        "lng": -126.55000000000035
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "MODIS Gross Primary Productivity 8-Day (500m)",
+      "imagery_difference": {
+        "changedPixelRatio": 1,
+        "meanAbsoluteDifference": 55.09
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 6329,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 1,
+        "meanRgb": [
+          24,
+          15,
+          62
+        ],
+        "meanLuminance": 20.31,
+        "luminanceVariance": 0,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\06-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-17A2H-061",
+      "uniform_image_grounded": true,
+      "uniform_grounding_sentence": "The colour visible in this MODIS Gross Primary Productivity (GPP) image over interior British Columbia is solid dark purple, and there is no visible variation across the frame.",
+      "response_excerpt": "The colour visible in this MODIS Gross Primary Productivity (GPP) image over interior British Columbia is solid dark purple, and there is no visible variation across the frame.\n\nThis dark purple indicates very low GPP values or potentially areas without significant vegetation or photosynthetic activity during the observed 8-day period. It might represent barren terrain, areas covered by snow or ice, or regions where cloud cover obscured the satellite's ability to measure productivity.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\06-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "setup_query": "Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28",
+      "image_query": "State the colours actually visible in this February 2025 MODIS snow-cover image and whether they vary, then explain only those visible colours around Quebec City.",
+      "outcome": "pass",
+      "elapsed_ms": 27767,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394223468-2jus2uqi5"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -71.218,
+        46.8039,
+        -71.198,
+        46.8239
+      ],
+      "expected_pin": {
+        "lat": 46.813900000000004,
+        "lng": -71.208
+      },
+      "submitted_pin": {
+        "lat": 46.81390092974539,
+        "lng": -71.20800000000071
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "modis-10A1-061",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9982,
+        "meanAbsoluteDifference": 51.98
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 49965,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 85,
+        "meanRgb": [
+          11.23,
+          49.88,
+          106.88
+        ],
+        "meanLuminance": 45.78,
+        "luminanceVariance": 82.37,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\07-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "modis-10A1-061",
+      "response_excerpt": "In the MODIS snow-cover image provided, the only visible colour is consistent dark blue across the entire area, including around Quebec City. No other variations in colour or textures are detectable. This uniformity suggests either complete thematic coverage or an absence of data differentiation near Quebec City in this February 2025 dataset.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\07-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m spring river and ice observations near Norman Wells",
+      "setup_query": "Show Sentinel-2 imagery along the Mackenzie River near Norman Wells, Canada from 2026-05-01 to 2026-06-30",
+      "image_query": "Identify open water, ice, snow, and land in this 2026 image.",
+      "outcome": "pass",
+      "elapsed_ms": 27582,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394251047-1wqnsm4a3"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -127.2,
+        65.1,
+        -126.5,
+        65.5
+      ],
+      "expected_pin": {
+        "lat": 65.3,
+        "lng": -126.85
+      },
+      "submitted_pin": {
+        "lat": 65.30075893837045,
+        "lng": -126.8500000000005
+      },
+      "pin_distance_km": 0.08,
+      "map_zoom": 9,
+      "imagery_layer": "Sentinel-2 Level-2A",
+      "imagery_difference": {
+        "changedPixelRatio": 0.8473,
+        "meanAbsoluteDifference": 101.38
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 116921,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 283,
+        "meanRgb": [
+          126.41,
+          136.33,
+          125.64
+        ],
+        "meanLuminance": 133.45,
+        "luminanceVariance": 7762.14,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\08-10m-spring-river-and-ice-observations-near-norman-wells.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.11,
+      "evidence_collection": "sentinel-2-l2a",
+      "response_excerpt": "In this satellite image near Norman Wells, Northwest Territories, I can identify the following elements:\n\n### **Open water:**\n- The Mackenzie River is prominently visible in shades of blue or dark green, winding centrally through the image.\n- Other smaller water bodies, such as Otter Lake and Three Day Lake, appear as darker patches in the surrounding terrain.\n\n### **Snow:**\n- There are patches with white or light tones visible along the higher elevation areas, especially in the northeastern and central areas of the image. These might indicate snow persisting in June, possibly due to local climatic conditions.\n\n### **Ice:**\n- No clear or distinct patches of ice are visible on the water bodies or surrounding terrain. The open water is free of ice, consistent with summer conditions.\n\n### **Land:**\n- Green, vegetated terrain dominates much of the landscape, particularly in the western regions of the image. This indicates tundra or forest-covered land. \n- Bare, grayish or light-brown tones",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\08-10m-spring-river-and-ice-observations-near-norman-wells.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal observations at a verified Churchill pixel",
+      "setup_query": "Show Landsat Collection 2 Level-2 imagery along the Hudson Bay coast at Churchill, Manitoba, Canada, latitude 58.7684, longitude -94.1650, from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the natural-colour rendering and identify water, cloud, tundra, and coast near Churchill.",
+      "outcome": "pass",
+      "elapsed_ms": 32389,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394278798-hjx8lydn0"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -94.175,
+        58.7584,
+        -94.155,
+        58.7784
+      ],
+      "expected_pin": {
+        "lat": 58.7684,
+        "lng": -94.16499999999999
+      },
+      "submitted_pin": {
+        "lat": 58.76840143914845,
+        "lng": -94.16500000000052
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "Landsat Collection 2 Level-2",
+      "imagery_difference": {
+        "changedPixelRatio": 0.6978,
+        "meanAbsoluteDifference": 116.55
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\09-30m-summer-coastal-observations-at-a-verified-churchill-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0,
+      "evidence_collection": "landsat-c2-l2",
+      "response_excerpt": "The image provided is a wide-scale view of North America with Canada prominently displayed, including Hudson Bay—where Churchill, Manitoba, is located on its western coast. This rendering appears to emphasize natural-colour processing, showcasing land cover as it would appear to the human eye.\n\n### Identification of Features Near Churchill:\n\n1. **Water:**\n   - The Hudson Bay is visible adjacent to Churchill as a large, dark blue expanse, representing open water in this rendering. Its coastline curves around the town.\n   - Smaller water bodies, such as rivers, estuaries, and lakes, are visible in lighter blue tones in the surrounding region.\n\n2. **Cloud Cover:**\n   - There appears to be very little or no visible cloud cover over the Churchill area in this image, as the scene remains clear with uninterrupted natural detail.\n\n3. **Tundra:**\n   - The land surrounding the town and Hudson Bay displays shades of muted green, brown, and gray, characteristic of tundra vegetation during late sum",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\09-30m-summer-coastal-observations-at-a-verified-churchill-pixel.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "setup_query": "Show Copernicus DEM terrain around Banff, Canada for 2026 analysis",
+      "image_query": "Explain the elevation colours and identify valleys, slopes, and peaks.",
+      "outcome": "pass",
+      "elapsed_ms": 30842,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394311548-71lv4mw2d"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -115.8,
+        51.05,
+        -115.35,
+        51.4
+      ],
+      "expected_pin": {
+        "lat": 51.224999999999994,
+        "lng": -115.57499999999999
+      },
+      "submitted_pin": {
+        "lat": 51.22533269602462,
+        "lng": -115.57500000000053
+      },
+      "pin_distance_km": 0.04,
+      "map_zoom": 10,
+      "imagery_layer": "Copernicus DEM 30m",
+      "imagery_difference": {
+        "changedPixelRatio": 0.8836,
+        "meanAbsoluteDifference": 51.68
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\10-30m-elevation-used-for-current-year-terrain-analysis.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.05,
+      "evidence_collection": "cop-dem-glo-30",
+      "response_excerpt": "This image shows a broad satellite view of parts of Canada and the United States, highlighting landforms, vegetation, and major geographic features. Here's the analysis:\n\n### **Elevation Colours**\n1. **White Region** – Found prominently along the western mountainous areas (e.g., Yukon and British Columbia) and parts of northern Canada. This represents high elevations, possibly snow-capped peaks and glaciers. Areas such as the Rocky Mountains and coastal ranges stand out.\n2. **Brown and Tan** – Indicate mid-elevation terrain, generally rugged but not as high as mountainous peaks. These colours dominate Alberta's foothills and other zones of elevated plateau land across Canada.\n3. **Greens** – Lowland areas, like the prairies, are primarily green across provinces like Saskatchewan and Manitoba, representing fertile plains and valleys.\n4. **Darker Green** – Represents lower elevations or regions densely vegetated with forests, seen in many parts near British Columbia and Ontario.\n5. **Blu",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\10-30m-elevation-used-for-current-year-terrain-analysis.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over Vancouver, Canada from 2026-01-01 to 2026-08-26",
+      "image_query": "Explain the radar colours and distinguish water, vegetation, and built-up areas.",
+      "outcome": "pass",
+      "elapsed_ms": 32638,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394342716-0atbg7qdb"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -123.4,
+        49,
+        -122.7,
+        49.4
+      ],
+      "expected_pin": {
+        "lat": 49.2,
+        "lng": -123.05000000000001
+      },
+      "submitted_pin": {
+        "lat": 49.20040440038616,
+        "lng": -123.05000000000011
+      },
+      "pin_distance_km": 0.04,
+      "map_zoom": 10,
+      "imagery_layer": "Sentinel-1 RTC",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9977,
+        "meanAbsoluteDifference": 58.77
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\11-10m-terrain-corrected-radar-backscatter-for-metro-vancouver.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.06,
+      "evidence_collection": "sentinel-1-rtc",
+      "response_excerpt": "The displayed image is not a Sentinel-1 radar image. Instead, it shows a natural-colour, satellite basemap view of North America. Such basemap imagery uses visible light to represent geographic features realistically, rather than radar reflectance values. Thus, the visible colours and distinctions between water, vegetation, and built-up areas here are based on optical light rather than radar signals.\n\n### General Observations:\n1. **Water Bodies:**\n   - Large areas of dark blue, such as the Pacific Ocean, Hudson Bay, and smaller lakes across Canada and the U.S., represent water. Optical detection highlights water as a smooth, uniform, dark surface due to its low reflectance in visible light.\n\n2. **Vegetation:**\n   - Green regions dominate much of Canada and the U.S., such as forests and grasslands. Dense green areas likely suggest forested regions such as British Columbia's coastal rainforest, while subtler shades represent grasslands or fewer trees.\n\n3. **Built-Up Areas:**\n   - Urban r",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\11-10m-terrain-corrected-radar-backscatter-for-metro-vancouver.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over the Red River, Manitoba from 2026-03-01 to 2026-05-31",
+      "image_query": "Explain the radar colour composite and identify possible inundation.",
+      "outcome": "pass",
+      "elapsed_ms": 30714,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+        "latitude": 43.72,
+        "longitude": -79.38,
+        "session_id": "web-session-1788394375090-kcxlu3kby"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -97.45,
+        49,
+        -96.7,
+        50.2
+      ],
+      "expected_pin": {
+        "lat": 49.6,
+        "lng": -97.075
+      },
+      "submitted_pin": {
+        "lat": 49.603691667301035,
+        "lng": -97.07500000000017
+      },
+      "pin_distance_km": 0.41,
+      "map_zoom": 8,
+      "imagery_layer": "Sentinel-1 RTC",
+      "imagery_difference": {
+        "changedPixelRatio": 0.2679,
+        "meanAbsoluteDifference": 20.03
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 266877,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 508,
+        "meanRgb": [
+          122.9,
+          113.37,
+          61.44
+        ],
+        "meanLuminance": 111.65,
+        "luminanceVariance": 690.62,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\payload-images\\12-all-weather-radar-observations-for-spring-flood-monitoring.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.52,
+      "evidence_collection": "sentinel-1-rtc",
+      "response_excerpt": "The radar colour composite in this Sentinel-1 RTC imagery likely uses bands such as VV (vertical transmit, vertical receive) and VH (vertical transmit, horizontal receive) polarization, blended to highlight land cover types and features. Specific colours indicate radar backscatter intensity, which corresponds to surface texture, moisture, and land conditions.\n\n### Colour Representation:\n- **Orange areas (left and right borders):** These are regions of high radar backscatter, likely showing dense forested areas (east) or terrain reflecting higher moisture or rough surfaces, including agriculture on the left (west). These stable, saturated colours often indicate natural, wet, or textured surfaces.\n\n- **Grey and speckled appearance in the central regions:** This is characteristic of urban areas (like Winnipeg), agricultural lands, or moderate-return surfaces. Roads and city layouts are distinguishable, with residential or commercial areas creating granular patterns.\n\n### Identifying Possi",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-release-candidate\\browser-screenshots\\12-all-weather-radar-observations-for-spring-flood-monitoring.png"
+    }
+  ]
+}

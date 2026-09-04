@@ -12,6 +12,7 @@ tables to maintain.
 from __future__ import annotations
 
 from hybrid_rendering_system import (
+    EXPLICIT_RENDER_CONFIGS,
     HybridRenderingSystem,
     _SCENE_STRETCH_CACHE,
     _get_scene_percentile_stretches,
@@ -49,6 +50,20 @@ S2_RENDERS = {
         "assets": ["B11", "B08", "B02"],
     },
 }
+
+
+def test_landsat_l2_uses_supported_tile_scale():
+    config = EXPLICIT_RENDER_CONFIGS["landsat-c2-l2"]
+
+    assert config.tile_scale == 2
+
+
+def test_modis_gpp_uses_catalog_asset_name():
+    config = EXPLICIT_RENDER_CONFIGS["modis-17A2H-061"]
+
+    assert config.assets == ["Gpp_500m"]
+    assert config.colormap == "modis-17A2H|A2HGF"
+    assert config.rescale is None
 
 
 def test_fire_query_picks_swir_preset():

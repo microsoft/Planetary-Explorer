@@ -19,22 +19,16 @@ import logging
 import math
 import operator
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Callable, Dict, List, Optional, Set
+from concurrent.futures import as_completed
+from typing import Any, Callable, Dict, Set
 
 import numpy as np
-
-from cloud_config import cloud_cfg
-
-logger = logging.getLogger(__name__)
 
 # Re-use shared infrastructure from extreme_weather_tools
 from geoint.extreme_weather_tools import (
     ANNUAL_SUBSAMPLE_DEFAULT,
     ANNUAL_SUBSAMPLE_TARGET,
     CLIMATE_VAR_INFO,
-    CMIP6_COLLECTION,
-    PREFERRED_MODELS,
     _convert_longitude,
     _find_valid_grid_point,
     _get_https_fs,
@@ -42,10 +36,11 @@ from geoint.extreme_weather_tools import (
     _netcdf_result_cache,
     _netcdf_result_cache_ts,
     _netcdf_cache_ttl,
+    _run_values_read,
     _search_cmip6_items,
-    _stac_search_cache,
-    _values_pool,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -81,6 +76,60 @@ NETCDF_CATALOG: Dict[str, Dict[str, Any]] = {
         "stac_filters": ["cmip6:year", "cmip6:model", "cmip6:scenario"],
     },
 }
+
+
+def _monthly_slices(n_days: int, year: int) -> list[slice]:
+    """Partition every daily sample into one calendar-aware month."""
+    if n_days <= 0:
+        return []
+    if n_days == 360:
+        lengths = [30] * 12
+    elif n_days == 365:
+        lengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    elif n_days == 366:
+        lengths = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    else:
+        # Unknown or partial calendars still assign every sample exactly once.
+        base, remainder = divmod(n_days, 12)
+        lengths = [base + (1 if month < remainder else 0) for month in range(12)]
+
+    slices = []
+    start = 0
+    for length in lengths:
+        end = start + length
+        slices.append(slice(start, end))
+        start = end
+    return slices
+
+
+def _aggregate_monthly_values(
+    values: np.ndarray,
+    year: int,
+    convert: Callable[[float], float],
+    unit: str,
+) -> list[dict[str, Any]]:
+    """Aggregate every valid daily value into its calendar month."""
+    month_names = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ]
+    periods = []
+    for month_name, month_slice in zip(
+        month_names,
+        _monthly_slices(len(values), year),
+    ):
+        month_values = values[month_slice]
+        valid = month_values[~np.isnan(month_values)]
+        if len(valid) == 0:
+            continue
+        periods.append({
+            "period": month_name,
+            "mean": convert(float(np.mean(valid))),
+            "max": convert(float(np.max(valid))),
+            "min": convert(float(np.min(valid))),
+            "unit": unit,
+        })
+    return periods
 
 
 # ============================================================================
@@ -294,9 +343,11 @@ def sample_timeseries(
                 step = max(1, n_times // 365)
                 point = point.isel(time=slice(None, None, step))
 
-            future = _values_pool.submit(lambda p=point: p.values.astype(float))
             try:
-                all_values = future.result(timeout=60)
+                all_values = _run_values_read(
+                    lambda p=point: p.values.astype(float),
+                    60,
+                )
             except TimeoutError:
                 return json.dumps({"error": "NetCDF read timed out"})
 
@@ -334,27 +385,13 @@ def sample_timeseries(
                         "unit": var_info["display_unit"],
                     })
             else:
-                # Monthly: split into ~12 equal chunks
-                days_per_month = max(1, n_days // 12)
-                month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-                periods = []
-                for m in range(12):
-                    start = m * days_per_month
-                    end = min((m + 1) * days_per_month, n_days)
-                    if start >= n_days:
-                        break
-                    vals = all_values[start:end]
-                    valid = vals[~np.isnan(vals)]
-                    if len(valid) == 0:
-                        continue
-                    periods.append({
-                        "period": month_names[m],
-                        "mean": convert(float(np.mean(valid))),
-                        "max": convert(float(np.max(valid))),
-                        "min": convert(float(np.min(valid))),
-                        "unit": var_info["display_unit"],
-                    })
+                # Monthly: preserve real month boundaries and include every day.
+                periods = _aggregate_monthly_values(
+                    all_values,
+                    year,
+                    convert,
+                    var_info["display_unit"],
+                )
 
             # Annual summary
             valid_all = all_values[valid_mask]
@@ -519,9 +556,11 @@ def sample_area_stats(
                 n_sampled = 1
                 n_times = 1
 
-            future = _values_pool.submit(lambda s=spatial_subset: s.values.astype(float))
             try:
-                values_nd = future.result(timeout=90)
+                values_nd = _run_values_read(
+                    lambda s=spatial_subset: s.values.astype(float),
+                    90,
+                )
             except TimeoutError:
                 return json.dumps({"error": "NetCDF area read timed out"})
 
@@ -789,7 +828,6 @@ def compute_trend(
     x = np.array(sorted_years, dtype=float)
     y = np.array([data_points[yr] for yr in sorted_years], dtype=float)
 
-    n = len(x)
     x_mean = np.mean(x)
     y_mean = np.mean(y)
     ss_xy = np.sum((x - x_mean) * (y - y_mean))
@@ -797,7 +835,6 @@ def compute_trend(
     ss_yy = np.sum((y - y_mean) ** 2)
 
     slope = ss_xy / ss_xx if ss_xx != 0 else 0
-    intercept = y_mean - slope * x_mean
     r_squared = (ss_xy ** 2) / (ss_xx * ss_yy) if ss_xx != 0 and ss_yy != 0 else 0
 
     # Slope per decade in display units

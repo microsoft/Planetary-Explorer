@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-02T12:29:22.004Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "setup_query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+      "image_query": "Describe urban growth and vegetation patterns visible around Calgary in 2026.",
+      "outcome": "pass",
+      "elapsed_ms": 38379,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -114.09,
+        51.02,
+        -114.07,
+        51.04
+      ],
+      "expected_pin": {
+        "lat": 51.03,
+        "lng": -114.08
+      },
+      "submitted_pin": {
+        "lat": 51.03000107880641,
+        "lng": -114.07999999999976
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 319923,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 160,
+        "luminanceVariance": 520.61,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-calibration\\payload-images\\01-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "Calgary's urban and vegetation patterns in 2026 show distinct contrasts between densified urban spaces and preserved green areas.\n\n### **Urban Growth Patterns**\n1. **Urban Density:** Neighborhoods like **Connaught**, **Beltline**, and **Mission** show high-density building layouts, with mixed-use developments emphasizing downtown expansion.\n2. **Suburban Expansion:** Areas such as **Mount Royal** and **Roxboro** reflect spacious suburban development with larger single-family lots and established residential zones.\n3. **Infrastructure Landmarks:** The growth around **Lindsay Park** and northern Beltline suggests vertical redevelopment adjacent to downtown.\n\n### **Vegetation Patterns**\n1. **Parks and Rivers:** Green corridors along the **Elbow River**, especially near Lindsay Park, are emphasized for ecological and recreational purposes.\n2. **Urban Canopy:** Suburban zones like Mount Royal exhibit balanced tree cover with lawns and parklands integrated into urban planning.\n3. **Riparian ",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-calibration\\browser-screenshots\\01-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.png"
+    }
+  ]
+}

@@ -405,19 +405,19 @@ Be specific and concise."""
         
         logger.info(f"Extreme Weather Session {session_id}: Processing '{user_message[:50]}...'")
         
-        _retryable_patterns = [
-            "404", "Resource not found", "invalid_engine_error",
-            "Failed to resolve model", "InternalServerError",
-            "Unable to get resource", "DeploymentNotFound",
-            "server_error", "something went wrong",
-        ]
+        from geoint.agent_retry import (
+            agent_run_has_dispatched_tools,
+            agent_retry_delay_seconds,
+            is_retryable_agent_error,
+        )
         max_retries = 3
         for attempt in range(max_retries):
+            run_dispatch_started = False
             try:
                 # Re-create thread if we had to re-initialize (stale session)
                 if attempt > 0:
                     import asyncio as _aio
-                    await _aio.sleep(2 ** attempt)
+                    await _aio.sleep(agent_retry_delay_seconds(attempt))
                     session = await self._get_or_create_session(f"{session_id}_retry{attempt}", latitude, longitude)
 
                 await self._agents_client.messages.create(
@@ -425,7 +425,8 @@ Be specific and concise."""
                     role="user",
                     content=context_message,
                 )
-                
+
+                run_dispatch_started = True
                 run = await self._agents_client.runs.create_and_process(
                     thread_id=session.thread_id,
                     agent_id=self._agent_id,
@@ -434,8 +435,13 @@ Be specific and concise."""
                 if run.status == "failed":
                     error_text = str(run.last_error)
                     logger.error(f"Extreme weather agent run failed: {error_text}")
-                    is_retryable = any(p.lower() in error_text.lower() for p in _retryable_patterns)
-                    if is_retryable and attempt < max_retries - 1:
+                    is_retryable = is_retryable_agent_error(error_text)
+                    tools_dispatched = await agent_run_has_dispatched_tools(
+                        self._agents_client,
+                        session.thread_id,
+                        run.id,
+                    )
+                    if is_retryable and not tools_dispatched and attempt < max_retries - 1:
                         logger.warning(f"Extreme weather run failed (retryable), re-initializing... (attempt {attempt + 1})")
                         self._initialized = False
                         self._agent_id = None
@@ -508,25 +514,23 @@ Be specific and concise."""
                 }
                 
             except Exception as e:
-                error_str = str(e)
-                is_retryable = any(p.lower() in error_str.lower() for p in _retryable_patterns)
-                if is_retryable and attempt < max_retries - 1:
-                    logger.warning(f"Extreme weather agent error (retryable): {error_str[:200]}, re-initializing... (attempt {attempt + 1})")
+                if (
+                    not run_dispatch_started
+                    and is_retryable_agent_error(e)
+                    and attempt < max_retries - 1
+                ):
+                    logger.warning(
+                        "Extreme weather pre-dispatch failure is retryable, "
+                        "attempt %d: %s",
+                        attempt + 1,
+                        str(e)[:200],
+                    )
                     self._initialized = False
                     self._agent_id = None
                     self._agents_client = None
                     self.sessions.clear()
-                    try:
-                        await self._ensure_initialized()
-                        continue
-                    except Exception as reinit_err:
-                        logger.error(f"Extreme weather agent re-initialization failed: {reinit_err}")
-                        return {
-                            "response": f"Error: Agent service unavailable - {str(reinit_err)}",
-                            "error": str(reinit_err),
-                            "session_id": session_id
-                        }
-
+                    await self._ensure_initialized()
+                    continue
                 logger.error(f"Extreme weather agent error: {e}")
                 import traceback
                 logger.error(traceback.format_exc())

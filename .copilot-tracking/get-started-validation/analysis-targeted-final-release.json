@@ -1,0 +1,139 @@
+{
+  "generated_at": "2026-09-02T21:21:23.228828+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "resilience": true,
+    "weather": true
+  },
+  "scenario_count": 2,
+  "results": [
+    {
+      "family": "Terrain",
+      "location": "Calgary, Alberta",
+      "question": "Analyze 2026 terrain elevation, slope, aspect, and sun exposure near Calgary at 51.0447N, 114.0719W.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 14392,
+      "attempts": 1,
+      "request": {
+        "message": "Analyze 2026 terrain elevation, slope, aspect, and sun exposure near Calgary at 51.0447N, 114.0719W.",
+        "latitude": 51.0447,
+        "longitude": -114.0719,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview near Calgary at 51.0447\u00b0N, 114.0719\u00b0W\nThe analyzed area features gently rolling hills with variations in elevation and slope. The terrain characteristics provide moderately sunlit conditions due to the slope direction.\n\n### Elevation & Topography\n- **Minimum Elevation**: 1022.0 meters\n- **Maximum Elevation**: 1142.4 meters\n- **Mean Elevation**: 1074.1 meters\n- **Elevation Range**: 120.4 meters\n- **Terrain Type**: Gently rolling hills\n\n### Slope & Traversability\n- **Slope Range**: 0.0\u00b0 to 37.2\u00b0\n- **Mean Slope**: 3.7\u00b0\n- **Terrain Summary**:\n  - **Flat Areas** (<5\u00b0 slope): 76.9%\n  - **Moderate Slope** (5-20\u00b0 slope): 21.8%\n  - **Steep Areas** (>20\u00b0 slope): 1.3%\n- **Traversability**: Easy\n\n### Aspect & Sun Exposure\n- **Dominant Slope Direction**: East (14.6%)\n- **Direction Distribution**:\n  - North: 12.5%, Northeast: 13.1%, East: 14.6%, Southeast: 13.7%\n  - South: 13.8%, Southwest: 11.8%, West: 11.0%, Northwest: 9.5%\n- **Flat Terrain Percentage**: 0.7%\n- **Sun Exposure**: Moderate\n  - **Note**: 39% of the slopes face south, contributing to moderate sunlight reception.\n\n### Summary\nThe terrain near Calgary shows gently rolling hills with a very high percentage of flat and moderately sloped areas, making it traversable. Elevation is typical for the region, ranging between 1022 and 1142 meters. Sun exposure is moderate due to slope directions mostly facing south and east. This data suggests suitable conditions for varied uses, including construction and solar energy installations.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_elevation_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_slope_analysis",
+          "result": null
+        },
+        {
+          "tool": "get_aspect_analysis",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Forecast",
+      "location": "Atlantic Canada precipitation comparison",
+      "question": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 37934,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.0,
+        "longitude": -63.0,
+        "lead_hours": 24,
+        "grid_size": 8,
+        "user_query": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+        "location_label": "Atlantic Canada precipitation comparison"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 291.413,
+            "min": 291.217,
+            "max": 291.609,
+            "samples": 2,
+            "unit": "K",
+            "stdev": 0.277,
+            "spread": 0.392
+          },
+          "precip": {
+            "mean": 0.002,
+            "min": 0.0,
+            "max": 0.003,
+            "samples": 2,
+            "unit": "mm/hr",
+            "stdev": 0.002,
+            "spread": 0.003
+          },
+          "u10": {
+            "mean": -2.404,
+            "min": -2.708,
+            "max": -2.099,
+            "samples": 2,
+            "unit": "m/s",
+            "stdev": 0.431,
+            "spread": 0.609
+          },
+          "v10": {
+            "mean": 2.352,
+            "min": 2.19,
+            "max": 2.514,
+            "samples": 2,
+            "unit": "m/s",
+            "stdev": 0.229,
+            "spread": 0.324
+          }
+        }
+      },
+      "forecast_sources": [
+        {
+          "provider_id": "aurora-1.x",
+          "source": "ECMWF IFS 0.25",
+          "native_model_inference": false,
+          "data_source_note": "aurora-1.x contract backed by ECMWF IFS 0.25 via Open-Meteo; this is not native model inference (real fields: ['precip', 't2m', 'u10', 'v10']; synthetic fallback: [])"
+        },
+        {
+          "provider_id": "earth2-fcn",
+          "source": "NOAA GFS",
+          "native_model_inference": false,
+          "data_source_note": "earth2-fcn contract backed by NOAA GFS via Open-Meteo; this is not native model inference (real fields: ['precip', 't2m', 'u10', 'v10']; synthetic fallback: [])"
+        }
+      ]
+    }
+  ],
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-final-0902-1712",
+    "api_image_digest": "sha256:5d965aa56428878090a2a3c3715983390029385cb6d588ab4f7eded42e1a7cba",
+    "frontend_deployment_id": "d9daf5b6-55f9-4b7e-ac80-bc12fcd54d22",
+    "frontend_bundle": "index-BZXZrEHm.js",
+    "frontend_bundle_sha256": "80125fd6fcd980f306aad822ae06d091ff12e54253fa93fd7b9d289f3983c65b"
+  }
+}

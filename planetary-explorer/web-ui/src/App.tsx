@@ -10,6 +10,7 @@ import { GlobalStyles } from './styles/GlobalStyles';
 import { API_BASE_URL } from './config/api';
 import type { ChatHistoryContext } from './services/api';
 import { confirmFailedHistoryDiscard, restoredStacMode } from './utils/chatHistory';
+import type { DeploymentFeatureFlags } from './components/GetStartedButton';
 
 const queryClient = new QueryClient();
 
@@ -27,10 +28,7 @@ export interface AppState {
 // integrations that aren't wired up in this environment. We default to
 // the most-permissive shape so the UI stays usable while the fetch is
 // in flight; the backend's response then narrows the flags.
-interface DeploymentFeatures {
-  mpcPublic: boolean;
-  mpcPro: boolean;
-  fabric: boolean;
+interface DeploymentFeatures extends DeploymentFeatureFlags {
   chatHistory: boolean;
 }
 
@@ -39,6 +37,8 @@ const DEFAULT_FEATURES: DeploymentFeatures = {
   mpcPro: false,
   fabric: false,
   chatHistory: false,
+  resilience: false,
+  weather: false,
 };
 
 function App() {
@@ -88,6 +88,8 @@ function App() {
           mpcPro: !!data.features.mpcPro,
           fabric: !!data.features.fabric,
           chatHistory: !!data.features.chatHistory,
+          resilience: !!data.features.resilience,
+          weather: !!data.features.weather,
         };
         setFeatures(next);
         // If Pro is locked out by this deployment but the user had it
@@ -196,6 +198,7 @@ function App() {
             stacMode={stacMode}
             onStacModeChange={handleStacModeChange}
             proEnabled={features.mpcPro}
+            features={features}
           />
         ) : (
           <>
@@ -210,6 +213,7 @@ function App() {
               stacMode={stacMode}
               onStacModeChange={handleStacModeChange}
               proEnabled={features.mpcPro}
+              features={features}
             />
             <MainApp 
               appState={appState}
@@ -226,6 +230,7 @@ function App() {
               onStacModeChange={handleStacModeChange}
               onHistorySaveRiskChange={setHasUnsavedHistorySnapshot}
               proEnabled={features.mpcPro}
+              features={features}
             />
           </>
         )}

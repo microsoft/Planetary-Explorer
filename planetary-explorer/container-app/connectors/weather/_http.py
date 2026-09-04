@@ -97,9 +97,19 @@ async def call_score_endpoint(
     latency_ms = int((time.perf_counter() - started) * 1000)
 
     extras: dict[str, Any] = {}
-    for k in extra_response_keys:
+    provenance_keys = (
+        "source",
+        "data_source_note",
+        "provider_contract",
+        "native_model_inference",
+        "real_variables",
+        "synthetic_fallback_variables",
+    )
+    for k in (*provenance_keys, *extra_response_keys):
         if k in body:
             extras[k] = body[k]
+    extras.setdefault("source", provider_id)
+    extras.setdefault("native_model_inference", not bool(body.get("stub", False)))
 
     return ForecastBundle(
         provider_id=provider_id,

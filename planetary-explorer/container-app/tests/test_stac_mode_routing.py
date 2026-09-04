@@ -10,9 +10,6 @@ Covers:
 from __future__ import annotations
 
 import importlib
-import os
-import sys
-from typing import Any
 
 import pytest
 
@@ -106,6 +103,69 @@ def test_resolve_public_unchanged(monkeypatch):
     assert label == "planetary_computer"
 
 
+def test_pro_remap_returns_one_best_match_per_requested_collection(monkeypatch):
+    # Arrange
+    _import_helpers(monkeypatch)
+    fastapi_app = importlib.import_module("fastapi_app")
+
+    # Act
+    remapped = fastapi_app._remap_collections_for_pro(
+        ["hls2-s30"],
+        [
+            {"id": "archive-hls2-s30-copy"},
+            {"id": "hls2-s30-prod"},
+        ],
+    )
+
+    # Assert
+    assert remapped == ["hls2-s30-prod"]
+
+
+def test_pro_remap_token_tie_is_independent_of_inventory_order(monkeypatch):
+    # Arrange
+    _import_helpers(monkeypatch)
+    fastapi_app = importlib.import_module("fastapi_app")
+    inventory = [
+        {"id": "tenant-z", "title": "HLS S30 archive"},
+        {"id": "tenant-a", "title": "HLS S30 primary"},
+    ]
+
+    # Act
+    forward = fastapi_app._remap_collections_for_pro(["hls2-s30"], inventory)
+    reverse = fastapi_app._remap_collections_for_pro(
+        ["hls2-s30"],
+        list(reversed(inventory)),
+    )
+
+    # Assert
+    assert forward == reverse == ["tenant-a"]
+
+
+def test_v2_locked_load_owns_legacy_router_bridge(monkeypatch):
+    # Arrange
+    _import_helpers(monkeypatch)
+    fastapi_app = importlib.import_module("fastapi_app")
+
+    # Act
+    action = fastapi_app._router_action_for_v2_load(
+        {
+            "_v2_load_turn": True,
+            "_v2_post_load_inspection": {"collection_id": "tenant-fire"},
+            "has_satellite_data": True,
+        }
+    )
+
+    # Assert
+    assert action == {
+        "action_type": "stac_search",
+        "needs_stac_search": True,
+        "needs_vision_analysis": False,
+        "use_current_location": True,
+        "collection_hint": "tenant-fire",
+        "routing_reason": "v2_load_authoritative",
+    }
+
+
 # ---------------------------------------------------------------------------
 # LoadAgent prompt template renders Pro guard rails
 # ---------------------------------------------------------------------------
@@ -153,3 +213,70 @@ def test_load_agent_system_prompt_forbids_loading_prefix_on_clarify():
     assert "loading imagery for grand canyon" in lower or "rendering tiles now" in lower
     # And the explicit forbid is present
     assert "must not say" in lower or "must not start" in lower
+
+
+@pytest.mark.asyncio
+async def test_locked_collection_skips_v2_selector(monkeypatch):
+    # Arrange
+    monkeypatch.setenv("COLLECTION_SELECTOR", "v2")
+    monkeypatch.delenv("MPC_PRO_STAC_URL", raising=False)
+    fastapi_app = importlib.import_module("fastapi_app")
+
+    async def unexpected_selector(*_args, **_kwargs):
+        raise AssertionError("Locked inspection collection must bypass selector")
+
+    import collection_selector
+
+    monkeypatch.setattr(collection_selector, "select_collection", unexpected_selector)
+
+    # Act
+    result = await fastapi_app.execute_direct_stac_search(
+        {"collections": ["wrong-collection"]},
+        "planetary_computer_pro",
+        original_query="Inspect tenant-fire assets at this pin",
+        locked_collection="tenant-fire",
+    )
+
+    # Assert
+    assert result["stac_mode"] == "pro"
+    assert "not configured" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_alternative_queries_preserve_locked_collection(monkeypatch):
+    # Arrange
+    fastapi_app = importlib.import_module("fastapi_app")
+    calls = []
+
+    async def capture_search(stac_query, _endpoint, **kwargs):
+        calls.append((dict(stac_query), kwargs.get("locked_collection")))
+        return {"success": True, "results": {"features": []}}
+
+    monkeypatch.setattr(
+        fastapi_app,
+        "execute_direct_stac_search",
+        capture_search,
+    )
+
+    # Act
+    result = await fastapi_app.try_alternative_queries(
+        "Inspect sentinel-2-l2a assets at this pin",
+        {
+            "collections": ["sentinel-2-l2a"],
+            "datetime": "2026-07-04T00:00:00Z/2026-07-04T23:59:59Z",
+        },
+        {},
+        None,
+        "planetary_computer",
+        [-89.97, 50.19, -89.74, 50.34],
+        locked_collection="sentinel-2-l2a",
+    )
+
+    # Assert
+    assert result["success"] is False
+    assert calls
+    assert all(lock == "sentinel-2-l2a" for _query, lock in calls)
+    assert all(
+        query["collections"] == ["sentinel-2-l2a"]
+        for query, _lock in calls
+    )

@@ -1,0 +1,260 @@
+{
+  "generated_at": "2026-09-03T03:54:16.793Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-hardened-0903-0316",
+    "api_image_digest": "sha256:4b5288048cd6ab9033284e49cea6ad85129fb30925c82f0fde88dc6ba04dd73e",
+    "weather_revision": "ca-weather-44gnuvaloryac--getstarted-0902-1700",
+    "weather_image_digest": "sha256:4f928d2b54e2fb0712703eba111395c9a62e2b0d6901d908fa4ac8a5cff2660b",
+    "frontend_deployment_id": "72b1ce87-7b21-4793-990b-c9e557fe7d10",
+    "frontend_bundle": "index-jUC2ydNZ.js",
+    "frontend_bundle_sha256": "6e446d885a45f14e593ea0f88f5edfb30c682eb5e90e9a320584d4106e02d05a",
+    "verification": {
+      "verified_at": "2026-09-03T03:38:49.046849+00:00",
+      "azure_subscription": "a0c62bdd-d642-4fdb-b372-ae041cf83ce3",
+      "azure_tenant": "711a9076-1115-4c36-b7b4-82b4f3a05f6f",
+      "api_fqdn": "ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+      "api_health": "healthy",
+      "api_revision_health": "Healthy",
+      "api_revision_running": "Running",
+      "api_traffic_weight": 100,
+      "weather_revision_health": "Healthy",
+      "weather_revision_running": "Running",
+      "weather_traffic_weight": 100,
+      "frontend_deployment_active": true,
+      "frontend_bundle_live_sha256": "6e446d885a45f14e593ea0f88f5edfb30c682eb5e90e9a320584d4106e02d05a",
+      "geofm_worker_min_replicas": 0,
+      "geofm_worker_active_replicas": 0
+    }
+  },
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "setup_query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the colours in this 2026 Toronto image and identify visible land-cover types.",
+      "outcome": "fail",
+      "elapsed_ms": 76933,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788406734448-7qhwexajp"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.png"
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "setup_query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+      "image_query": "Describe urban growth and vegetation patterns visible around Calgary in 2026.",
+      "outcome": "fail",
+      "elapsed_ms": 75329,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788406812259-u4nq9s4eb"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\02-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.png"
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "setup_query": "Show Landsat imagery over Halifax, Canada from 2026-01-01 to 2026-08-26",
+      "image_query": "Identify water, urban, forest, and shoreline features in this 2026 Halifax image.",
+      "outcome": "fail",
+      "elapsed_ms": 75576,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788406887913-hwvqdywpa"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\03-landsat-collection-2-surface-reflectance-over-coastal-nova-scoti.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "setup_query": "Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colours actually visible in this 2026 MODIS thermal-anomaly image and whether any clusters are visible, then explain only those visible colours at this Alberta location.",
+      "outcome": "fail",
+      "elapsed_ms": 78823,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788406964144-ljmd13xxz"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\04-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "setup_query": "Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26",
+      "image_query": "Explain the vegetation colours and identify lower-vigour areas near Regina in 2026.",
+      "outcome": "fail",
+      "elapsed_ms": 87630,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407042590-j509yq1a7"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\05-250m-ndvi-and-evi-composites-at-verified-regina-cropland.png"
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "image_query": "State the colour actually visible in this 2026 GPP image and whether it varies, then explain only that visible productivity colour at this interior British Columbia location.",
+      "outcome": "fail",
+      "elapsed_ms": 75686,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407129372-p7o0o41vv"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\06-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "setup_query": "Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28",
+      "image_query": "State the colours actually visible in this February 2025 MODIS snow-cover image and whether they vary, then explain only those visible colours around Quebec City.",
+      "outcome": "fail",
+      "elapsed_ms": 74040,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407205031-dwvmra2v3"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\07-500m-archived-daily-snow-cover-at-a-verified-quebec-city-pixel.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m spring river and ice observations near Norman Wells",
+      "setup_query": "Show Sentinel-2 imagery along the Mackenzie River near Norman Wells, Canada from 2026-05-01 to 2026-06-30",
+      "image_query": "Identify open water, ice, snow, and land in this 2026 image.",
+      "outcome": "fail",
+      "elapsed_ms": 76025,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407281330-8l0xw27oc"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\08-10m-spring-river-and-ice-observations-near-norman-wells.png"
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal observations at a verified Churchill pixel",
+      "setup_query": "Show Landsat Collection 2 Level-2 imagery along the Hudson Bay coast at Churchill, Manitoba, Canada, latitude 58.7684, longitude -94.1650, from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the natural-colour rendering and identify water, cloud, tundra, and coast near Churchill.",
+      "outcome": "fail",
+      "elapsed_ms": 75589,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407355749-gzmmwwm1b"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\09-30m-summer-coastal-observations-at-a-verified-churchill-pixel.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "setup_query": "Show Copernicus DEM terrain around Banff, Canada for 2026 analysis",
+      "image_query": "Explain the elevation colours and identify valleys, slopes, and peaks.",
+      "outcome": "fail",
+      "elapsed_ms": 74625,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407431793-mgn05meut"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\10-30m-elevation-used-for-current-year-terrain-analysis.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over Vancouver, Canada from 2026-01-01 to 2026-08-26",
+      "image_query": "Explain the radar colours and distinguish water, vegetation, and built-up areas.",
+      "outcome": "fail",
+      "elapsed_ms": 76208,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407507245-ahb1vj2o5"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\11-10m-terrain-corrected-radar-backscatter-for-metro-vancouver.png"
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over the Red River, Manitoba from 2026-03-01 to 2026-05-31",
+      "image_query": "Explain the radar colour composite and identify possible inundation.",
+      "outcome": "fail",
+      "elapsed_ms": 76874,
+      "error": "page.waitForFunction: Timeout 60000ms exceeded.\n    at waitForMapZoom (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:293:14)\n    at runScenario (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:587:15)\n    at async main (C:\\Users\\chenalex\\Planetary-Explorer\\scripts\\verify_get_started_image_analysis.mjs:922:22)",
+      "diagnostics": {
+        "adversarial_location": {
+          "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+          "latitude": -26.85,
+          "longitude": 133.28,
+          "session_id": "web-session-1788407583921-jqyd3baxv"
+        }
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-release\\failures\\12-all-weather-radar-observations-for-spring-flood-monitoring.png"
+    }
+  ]
+}

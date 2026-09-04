@@ -13,12 +13,30 @@ const RESTORABLE_MODULES = new Set([
   'vision',
 ]);
 
-export function restorableHistoryModule(module?: string): string | null {
-  return module && RESTORABLE_MODULES.has(module) ? module : null;
+export interface RestorableModuleFeatures {
+  mpcPro?: boolean;
+  fabric?: boolean;
+  resilience?: boolean;
+  weather?: boolean;
+}
+
+export function restorableHistoryModule(
+  module?: string,
+  features?: RestorableModuleFeatures,
+): string | null {
+  if (!module || !RESTORABLE_MODULES.has(module)) return null;
+  if (module === 'building_damage' && features?.mpcPro === false) return null;
+  if (module === 'site_audit' && features?.fabric === false) return null;
+  if (module === 'resilience' && features?.resilience === false) return null;
+  if (module === 'forecast' && features?.weather === false) return null;
+  return module;
 }
 
 export function restoredLayerFromContext(map?: Partial<MapContext>): any | null {
   if (!map) return null;
+  const savedScenes = map.scene_refs?.filter(
+    (scene) => Boolean(scene.id) && Boolean(scene.collection),
+  ) || [];
   const savedTiles = map.tile_urls?.filter(
     (tile) => Boolean(tile.tilejson_url) && !tile.tilejson_url.includes('<redacted>'),
   ) || [];
@@ -31,13 +49,30 @@ export function restoredLayerFromContext(map?: Partial<MapContext>): any | null 
   const bounds = map.bounds
     ? [map.bounds.west, map.bounds.south, map.bounds.east, map.bounds.north]
     : undefined;
-  const collection = map.current_collection || fallbackTile?.collection || 'restored-layer';
-  const itemId = map.item_id || fallbackTile?.item_id || 'restored-item';
+  const collection = map.current_collection
+    || savedScenes[0]?.collection
+    || fallbackTile?.collection
+    || 'restored-layer';
+  const itemId = map.item_id
+    || savedScenes[0]?.id
+    || fallbackTile?.item_id
+    || 'restored-item';
   const tileBounds = bounds || [-180, -85, 180, 85];
-  const items = savedTiles.length > 0
+  const items = savedScenes.length > 0
+    ? savedScenes.map((scene) => ({
+        id: scene.id,
+        collection: scene.collection,
+        stac_mode: scene.stac_mode || map.stac_mode,
+        bbox: scene.bbox,
+        datetime: scene.datetime || map.datetime || '',
+        tile_url: savedTiles.find((tile) => tile.item_id === scene.id)?.tilejson_url
+          || tileUrl,
+      }))
+    : savedTiles.length > 0
     ? savedTiles.map((tile, index) => ({
         id: tile.item_id || `${itemId}-${index + 1}`,
         collection: tile.collection || collection,
+        stac_mode: tile.stac_mode || map.stac_mode,
         bbox: tile.bbox,
         datetime: map.datetime || '',
         tile_url: tile.tilejson_url,
@@ -45,6 +80,7 @@ export function restoredLayerFromContext(map?: Partial<MapContext>): any | null 
     : [{
         id: itemId,
         collection,
+        stac_mode: map.stac_mode,
         datetime: map.datetime || '',
         tile_url: tileUrl,
       }];
@@ -52,6 +88,7 @@ export function restoredLayerFromContext(map?: Partial<MapContext>): any | null 
       item_id: tile.item_id || `${itemId}-${index + 1}`,
       bbox: tile.bbox || tileBounds,
       tilejson_url: tile.tilejson_url,
+      stac_mode: tile.stac_mode || map.stac_mode,
     }));
   return {
     bbox: bounds,
@@ -93,7 +130,7 @@ export async function resolveLeafletTileSources(
       ? [{ url: data.tile_url, bbox: data.bbox }]
       : [];
 
-  const resolved = await Promise.all(sources.map(async (source) => {
+  const resolved: Array<{ tileTemplate: string; bbox?: number[] } | null> = await Promise.all(sources.map(async (source) => {
     if (
       source.url.includes('{z}') &&
       source.url.includes('{x}') &&
@@ -116,6 +153,7 @@ export function buildExpansionSearchBody(
   collection: string,
   bbox: number[],
   stacMode: 'public' | 'pro' = 'public',
+  datetime?: string,
 ) {
   return {
     collections: [collection],
@@ -123,5 +161,12 @@ export function buildExpansionSearchBody(
     limit: 50,
     sortby: [{ field: 'datetime', direction: 'desc' }],
     stac_mode: stacMode,
+    ...(datetime ? { datetime } : {}),
   };
+}
+
+export function restoredSearchDatetime(map?: Partial<MapContext>): string | null {
+  return typeof map?.search_datetime === 'string' && map.search_datetime
+    ? map.search_datetime
+    : null;
 }

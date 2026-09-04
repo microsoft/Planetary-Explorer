@@ -14,7 +14,7 @@ This agent:
 import logging
 import os
 import json
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -345,7 +345,7 @@ class GeointMobilityAgent:
 - Point B (Destination): {location_name_b} ({latitude_b:.6f}, {longitude_b:.6f})
 - Analysis mode: Two-point traverse (A -> B)"""
         else:
-            context_message += f"""
+            context_message += """
 - Analysis radius: 5 miles"""
 
         context_message += f"""
@@ -355,7 +355,7 @@ class GeointMobilityAgent:
             context_message += f"\n\n[Infrastructure Detection from Satellite Imagery]\n{visual_analysis}"
 
         query = user_context or (
-            f"Analyze terrain traversability from Point A to Point B. Provide a structured situation report with hazards, route assessment, and recommendations."
+            "Analyze terrain traversability from Point A to Point B. Provide a structured situation report with hazards, route assessment, and recommendations."
             if latitude_b is not None and longitude_b is not None
             else "Analyze terrain mobility at this location in all four directions. Provide a structured situation report with hazards, assessments, and recommendations."
         )
@@ -383,15 +383,19 @@ class GeointMobilityAgent:
                 f"Base your response ONLY on tool results."
             )
 
-        _retryable_patterns = ["404", "Resource not found", "invalid_engine_error",
-                               "Failed to resolve model", "InternalServerError",
-                               "Unable to get resource", "DeploymentNotFound", "server_error"]
+        from geoint.agent_retry import (
+            agent_run_has_dispatched_tools,
+            agent_retry_delay_seconds,
+            is_retryable_agent_error,
+        )
 
         max_retries = 3
         for attempt in range(max_retries):
+            run_dispatch_started = False
             try:
                 # Re-create thread if we had to re-initialize (stale session)
                 if attempt > 0:
+                    await asyncio.sleep(agent_retry_delay_seconds(attempt))
                     session = await self._get_or_create_session(f"{session_id}_retry{attempt}", latitude, longitude)
 
                 await self._agents_client.messages.create(
@@ -400,6 +404,7 @@ class GeointMobilityAgent:
                     content=context_message,
                 )
 
+                run_dispatch_started = True
                 run = await self._agents_client.runs.create_and_process(
                     thread_id=session.thread_id,
                     agent_id=self._agent_id,
@@ -408,9 +413,14 @@ class GeointMobilityAgent:
                 if run.status == "failed":
                     error_info = run.last_error
                     err_str = str(error_info)
-                    is_retryable = any(p in err_str for p in _retryable_patterns)
+                    is_retryable = is_retryable_agent_error(err_str)
                     logger.error(f"Mobility agent run failed: {error_info}")
-                    if is_retryable and attempt < max_retries - 1:
+                    tools_dispatched = await agent_run_has_dispatched_tools(
+                        self._agents_client,
+                        session.thread_id,
+                        run.id,
+                    )
+                    if is_retryable and not tools_dispatched and attempt < max_retries - 1:
                         logger.warning(f"Mobility run failed (retryable), attempt {attempt + 1}: {error_info}")
                         self._initialized = False
                         self._agent_id = None
@@ -472,26 +482,22 @@ class GeointMobilityAgent:
                 }
 
             except Exception as e:
-                error_str = str(e)
-                is_retryable = any(p in error_str for p in _retryable_patterns)
-                if is_retryable and attempt < max_retries - 1:
-                    logger.warning(f"Mobility agent error (retryable), re-initializing... (attempt {attempt + 1}): {e}")
+                if (
+                    not run_dispatch_started
+                    and is_retryable_agent_error(e)
+                    and attempt < max_retries - 1
+                ):
+                    logger.warning(
+                        "Mobility pre-dispatch failure is retryable, attempt %d: %s",
+                        attempt + 1,
+                        str(e)[:200],
+                    )
                     self._initialized = False
                     self._agent_id = None
                     self._agents_client = None
                     self.sessions.clear()
-                    try:
-                        await self._ensure_initialized()
-                        continue  # Retry with fresh agent
-                    except Exception as reinit_err:
-                        logger.error(f"Mobility agent re-initialization failed: {reinit_err}")
-                        return {
-                            "agent": "geoint_mobility",
-                            "response": f"Error: Agent service unavailable - {str(reinit_err)}",
-                            "error": str(reinit_err),
-                            "session_id": session_id
-                        }
-
+                    await self._ensure_initialized()
+                    continue
                 logger.error(f"Mobility agent error: {e}")
                 import traceback
                 logger.error(traceback.format_exc())

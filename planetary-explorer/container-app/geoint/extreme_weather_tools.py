@@ -26,8 +26,9 @@ Usage:
 import logging
 import json
 import os
+import threading
 import time
-from typing import Dict, Any, List, Set, Callable, Optional
+from typing import Dict, Any, Set, Callable, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from cloud_config import cloud_cfg
@@ -67,6 +68,44 @@ _netcdf_pool = ThreadPoolExecutor(max_workers=6)
 # were the same, timed-out .values threads would hold workers while
 # retries need new workers → deadlock.
 _values_pool = ThreadPoolExecutor(max_workers=4)
+_values_admission = threading.BoundedSemaphore(4)
+_comparison_admission = threading.BoundedSemaphore(1)
+
+
+def _release_semaphore_when_done(
+    futures: list[Any],
+    semaphore: threading.BoundedSemaphore,
+) -> None:
+    """Release one admission slot after every running future drains."""
+    remaining = len(futures)
+    lock = threading.Lock()
+
+    def completed(_future: Any) -> None:
+        nonlocal remaining
+        with lock:
+            remaining -= 1
+            if remaining == 0:
+                semaphore.release()
+
+    for future in futures:
+        future.add_done_callback(completed)
+
+
+def _run_values_read(reader: Callable[[], Any], timeout_seconds: float) -> Any:
+    """Run one byte-range read without admitting an unbounded work queue."""
+    if not _values_admission.acquire(blocking=False):
+        raise TimeoutError("NetCDF read capacity is busy")
+    try:
+        future = _values_pool.submit(reader)
+    except Exception:
+        _values_admission.release()
+        raise
+    future.add_done_callback(lambda _future: _values_admission.release())
+    try:
+        return future.result(timeout=timeout_seconds)
+    except TimeoutError:
+        future.cancel()
+        raise
 
 # ============================================================
 # MODULE-LEVEL FSSPEC FILESYSTEM — connection & block cache reuse
@@ -188,9 +227,8 @@ def _find_valid_grid_point(var_data, latitude: float, sample_lng: float):
         else:
             probe = window
         # Use _values_pool so we honour the same timeout discipline as the main reader
-        fut = _values_pool.submit(lambda p=probe: p.values)
         try:
-            vals = fut.result(timeout=30)
+            vals = _run_values_read(lambda p=probe: p.values, 30)
         except TimeoutError:
             return None, (lat_lo, lon_lo)
         return np.asarray(vals, dtype=float), (lat_lo, lon_lo)
@@ -324,6 +362,10 @@ _ENSEMBLE_SIZE = max(1, int(os.environ.get("CMIP6_ENSEMBLE_SIZE", "1") or "1"))
 # to 25 s (was 120 s). A slow model is dropped, never blocks the turn.
 _ENSEMBLE_FUTURE_TIMEOUT = int(os.environ.get("CMIP6_FUTURE_TIMEOUT", "30") or "30")
 _ENSEMBLE_RESULT_TIMEOUT = max(5, _ENSEMBLE_FUTURE_TIMEOUT - 5)
+_COMPARISON_FUTURE_TIMEOUT = max(
+    _ENSEMBLE_FUTURE_TIMEOUT,
+    int(os.environ.get("CMIP6_COMPARISON_TIMEOUT", "50") or "50"),
+)
 
 
 def _get_catalog():
@@ -463,7 +505,6 @@ def _sample_netcdf(
     or 'error' key on failure.
     """
     import xarray as xr
-    import fsspec
     import numpy as np
 
     var_info = CLIMATE_VAR_INFO.get(variable, {
@@ -550,9 +591,11 @@ def _sample_netcdf(
                 # Wrap .values in a timeout to prevent indefinite blocking
                 # on slow HTTP range requests (cold cache can take 40-60s+)
                 # Uses _values_pool (NOT _netcdf_pool) to avoid thread starvation
-                _read_future = _values_pool.submit(lambda ps=point_subset: ps.values.astype(float))
                 try:
-                    all_values = _read_future.result(timeout=45)
+                    all_values = _run_values_read(
+                        lambda ps=point_subset: ps.values.astype(float),
+                        45,
+                    )
                 except TimeoutError:
                     logger.warning(f"[CMIP6] .values read TIMED OUT after 45s for {variable} ({n_sampled} timesteps)")
                     raise TimeoutError(f"NetCDF read timed out for {variable} (cold cache)")
@@ -604,9 +647,8 @@ def _sample_netcdf(
                 t_read_start = time.time()
                 # Wrap single-timestep read in timeout too
                 # Uses _values_pool (NOT _netcdf_pool) to avoid thread starvation
-                _read_future = _values_pool.submit(lambda p=point: float(p.values))
                 try:
-                    raw_value = _read_future.result(timeout=30)
+                    raw_value = _run_values_read(lambda p=point: float(p.values), 30)
                 except TimeoutError:
                     logger.warning(f"[CMIP6] Single-timestep .values read TIMED OUT after 30s for {variable}")
                     raise TimeoutError(f"NetCDF single-timestep read timed out for {variable}")
@@ -1124,7 +1166,7 @@ def get_climate_overview(latitude: float, longitude: float, scenario: str = "ssp
                 var, result, error, model = future.result(timeout=_ENSEMBLE_RESULT_TIMEOUT)
             except Exception as exc:
                 logger.warning(f"[TOOL] Overview variable future timed out or failed: {exc}")
-                errors.append(f"Variable sampling timed out")
+                errors.append("Variable sampling timed out")
                 continue
             if result:
                 overview[var] = result
@@ -1182,6 +1224,13 @@ def compare_climate_scenarios(latitude: float, longitude: float, year: int = 203
     :param year: Projection year (2015-2100). Default 2030
     :return: JSON string comparing key climate variables across both SSP scenarios
     """
+    if not _comparison_admission.acquire(blocking=False):
+        return json.dumps({
+            "error": "Another climate scenario comparison is still running. Try again shortly.",
+            "retryable": True,
+        })
+
+    futures = []
     try:
         logger.info(f"[TOOL] compare_climate_scenarios at ({latitude:.4f}, {longitude:.4f}), {year}")
         
@@ -1220,12 +1269,11 @@ def compare_climate_scenarios(latitude: float, longitude: float, year: int = 203
                     }
             return var, sc, {"error": "Sampling failed"}
         
-        futures = []
         for var in compare_vars:
             for sc in scenarios:
                 futures.append(_netcdf_pool.submit(_sample_comparison, var, sc))
         try:
-            for future in as_completed(futures, timeout=_ENSEMBLE_FUTURE_TIMEOUT):
+            for future in as_completed(futures, timeout=_COMPARISON_FUTURE_TIMEOUT):
                 try:
                     var, sc, result = future.result(timeout=_ENSEMBLE_RESULT_TIMEOUT)
                     comparison[var][sc] = result
@@ -1243,7 +1291,7 @@ def compare_climate_scenarios(latitude: float, longitude: float, year: int = 203
                 deltas[var] = {
                     "difference": round(ssp585_val - ssp245_val, 2),
                     "unit": CLIMATE_VAR_INFO[var]['display_unit'],
-                    "description": f"SSP5-8.5 minus SSP2-4.5",
+                    "description": "SSP5-8.5 minus SSP2-4.5",
                 }
         
         output = {
@@ -1256,6 +1304,11 @@ def compare_climate_scenarios(latitude: float, longitude: float, year: int = 203
             },
             "comparison": comparison,
             "scenario_difference": deltas,
+            "complete": all(
+                isinstance(comparison.get(var, {}).get(sc, {}).get("value"), (int, float))
+                for var in compare_vars
+                for sc in scenarios
+            ),
             "note": "Positive difference = worse conditions under high emissions"
         }
         
@@ -1265,6 +1318,17 @@ def compare_climate_scenarios(latitude: float, longitude: float, year: int = 203
     except Exception as e:
         logger.error(f"[TOOL] Scenario comparison failed: {e}")
         return json.dumps({"error": str(e)})
+    finally:
+        running = []
+        for future in futures:
+            if future.done():
+                continue
+            if not future.cancel():
+                running.append(future)
+        if running:
+            _release_semaphore_when_done(running, _comparison_admission)
+        else:
+            _comparison_admission.release()
 
 
 def get_radiation_projection(latitude: float, longitude: float, scenario: str = "ssp585", year: int = 2030) -> str:

@@ -1,0 +1,1029 @@
+{
+  "generated_at": "2026-09-02T15:40:05.556203+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "resilience": true,
+    "weather": true
+  },
+  "scenario_count": 32,
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "setup_query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1618,
+      "action": null,
+      "expected_center": [
+        43.72,
+        -79.38
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -79.64,
+        43.58,
+        -79.12,
+        43.86
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-06-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+      "expected_collection": "sentinel-2-l2a",
+      "collections": [
+        "sentinel-2-l2a"
+      ],
+      "item_count": 2,
+      "first_item": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+      "response": "Displaying 2 Sentinel-2 Level-2A images of Toronto, Ontario, Canada on 2026-08-05."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "setup_query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1360,
+      "action": null,
+      "expected_center": [
+        51.03,
+        -114.08
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -114.09,
+        51.02,
+        -114.07,
+        51.04
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-05-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "HLS.S30.T11UQS.2026235T183919.v2.0",
+      "expected_collection": "hls2-s30",
+      "collections": [
+        "hls2-s30"
+      ],
+      "item_count": 2,
+      "first_item": "HLS.S30.T11UQS.2026235T183919.v2.0",
+      "response": "Displaying 2 Harmonized Landsat Sentinel-2 (HLS) Version 2.0, Sentinel-2 Data images of Calgary, Alberta, Canada on 2026-08-23."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "setup_query": "Show Landsat imagery over Halifax, Canada from 2026-01-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1605,
+      "action": null,
+      "expected_center": [
+        44.65,
+        -63.58
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -63.85,
+        44.48,
+        -63.35,
+        44.82
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-01-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "LC08_L2SP_007029_20260807_02_T1",
+      "expected_collection": "landsat-c2-l2",
+      "collections": [
+        "landsat-c2-l2"
+      ],
+      "item_count": 1,
+      "first_item": "LC08_L2SP_007029_20260807_02_T1",
+      "response": "Displaying 1 Landsat Collection 2 Level-2 image of Halifax, Nova Scotia, Canada on 2026-08-07."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "setup_query": "Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1219,
+      "action": null,
+      "expected_center": [
+        54.5,
+        -115.0
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -115.01,
+        54.49,
+        -114.99,
+        54.51
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-05-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "MYD14A1.A2026225.h11v03.061.2026234002613",
+      "expected_collection": "modis-14A1-061",
+      "collections": [
+        "modis-14A1-061"
+      ],
+      "item_count": 10,
+      "first_item": "MYD14A1.A2026225.h11v03.061.2026234002613",
+      "response": "Displaying 10 MODIS Thermal Anomalies/Fire Daily images of Alberta, Canada between 2026-06-18 and 2026-08-13. Zoom to level 10 or higher to see the tiles."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "setup_query": "Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1427,
+      "action": null,
+      "expected_center": [
+        50.35,
+        -104.6
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -104.61,
+        50.34,
+        -104.59,
+        50.36
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-04-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "MYD13Q1.A2026217.h11v03.061.2026234002622",
+      "expected_collection": "modis-13Q1-061",
+      "collections": [
+        "modis-13Q1-061"
+      ],
+      "item_count": 10,
+      "first_item": "MYD13Q1.A2026217.h11v03.061.2026234002622",
+      "response": "Displaying 10 MODIS Vegetation Indices 16-Day (250m) images of Regina, Saskatchewan, Canada between 2026-03-22 and 2026-08-05. Zoom to level 10 or higher to see the tiles."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1123,
+      "action": null,
+      "expected_center": [
+        54.15,
+        -126.55
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -126.56,
+        54.14,
+        -126.54,
+        54.16
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-05-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "MYD17A2H.A2026225.h10v03.061.2026234050640",
+      "expected_collection": "modis-17A2H-061",
+      "collections": [
+        "modis-17A2H-061"
+      ],
+      "item_count": 10,
+      "first_item": "MYD17A2H.A2026225.h10v03.061.2026234050640",
+      "response": "Displaying 10 MODIS Gross Primary Productivity 8-Day images of British Columbia, Canada between 2026-06-18 and 2026-08-13. Zoom to level 10 or higher to see the tiles."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover at a verified Quebec City pixel",
+      "setup_query": "Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1309,
+      "action": null,
+      "expected_center": [
+        46.8139,
+        -71.208
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -71.218,
+        46.8039,
+        -71.198,
+        46.8239
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2025-02-01",
+        "2025-02-28"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "MYD10A1.A2025059.h13v04.061.2025063044635",
+      "expected_collection": "modis-10A1-061",
+      "collections": [
+        "modis-10A1-061"
+      ],
+      "item_count": 10,
+      "first_item": "MYD10A1.A2025059.h13v04.061.2025063044635",
+      "response": "Displaying 10 MODIS Snow Cover Daily images of Quebec City, Quebec, Canada in February 2025. Zoom to level 10 or higher to see the tiles."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m spring river and ice observations near Norman Wells",
+      "setup_query": "Show Sentinel-2 imagery along the Mackenzie River near Norman Wells, Canada from 2026-05-01 to 2026-06-30",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1050,
+      "action": null,
+      "expected_center": [
+        65.282,
+        -126.832
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -127.2,
+        65.1,
+        -126.5,
+        65.5
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-05-01",
+        "2026-06-30"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226",
+      "expected_collection": "sentinel-2-l2a",
+      "collections": [
+        "sentinel-2-l2a"
+      ],
+      "item_count": 2,
+      "first_item": "S2B_MSIL2A_20260621T200849_R028_T09WWN_20260621T234226",
+      "response": "Displaying 2 Sentinel-2 Level-2A images of Mackenzie River near Norman Wells, Northwest Territories, Canada on 2026-06-21."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal observations at a verified Churchill pixel",
+      "setup_query": "Show Landsat Collection 2 Level-2 imagery along the Hudson Bay coast at Churchill, Manitoba, Canada, latitude 58.7684, longitude -94.1650, from 2026-06-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1306,
+      "action": null,
+      "expected_center": [
+        58.7684,
+        -94.165
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -94.175,
+        58.7584,
+        -94.155,
+        58.7784
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-06-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "LC09_L2SP_032019_20260814_02_T1",
+      "expected_collection": "landsat-c2-l2",
+      "collections": [
+        "landsat-c2-l2"
+      ],
+      "item_count": 1,
+      "first_item": "LC09_L2SP_032019_20260814_02_T1",
+      "response": "Displaying 1 Landsat Collection 2 Level-2 image of Churchill, Manitoba, Canada on 2026-08-14."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "setup_query": "Show Copernicus DEM terrain around Banff, Canada for 2026 analysis",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1037,
+      "action": null,
+      "expected_center": [
+        51.23,
+        -115.58
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -115.8,
+        51.05,
+        -115.35,
+        51.4
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": null,
+      "returned_date_matches": true,
+      "matching_scene_id": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+      "expected_collection": "cop-dem-glo-30",
+      "collections": [
+        "cop-dem-glo-30"
+      ],
+      "item_count": 1,
+      "first_item": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+      "response": "Displaying 1 Copernicus DEM GLO-30 image of Banff, Alberta, Canada on 2021-04-22."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over Vancouver, Canada from 2026-01-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 1358,
+      "action": null,
+      "expected_center": [
+        49.2,
+        -123.05
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -123.4,
+        49.0,
+        -122.7,
+        49.4
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-01-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+      "expected_collection": "sentinel-1-rtc",
+      "collections": [
+        "sentinel-1-rtc"
+      ],
+      "item_count": 2,
+      "first_item": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+      "response": "Displaying 2 Sentinel 1 Radiometrically Terrain Corrected (RTC) images of Vancouver, British Columbia, Canada on 2026-08-23."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "setup_query": "Show Sentinel-1 RTC radar imagery over the Red River, Manitoba from 2026-03-01 to 2026-05-31",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 706,
+      "action": null,
+      "expected_center": [
+        49.6,
+        -97.08
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -97.45,
+        49.0,
+        -96.7,
+        50.2
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-03-01",
+        "2026-05-31"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+      "expected_collection": "sentinel-1-rtc",
+      "collections": [
+        "sentinel-1-rtc"
+      ],
+      "item_count": 2,
+      "first_item": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+      "response": "Displaying 2 Sentinel 1 Radiometrically Terrain Corrected (RTC) images of Red River, Manitoba, Canada on 2026-05-22."
+    },
+    {
+      "family": "Terrain",
+      "location": "Vancouver, British Columbia",
+      "setup_query": "Show Copernicus DEM elevation near Vancouver, Canada for 2026",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 9919,
+      "action": null,
+      "expected_center": [
+        49.2827,
+        -123.1207
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -123.27,
+        49.2,
+        -123.02,
+        49.32
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": null,
+      "returned_date_matches": true,
+      "matching_scene_id": "Copernicus_DSM_COG_10_N49_00_W124_00_DEM",
+      "expected_collection": "cop-dem-glo-30",
+      "collections": [
+        "cop-dem-glo-30"
+      ],
+      "item_count": 1,
+      "first_item": "Copernicus_DSM_COG_10_N49_00_W124_00_DEM",
+      "response": "Displaying 1 Copernicus DEM GLO-30 image of Vancouver, Canada on 2021-04-22."
+    },
+    {
+      "family": "Terrain",
+      "location": "Calgary, Alberta",
+      "setup_query": "Show Copernicus DEM elevation near Calgary, Alberta, Canada for 2026",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 7917,
+      "action": null,
+      "expected_center": [
+        51.0447,
+        -114.0719
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -114.32,
+        50.84,
+        -113.83,
+        51.21
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": null,
+      "returned_date_matches": true,
+      "matching_scene_id": "Copernicus_DSM_COG_10_N51_00_W115_00_DEM",
+      "expected_collection": "cop-dem-glo-30",
+      "collections": [
+        "cop-dem-glo-30"
+      ],
+      "item_count": 4,
+      "first_item": "Copernicus_DSM_COG_10_N51_00_W115_00_DEM",
+      "response": "Displaying 4 Copernicus DEM GLO-30 images of Calgary, Alberta, Canada on 2021-04-22."
+    },
+    {
+      "family": "Terrain",
+      "location": "Halifax, Nova Scotia",
+      "setup_query": "Show Sentinel-2 imagery over Halifax, Canada from 2026-06-01 to 2026-08-26",
+      "expected_kind": "stac",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 14243,
+      "action": null,
+      "expected_center": [
+        44.6488,
+        -63.5752
+      ],
+      "actual_center": null,
+      "distance_km": null,
+      "bbox": [
+        -63.85,
+        44.48,
+        -63.35,
+        44.82
+      ],
+      "covers_expected_center": true,
+      "returned_scene_covers_expected_center": true,
+      "requested_dates": [
+        "2026-06-01",
+        "2026-08-26"
+      ],
+      "returned_date_matches": true,
+      "matching_scene_id": "S2B_MSIL2A_20260807T150719_R125_T20TMQ_20260807T184436",
+      "expected_collection": "sentinel-2-l2a",
+      "collections": [
+        "sentinel-2-l2a"
+      ],
+      "item_count": 1,
+      "first_item": "S2B_MSIL2A_20260807T150719_R125_T20TMQ_20260807T184436",
+      "response": "Displaying 1 Sentinel-2 Level-2A image of Halifax, Canada on 2026-08-07."
+    },
+    {
+      "family": "Mobility",
+      "location": "Kananaskis, Alberta",
+      "setup_query": "Kananaskis, Alberta, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6077,
+      "action": "navigate_to",
+      "expected_center": [
+        50.7,
+        -115.0
+      ],
+      "actual_center": [
+        51.0,
+        -115.0
+      ],
+      "distance_km": 33.4,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Kananaskis, Alberta, Canada."
+    },
+    {
+      "family": "Mobility",
+      "location": "North Shore Mountains, British Columbia",
+      "setup_query": "North Vancouver, British Columbia, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6433,
+      "action": "navigate_to",
+      "expected_center": [
+        49.32,
+        -123.07
+      ],
+      "actual_center": [
+        49.35,
+        -123.05
+      ],
+      "distance_km": 3.6,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to North Vancouver, British Columbia, Canada."
+    },
+    {
+      "family": "Mobility",
+      "location": "Yukon River corridor, Yukon",
+      "setup_query": "Whitehorse, Yukon, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6552,
+      "action": "navigate_to",
+      "expected_center": [
+        60.7212,
+        -135.0568
+      ],
+      "actual_center": [
+        60.75,
+        -135.05
+      ],
+      "distance_km": 3.2,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Whitehorse, Yukon, Canada."
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Vancouver, British Columbia",
+      "setup_query": "Vancouver, British Columbia, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6384,
+      "action": "navigate_to",
+      "expected_center": [
+        49.2827,
+        -123.1207
+      ],
+      "actual_center": [
+        49.260000000000005,
+        -123.145
+      ],
+      "distance_km": 3.1,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Vancouver, British Columbia, Canada."
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Toronto, Ontario",
+      "setup_query": "Toronto, Ontario, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6900,
+      "action": "navigate_to",
+      "expected_center": [
+        43.6532,
+        -79.3832
+      ],
+      "actual_center": [
+        43.72,
+        -79.38
+      ],
+      "distance_km": 7.4,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Toronto, Ontario, Canada."
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Montreal, Quebec",
+      "setup_query": "Montreal, Quebec, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 7361,
+      "action": "navigate_to",
+      "expected_center": [
+        45.5019,
+        -73.5674
+      ],
+      "actual_center": [
+        45.555,
+        -73.73
+      ],
+      "distance_km": 14.0,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Montreal, Quebec, Canada."
+    },
+    {
+      "family": "Building Damage",
+      "location": "Jasper, Alberta",
+      "setup_query": "Show my MPC Pro aerial imagery over Jasper, Alberta from 2026-01-01 to 2026-08-26",
+      "expected_kind": "pro",
+      "outcome": "blocked",
+      "elapsed_ms": 0,
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Building Damage",
+      "location": "Lytton, British Columbia",
+      "setup_query": "Show my MPC Pro aerial imagery over Lytton, British Columbia, Canada from 2026-01-01 to 2026-08-26",
+      "expected_kind": "pro",
+      "outcome": "blocked",
+      "elapsed_ms": 0,
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Calgary region, Alberta - Data centre",
+      "setup_query": "Calgary, Alberta, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 5476,
+      "action": "navigate_to",
+      "expected_center": [
+        51.0447,
+        -114.0719
+      ],
+      "actual_center": [
+        51.025000000000006,
+        -114.07499999999999
+      ],
+      "distance_km": 2.2,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Calgary, Alberta, Canada."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Montreal region, Quebec - Industrial parcels",
+      "setup_query": "Montreal, Quebec, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 7104,
+      "action": "navigate_to",
+      "expected_center": [
+        45.5019,
+        -73.5674
+      ],
+      "actual_center": [
+        45.555,
+        -73.73
+      ],
+      "distance_km": 14.0,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Montreal, Quebec, Canada."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Edmonton region, Alberta - Grid expansion",
+      "setup_query": "Edmonton, Alberta, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6635,
+      "action": "navigate_to",
+      "expected_center": [
+        53.5461,
+        -113.4938
+      ],
+      "actual_center": [
+        53.555,
+        -113.50999999999999
+      ],
+      "distance_km": 1.5,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Edmonton, Alberta, Canada."
+    },
+    {
+      "family": "Resilience",
+      "location": "Seven-day Canadian facility outlook",
+      "setup_query": "Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6267,
+      "action": "navigate_to",
+      "expected_center": [
+        56.1304,
+        -106.3468
+      ],
+      "actual_center": [
+        62.394999999999996,
+        -96.81
+      ],
+      "distance_km": 880.8,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Canada."
+    },
+    {
+      "family": "Resilience",
+      "location": "Vancouver distribution disruption",
+      "setup_query": "Vancouver, British Columbia, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6575,
+      "action": "navigate_to",
+      "expected_center": [
+        49.2827,
+        -123.1207
+      ],
+      "actual_center": [
+        49.260000000000005,
+        -123.145
+      ],
+      "distance_km": 3.1,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Vancouver, British Columbia, Canada."
+    },
+    {
+      "family": "Resilience",
+      "location": "Western Canada weekly review",
+      "setup_query": "Western Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6421,
+      "action": "navigate_to",
+      "expected_center": [
+        54.0,
+        -116.0
+      ],
+      "actual_center": [
+        54.15,
+        -120.21000000000001
+      ],
+      "distance_km": 275.1,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Western Canada."
+    },
+    {
+      "family": "Forecast",
+      "location": "Great Lakes five-day ensemble",
+      "setup_query": "Lake Ontario, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 6457,
+      "action": "navigate_to",
+      "expected_center": [
+        43.75,
+        -77.9
+      ],
+      "actual_center": [
+        43.7,
+        -77.9
+      ],
+      "distance_km": 5.6,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Lake Ontario, Canada."
+    },
+    {
+      "family": "Forecast",
+      "location": "Prairie temperature and wind",
+      "setup_query": "Saskatchewan, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 7184,
+      "action": "navigate_to",
+      "expected_center": [
+        52.94,
+        -106.45
+      ],
+      "actual_center": [
+        54.5,
+        -105.68
+      ],
+      "distance_km": 180.7,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Saskatchewan, Canada."
+    },
+    {
+      "family": "Forecast",
+      "location": "Atlantic Canada precipitation comparison",
+      "setup_query": "Nova Scotia, Canada",
+      "expected_kind": "navigate",
+      "outcome": "pass",
+      "http_status": 200,
+      "elapsed_ms": 7125,
+      "action": "navigate_to",
+      "expected_center": [
+        45.0,
+        -63.0
+      ],
+      "actual_center": [
+        45.25,
+        -63.1
+      ],
+      "distance_km": 28.9,
+      "bbox": null,
+      "covers_expected_center": false,
+      "returned_scene_covers_expected_center": false,
+      "requested_dates": null,
+      "returned_date_matches": false,
+      "matching_scene_id": null,
+      "expected_collection": null,
+      "collections": [],
+      "item_count": 0,
+      "first_item": null,
+      "response": "Navigating the map to Nova Scotia, Canada."
+    }
+  ]
+}

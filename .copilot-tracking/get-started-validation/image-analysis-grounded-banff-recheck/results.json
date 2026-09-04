@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-09-02T16:46:03.628Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-grounded-0902-1635",
+    "api_image_digest": "sha256:b09d743d21763db31385821e6a4df0f9f5871cf772738a37f35ca001e641c7de",
+    "frontend_deployment_id": "3d75e45a-a4c4-4e6f-9cf3-4b7da24dde22",
+    "frontend_bundle": "index-Bb1Ztwbx.js",
+    "frontend_bundle_sha256": "2b0bd9590e13940fdaf9d189621ce9d7354839f85ce667987b6dddbe8a07fa5d"
+  },
+  "results": [
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "setup_query": "Show Copernicus DEM terrain around Banff, Canada for 2026 analysis",
+      "image_query": "Explain the elevation colours and identify valleys, slopes, and peaks.",
+      "outcome": "pass",
+      "elapsed_ms": 34907,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -115.8,
+        51.05,
+        -115.35,
+        51.4
+      ],
+      "expected_pin": {
+        "lat": 51.224999999999994,
+        "lng": -115.57499999999999
+      },
+      "submitted_pin": {
+        "lat": 51.22533269602414,
+        "lng": -115.57500000000046
+      },
+      "pin_distance_km": 0.04,
+      "map_zoom": 10,
+      "imagery_layer": "Copernicus DEM 30m",
+      "imagery_difference": {
+        "changedPixelRatio": 0.8836,
+        "meanAbsoluteDifference": 51.68
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 243375,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 479,
+        "meanRgb": [
+          135.76,
+          148.62,
+          96.38
+        ],
+        "meanLuminance": 142.12,
+        "luminanceVariance": 666.32,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-grounded-banff-recheck\\payload-images\\01-30m-elevation-used-for-current-year-terrain-analysis.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.05,
+      "evidence_collection": "cop-dem-glo-30",
+      "response_excerpt": "Here’s an overview based on the provided map and elevation colours:\n\n### **Elevation Colours**\nThe map utilizes a gradient scale to represent elevation:\n- **Green:** Lower elevations, typically valleys and river plains. In this map, areas near Banff, Harvie Heights, and Canmore show expansive greenery, indicating lower elevation landscapes.\n- **Yellow/Beige:** Higher elevation zones such as ridges, slopes, and peaks. These hues are prominent where mountainous terrain rises steeply around valleys.\n- **Gray or Brown:** Represent the highest elevation areas, often peaks with rugged or exposed terrain. Key peaks like Mount Rundle and Eisenhower Peak exhibit these hues.\n\n---\n\n### **Identified Features**\n#### **Valleys:**\n1. **Bow Valley:** Clearly delineated by the green colouring, this valley hosts settlements like Banff, Harvie Heights, and Canmore. It’s flanked by steep slopes and follows the winding Bow River.\n2. Smaller tributary valleys branch off the main Bow Valley, visible as narro",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-grounded-banff-recheck\\browser-screenshots\\01-30m-elevation-used-for-current-year-terrain-analysis.png"
+    }
+  ]
+}

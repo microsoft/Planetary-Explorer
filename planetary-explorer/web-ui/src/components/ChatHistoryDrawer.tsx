@@ -95,7 +95,6 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = ({
   const activeSession = sessions.find((session) => session.sessionId === activeSessionId);
 
   const runAction = async (key: string, action: () => Promise<void>) => {
-    if (busy || actionKey !== null) return;
     setActionKey(key);
     setActionError(null);
     try {
@@ -109,7 +108,9 @@ const ChatHistoryDrawer: React.FC<ChatHistoryDrawerProps> = ({
 
   const openSession = (sessionId: string) => runAction(`open:${sessionId}`, async () => {
     const session = await apiService.getChatSession(sessionId);
-    if (onLoad(session) !== false) onClose();
+    if (onLoad(session) !== false) {
+      onClose();
+    }
   });
 
   const exportSession = (session: ChatHistorySummary) => runAction(`export:${session.sessionId}`, async () => {

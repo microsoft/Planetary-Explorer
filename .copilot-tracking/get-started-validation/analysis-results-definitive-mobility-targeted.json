@@ -1,0 +1,694 @@
+{
+  "generated_at": "2026-09-02T11:51:01.019845+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "resilience": true,
+    "weather": true
+  },
+  "scenario_count": 1,
+  "results": [
+    {
+      "family": "Mobility",
+      "location": "Yukon River corridor, Yukon",
+      "question": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 5641,
+      "attempts": 1,
+      "request": {
+        "latitude": 60.7212,
+        "longitude": -135.0568,
+        "latitude_b": 60.7562,
+        "longitude_b": -135.0068,
+        "user_query": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility."
+      },
+      "response": "## Two-point mobility assessment\n\n- Direct distance: 4.75 km at 34.9 degrees.\n- Corridor classification: SLOW-GO across 1 waypoint(s).\n- Road route: available.\n- Data sources: cop-dem-glo-30, esa-worldcover, jrc-gsw, modis-14A1-061, sentinel-1-rtc, sentinel-2-l2a.\n\nUse this as a planning aid; verify routes, hazards, weather, and access with authoritative local sources before travel.",
+      "errors": [],
+      "analysis_type": "two_point_traverse",
+      "tools": [
+        {
+          "tool": "analyze_two_point_traverse",
+          "result": {
+            "complete": true,
+            "elapsed_ms": 5434,
+            "coverage": {
+              "origin_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "destination_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "waypoints_with_data": 1,
+              "waypoints_expected": 1
+            },
+            "route": {
+              "distance_miles": 2.95,
+              "distance_km": 4.75,
+              "bearing_degrees": 34.9
+            },
+            "road_route": {
+              "road_route_available": true,
+              "travel_time_seconds": 1838,
+              "travel_time_minutes": 30.6,
+              "road_distance_km": 7.11,
+              "road_distance_miles": 4.42,
+              "traffic_delay_seconds": 0,
+              "departure_time": "2026-09-02T04:50:59-07:00",
+              "arrival_time": "2026-09-02T05:21:37-07:00"
+            },
+            "weather": {
+              "origin": {
+                "phrase": "Cloudy",
+                "temperature_c": 7.2,
+                "humidity_pct": 93,
+                "wind_speed_kmh": 3.7,
+                "wind_direction": "N",
+                "visibility_km": 24.1,
+                "cloud_cover_pct": 100,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T04:35:00-07:00"
+              },
+              "destination": {
+                "phrase": "Cloudy",
+                "temperature_c": 7.2,
+                "humidity_pct": 93,
+                "wind_speed_kmh": 3.7,
+                "wind_direction": "N",
+                "visibility_km": 24.1,
+                "cloud_cover_pct": 100,
+                "has_precipitation": false,
+                "precipitation_type": null,
+                "observation_time": "2026-09-02T04:35:00-07:00"
+              }
+            },
+            "elevation_transect": {
+              "profile": [
+                {
+                  "index": 0,
+                  "latitude": 60.7212,
+                  "longitude": -135.0568,
+                  "elevation_m": 638.4,
+                  "fraction": 0.0
+                },
+                {
+                  "index": 1,
+                  "latitude": 60.72995,
+                  "longitude": -135.0443,
+                  "elevation_m": 650.3,
+                  "fraction": 0.25
+                },
+                {
+                  "index": 2,
+                  "latitude": 60.7387,
+                  "longitude": -135.0318,
+                  "elevation_m": 681.5,
+                  "fraction": 0.5
+                },
+                {
+                  "index": 3,
+                  "latitude": 60.74745,
+                  "longitude": -135.0193,
+                  "elevation_m": 738.7,
+                  "fraction": 0.75
+                },
+                {
+                  "index": 4,
+                  "latitude": 60.7562,
+                  "longitude": -135.0068,
+                  "elevation_m": 743.4,
+                  "fraction": 1.0
+                }
+              ],
+              "summary": {
+                "total_ascent_m": 104.9,
+                "total_descent_m": 0,
+                "max_elevation_m": 743.4,
+                "min_elevation_m": 638.4,
+                "elevation_range_m": 104.9,
+                "start_elevation_m": 638.4,
+                "end_elevation_m": 743.4
+              }
+            },
+            "corridor": {
+              "waypoints_sampled": 1,
+              "overall_status": "SLOW-GO",
+              "waypoints": [
+                {
+                  "latitude": 60.7387,
+                  "longitude": -135.0318,
+                  "status": "SLOW-GO",
+                  "hazards": [
+                    "Challenging terrain: 70% tree cover/wetland"
+                  ],
+                  "data": {
+                    "elevation": {
+                      "avg": 6.2,
+                      "max": 42.1,
+                      "gentle_pct": 90.6,
+                      "moderate_pct": 9.0,
+                      "steep_pct": 0.4
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 69.9,
+                        "Grassland": 6.2,
+                        "Cropland": 0.0,
+                        "Built-up": 10.1,
+                        "Bare / sparse vegetation": 3.3,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.5,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 4.0
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              ]
+            },
+            "origin": {
+              "location": {
+                "latitude": 60.7212,
+                "longitude": -135.0568
+              },
+              "radius_miles": 5,
+              "directions": {
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.1% coverage",
+                    "Gentle terrain: 90.6% < 15 deg slopes (avg 5.9 deg)",
+                    "Light vegetation: 99.8% sparse (avg NDVI 0.14)",
+                    "Challenging terrain: 62% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.1,
+                      "permanent_pct": 4.4,
+                      "avg_occurrence": 77.6
+                    },
+                    "elevation": {
+                      "avg": 5.9,
+                      "max": 43.3,
+                      "gentle_pct": 90.6,
+                      "moderate_pct": 8.7,
+                      "steep_pct": 0.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.14,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 62.5,
+                        "Grassland": 7.6,
+                        "Cropland": 0.0,
+                        "Built-up": 14.9,
+                        "Bare / sparse vegetation": 2.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.7,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 6.1
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.8% coverage",
+                    "Gentle terrain: 90.5% < 15 deg slopes (avg 6.7 deg)",
+                    "Light vegetation: 98.2% sparse (avg NDVI 0.25)",
+                    "Challenging terrain: 76% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.8,
+                      "permanent_pct": 2.3,
+                      "avg_occurrence": 73.7
+                    },
+                    "elevation": {
+                      "avg": 6.7,
+                      "max": 42.1,
+                      "gentle_pct": 90.5,
+                      "moderate_pct": 9.1,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.25,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 75.8,
+                        "Grassland": 4.8,
+                        "Cropland": 0.0,
+                        "Built-up": 8.5,
+                        "Bare / sparse vegetation": 3.5,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 4.2,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 3.1
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.7% coverage",
+                    "Gentle terrain: 87.4% < 15 deg slopes (avg 7.2 deg)",
+                    "Light vegetation: 99.5% sparse (avg NDVI 0.20)",
+                    "Challenging terrain: 76% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.7,
+                      "permanent_pct": 4.9,
+                      "avg_occurrence": 78.6
+                    },
+                    "elevation": {
+                      "avg": 7.2,
+                      "max": 45.9,
+                      "gentle_pct": 87.4,
+                      "moderate_pct": 11.9,
+                      "steep_pct": 0.7
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.2,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 76.1,
+                        "Grassland": 5.2,
+                        "Cropland": 0.0,
+                        "Built-up": 5.7,
+                        "Bare / sparse vegetation": 0.9,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 8.7,
+                        "Moss and lichen": 3.4
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.2% coverage",
+                    "Gentle terrain: 93.0% < 15 deg slopes (avg 5.6 deg)",
+                    "Light vegetation: 98.4% sparse (avg NDVI 0.19)",
+                    "Challenging terrain: 64% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.2,
+                      "permanent_pct": 1.8,
+                      "avg_occurrence": 70.6
+                    },
+                    "elevation": {
+                      "avg": 5.6,
+                      "max": 42.1,
+                      "gentle_pct": 93.0,
+                      "moderate_pct": 6.6,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.19,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 63.8,
+                        "Grassland": 7.0,
+                        "Cropland": 0.0,
+                        "Built-up": 16.4,
+                        "Bare / sparse vegetation": 4.3,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 3.0,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 5.5
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            },
+            "destination": {
+              "location": {
+                "latitude": 60.7562,
+                "longitude": -135.0068
+              },
+              "radius_miles": 5,
+              "directions": {
+                "north": {
+                  "direction": "North",
+                  "cardinal": "N",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 3.0% coverage",
+                    "Gentle terrain: 95.8% < 15 deg slopes (avg 5.1 deg)",
+                    "Light vegetation: 98.7% sparse (avg NDVI 0.25)",
+                    "Challenging terrain: 90% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 3.0,
+                      "permanent_pct": 2.6,
+                      "avg_occurrence": 80.7
+                    },
+                    "elevation": {
+                      "avg": 5.1,
+                      "max": 38.5,
+                      "gentle_pct": 95.8,
+                      "moderate_pct": 4.0,
+                      "steep_pct": 0.2
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.25,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 89.9,
+                        "Grassland": 2.3,
+                        "Built-up": 0.2,
+                        "Bare / sparse vegetation": 0.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 5.4,
+                        "Herbaceous wetland": 0.1,
+                        "Moss and lichen": 1.8
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "south": {
+                  "direction": "South",
+                  "cardinal": "S",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 2.8% coverage",
+                    "Gentle terrain: 88.8% < 15 deg slopes (avg 6.8 deg)",
+                    "Light vegetation: 99.6% sparse (avg NDVI 0.21)",
+                    "Challenging terrain: 75% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 2.8,
+                      "permanent_pct": 2.3,
+                      "avg_occurrence": 72.9
+                    },
+                    "elevation": {
+                      "avg": 6.8,
+                      "max": 45.9,
+                      "gentle_pct": 88.8,
+                      "moderate_pct": 10.7,
+                      "steep_pct": 0.5
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.21,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 74.6,
+                        "Grassland": 4.8,
+                        "Cropland": 0.0,
+                        "Built-up": 8.3,
+                        "Bare / sparse vegetation": 3.2,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.7,
+                        "Herbaceous wetland": 0.0,
+                        "Moss and lichen": 2.4
+                      },
+                      "has_roads_likely": true
+                    }
+                  }
+                },
+                "east": {
+                  "direction": "East",
+                  "cardinal": "E",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 0.5% coverage",
+                    "Gentle terrain: 97.5% < 15 deg slopes (avg 4.7 deg)",
+                    "Light vegetation: 98.8% sparse (avg NDVI 0.28)",
+                    "Challenging terrain: 94% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 0.5,
+                      "permanent_pct": 0.4,
+                      "avg_occurrence": 62.4
+                    },
+                    "elevation": {
+                      "avg": 4.7,
+                      "max": 26.9,
+                      "gentle_pct": 97.5,
+                      "moderate_pct": 2.5,
+                      "steep_pct": 0.0
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.28,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 93.8,
+                        "Grassland": 3.1,
+                        "Permanent water bodies": 2.7,
+                        "Moss and lichen": 0.5
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                },
+                "west": {
+                  "direction": "West",
+                  "cardinal": "W",
+                  "status": "SLOW-GO",
+                  "factors": [
+                    "No active fires detected",
+                    "Minimal water: 5.3% coverage",
+                    "Gentle terrain: 91.9% < 15 deg slopes (avg 6.0 deg)",
+                    "Light vegetation: 99.6% sparse (avg NDVI 0.18)",
+                    "Challenging terrain: 81% tree cover/wetland"
+                  ],
+                  "confidence": "high",
+                  "data_sources_used": [
+                    "MODIS Fire",
+                    "JRC Global Surface Water",
+                    "Copernicus DEM",
+                    "Sentinel-2 NDVI",
+                    "ESA WorldCover"
+                  ],
+                  "metrics": {
+                    "fire": {
+                      "total": 0
+                    },
+                    "water": {
+                      "water_pct": 5.3,
+                      "permanent_pct": 4.5,
+                      "avg_occurrence": 78.3
+                    },
+                    "elevation": {
+                      "avg": 6.0,
+                      "max": 42.1,
+                      "gentle_pct": 91.9,
+                      "moderate_pct": 7.7,
+                      "steep_pct": 0.4
+                    },
+                    "vegetation": {
+                      "avg_ndvi": 0.18,
+                      "dense_pct": 0.0
+                    },
+                    "landcover": {
+                      "dominant_class": "Tree cover",
+                      "class_percentages": {
+                        "Tree cover": 81.2,
+                        "Grassland": 3.6,
+                        "Cropland": 0.0,
+                        "Built-up": 4.6,
+                        "Bare / sparse vegetation": 1.9,
+                        "Snow and ice": 0.0,
+                        "Permanent water bodies": 6.4,
+                        "Herbaceous wetland": 0.1,
+                        "Moss and lichen": 2.3
+                      },
+                      "has_roads_likely": false
+                    }
+                  }
+                }
+              },
+              "data_sources": [
+                "jrc-gsw",
+                "sentinel-1-rtc",
+                "sentinel-2-l2a",
+                "cop-dem-glo-30",
+                "modis-14A1-061",
+                "esa-worldcover"
+              ],
+              "collection_status": {
+                "jrc-gsw": "success",
+                "sentinel-1-rtc": "success",
+                "sentinel-2-l2a": "success",
+                "cop-dem-glo-30": "success",
+                "modis-14A1-061": "success",
+                "esa-worldcover": "success"
+              }
+            }
+          }
+        }
+      ],
+      "traverse_evidence": {
+        "distance_km": 4.75,
+        "corridor_status": "SLOW-GO",
+        "waypoints_sampled": 1,
+        "has_origin": true,
+        "has_destination": true,
+        "origin_source_count": 6,
+        "destination_source_count": 6,
+        "waypoints_with_data": 1
+      },
+      "within_ingress_retry_window": true
+    }
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "generated_at": "2026-09-02T11:50:33.831603+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "resilience": true,
+    "weather": true
+  },
+  "scenario_count": 2,
+  "results": [
+    {
+      "family": "Extreme Weather",
+      "location": "Toronto, Ontario",
+      "question": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 27356,
+      "attempts": 1,
+      "request": {
+        "latitude": 43.6532,
+        "longitude": -79.3832,
+        "user_query": "Show monthly projected precipitation for Toronto in 2026 and identify the wettest month."
+      },
+      "response": "## Monthly Precipitation for 2026\n\n- Jan: 2.88 mm/day\n- Feb: 1.53 mm/day\n- Mar: 5.26 mm/day\n- Apr: 2.81 mm/day\n- May: 2.36 mm/day\n- Jun: 3.65 mm/day\n- Jul: 2.46 mm/day\n- Aug: 2.58 mm/day\n- Sep: 3.55 mm/day\n- Oct: 3.53 mm/day\n- Nov: 1.82 mm/day\n- Dec: 0.81 mm/day\n\n**Maximum month:** Mar at 5.26 mm/day\n\nData source: NASA NEX-GDDP-CMIP6.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "sample_timeseries",
+          "result": {
+            "location": {
+              "latitude": 43.6532,
+              "longitude": -79.3832
+            },
+            "actual_sampled_location": {
+              "latitude": 43.625,
+              "longitude": 280.625,
+              "offset_km": 3.2
+            },
+            "variable": "pr",
+            "variable_name": "Precipitation",
+            "scenario": "ssp585",
+            "year": 2026,
+            "model": "UKESM1-0-LL",
+            "aggregation": "monthly",
+            "periods": [
+              {
+                "period": "Jan",
+                "mean": 2.88,
+                "max": 14.08,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Feb",
+                "mean": 1.53,
+                "max": 10.03,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Mar",
+                "mean": 5.26,
+                "max": 30.43,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Apr",
+                "mean": 2.81,
+                "max": 12.69,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "May",
+                "mean": 2.36,
+                "max": 11.98,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Jun",
+                "mean": 3.65,
+                "max": 15.52,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Jul",
+                "mean": 2.46,
+                "max": 20.64,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Aug",
+                "mean": 2.58,
+                "max": 11.56,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Sep",
+                "mean": 3.55,
+                "max": 23.12,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Oct",
+                "mean": 3.53,
+                "max": 24.49,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Nov",
+                "mean": 1.82,
+                "max": 14.85,
+                "min": 0.0,
+                "unit": "mm/day"
+              },
+              {
+                "period": "Dec",
+                "mean": 0.81,
+                "max": 5.0,
+                "min": 0.0,
+                "unit": "mm/day"
+              }
+            ],
+            "annual_summary": {
+              "annual_mean": 2.77,
+              "annual_max": 30.43,
+              "annual_min": 0.0,
+              "unit": "mm/day",
+              "days_sampled": 360,
+              "total_days": 360
+            },
+            "data_source": "NASA NEX-GDDP-CMIP6",
+            "grid_resolution": "0.25\u00b0 \u00d7 0.25\u00b0"
+          }
+        }
+      ],
+      "monthly_period_count": 12
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Montreal, Quebec",
+      "question": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 59582,
+      "attempts": 1,
+      "request": {
+        "latitude": 45.5019,
+        "longitude": -73.5674,
+        "user_query": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?"
+      },
+      "response": "**Climate Projection Analysis for Montreal in 2026: SSP2-4.5 vs. SSP5-8.5**\n\n**Location:** Montreal (Latitude 45.5019, Longitude -73.5674)  \n**Data Source:** NASA NEX-GDDP-CMIP6  \n**Year:** 2026  \n\n---\n\n### Emission Scenarios Overview\n- **SSP2-4.5 (Moderate Emissions):** Represents a sustainable development pathway with moderate greenhouse gas emissions.\n- **SSP5-8.5 (Worst-case Emissions):** Reflects a fossil fuel-intensive trajectory with high emissions.\n\n---\n\n### Temperature Trends (Maximum Daily Temperature - tasmax)\n\n| Scenario      | Projected tasmax | Unit  |\n|---------------|------------------|-------|\n| SSP2-4.5      | 28.0             | \u00b0F    |\n| SSP5-8.5      | 21.9             | \u00b0F    |\n| **Difference** (SSP5-8.5 minus SSP2-4.5) | **-6.1**          | \u00b0F    |\n\n**Interpretation:**  \nContrary to typical expectations, the SSP5-8.5 scenario projects a **6.1\u00b0F lower** maximum daily temperature compared to SSP2-4.5 for Montreal in 2026. This suggests that under the worst-case emissions scenario, maximum temperatures are forecasted to be cooler than under the moderate emissions pathway for this specific year and location. This unusual result may be influenced by model variability or regional climate dynamics and warrants further investigation.\n\n---\n\n### Precipitation Trends (Daily Precipitation - pr)\n\n| Scenario      | Projected Precipitation | Unit     |\n|---------------|------------------------|----------|\n| SSP2-4.5      | 4.17                   | mm/day   |\n| SSP5-8.5      | 3.62                   | mm/day   |\n| **Difference** (SSP5-8.5 minus SSP2-4.5) | **-0.55**               | mm/day   |\n\n**Interpretation:**  \nThe worst-case emissions scenario (SSP5-8.5) projects **0.55 mm/day less precipitation** than the moderate emissions scenario (SSP2-4.5). This decrease in daily precipitation under high emissions could imply drier conditions for Montreal in 2026, potentially impacting water resources, agriculture, and ecosystem health.\n\n---\n\n### Summary and Implications\n\n- **Temperature:** Montreal's maximum daily temperatures in 2026 are projected to be higher under the moderate emissions scenario (SSP2-4.5) than under the worst-case scenario (SSP5-8.5), with a notable 6.1\u00b0F difference. This counterintuitive result suggests regional climate complexities and highlights the importance of considering multiple models and scenarios in climate impact assessments.\n\n- **Precipitation:** The moderate emissions pathway predicts slightly wetter conditions compared t",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "compare_climate_scenarios",
+          "result": {
+            "location": {
+              "latitude": 45.5019,
+              "longitude": -73.5674
+            },
+            "year": 2026,
+            "data_source": "NASA NEX-GDDP-CMIP6",
+            "scenarios": {
+              "ssp245": "SSP2-4.5 \u2014 Moderate emissions (sustainable development path)",
+              "ssp585": "SSP5-8.5 \u2014 Worst-case emissions (fossil fuel intensive)"
+            },
+            "comparison": {
+              "tasmax": {
+                "ssp585": {
+                  "value": 21.9,
+                  "unit": "\u00b0F"
+                },
+                "ssp245": {
+                  "value": 28.0,
+                  "unit": "\u00b0F"
+                }
+              },
+              "pr": {
+                "ssp245": {
+                  "value": 4.17,
+                  "unit": "mm/day"
+                },
+                "ssp585": {
+                  "value": 3.62,
+                  "unit": "mm/day"
+                }
+              }
+            },
+            "scenario_difference": {
+              "tasmax": {
+                "difference": -6.1,
+                "unit": "\u00b0F",
+                "description": "SSP5-8.5 minus SSP2-4.5"
+              },
+              "pr": {
+                "difference": -0.55,
+                "unit": "mm/day",
+                "description": "SSP5-8.5 minus SSP2-4.5"
+              }
+            },
+            "complete": true,
+            "note": "Positive difference = worse conditions under high emissions"
+          }
+        }
+      ],
+      "comparison_cells": {
+        "tasmax.ssp245": 28.0,
+        "tasmax.ssp585": 21.9,
+        "pr.ssp245": 4.17,
+        "pr.ssp585": 3.62
+      }
+    }
+  ]
+}

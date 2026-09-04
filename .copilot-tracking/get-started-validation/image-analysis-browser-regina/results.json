@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-09-02T13:00:37.268Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites at verified Regina cropland",
+      "setup_query": "Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26",
+      "image_query": "Explain the vegetation colours and identify lower-vigour areas near Regina in 2026.",
+      "outcome": "fail",
+      "elapsed_ms": 1786532,
+      "error": "Error:Target page, context or browser has been closed\nError\n    at LongStandingScope._race (C:\\Users\\chenalex\\Planetary-Explorer\\planetary-explorer\\web-ui\\node_modules\\playwright-core\\lib\\coreBundle.js:3219:25)\n    at LongStandingScope.race (C:\\Users\\chenalex\\Planetary-Explorer\\planetary-explorer\\web-ui\\node_modules\\playwright-core\\lib\\coreBundle.js:3212:21)\n    at _Response.finished (C:\\Users\\chenalex\\Planetary-Explorer\\planetary-explorer\\web-ui\\node_modules\\playwright-core\\lib\\coreBundle.js:59638:58)\n    at waitForQuery (file:///C:/Users/chenalex/Planetary-Explorer/scripts/verify_get_started_image_analysis.mjs:232:18)\n    at async runScenario (file:///C:/Users/chenalex/Planetary-Explorer/scripts/verify_get_started_image_analysis.mjs:299:22)\n    at async main (file:///C:/Users/chenalex/Planetary-Explorer/scripts/verify_get_started_image_analysis.mjs:437:22)",
+      "diagnostics": {
+        "setup_bbox": [
+          -104.61,
+          50.34,
+          -104.59,
+          50.36
+        ],
+        "expected_pin": {
+          "lat": 50.35,
+          "lng": -104.6
+        },
+        "map_zoom": 14
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-regina\\failures\\01-250m-ndvi-and-evi-composites-at-verified-regina-cropland.png"
+    }
+  ]
+}

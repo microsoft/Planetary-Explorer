@@ -266,6 +266,9 @@ async def _build_response(req: ScoreRequest, badge: str) -> dict[str, Any]:
             field = _synth_field(seed, req.grid_size, base, amp)
             is_real = False
 
+        if v == "precip":
+            field = [[max(0.0, value) for value in row] for row in field]
+
         fields[v] = field
         units[v] = unit
         (real_vars if is_real else fallback_vars).append(v)
@@ -282,13 +285,21 @@ async def _build_response(req: ScoreRequest, badge: str) -> dict[str, Any]:
         },
         "variables": fields,
         "units": units,
-        "stub": not any_real,
+        "stub": True,
+        "provider_contract": badge,
+        "native_model_inference": False,
         "source": routing["source"] if routing else "synthetic",
+        "real_variables": sorted(real_vars),
+        "synthetic_fallback_variables": sorted(fallback_vars),
         "data_source_note": (
-            f"Forecast backed by {routing['source']} via Open-Meteo "
+            f"{badge} contract backed by {routing['source']} via Open-Meteo; "
+            "this is not native model inference "
             f"(real fields: {sorted(real_vars)}; "
             f"synthetic fallback: {sorted(fallback_vars)})"
-        ) if any_real else "All values synthetic (Open-Meteo unreachable).",
+        ) if any_real else (
+            f"{badge} contract used synthetic fallback values because "
+            "Open-Meteo was unavailable; this is not native model inference."
+        ),
     }
     if badge == "aurora-1.x" and "cyclone" in req.variables:
         body["cyclone_tracks"] = _build_cyclone_tracks(req)

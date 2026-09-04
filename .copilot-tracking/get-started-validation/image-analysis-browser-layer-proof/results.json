@@ -1,0 +1,54 @@
+{
+  "generated_at": "2026-09-02T13:07:54.807Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Sentinel-2 imagery at a verified Calgary pixel",
+      "setup_query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+      "image_query": "Describe urban growth and vegetation patterns visible around Calgary in 2026.",
+      "outcome": "pass",
+      "elapsed_ms": 43484,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -114.09,
+        51.02,
+        -114.07,
+        51.04
+      ],
+      "expected_pin": {
+        "lat": 51.03,
+        "lng": -114.08
+      },
+      "submitted_pin": {
+        "lat": 51.03000107880578,
+        "lng": -114.08000000000008
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "imagery_layer": "hls2-s30",
+      "imagery_difference": {
+        "changedPixelRatio": 0.8308,
+        "meanAbsoluteDifference": 33.95
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 208912,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 476,
+        "luminanceVariance": 836.26,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-layer-proof\\payload-images\\01-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "The imagery highlights urban development and vegetation distribution around Calgary. Here's the analysis:\n\n**Urban Growth Patterns**\n- **Dense Urban Area**: Northwest sections (Connaught, Beltline) show concentrated development with grid-like streets and large structures, characteristic of city centers.\n- **Residential Areas**: Southern regions (Mount Royal, Roxboro, Mission) transition into neighborhoods with parks and less rigid layouts.\n- **Mixed-Use Areas**: Mission near the Elbow River reflects planned urban renewal combining development and greenery.\n\n**Vegetation Patterns**\n- **Green Pockets and River Corridor**: The Elbow River is surrounded by vegetation, with parks (e.g., Parkhill Stanley Park) emphasizing ecological zones.\n- **Land Cover Varieties**: Mount Royal features prominent green spaces like tree-lined streets and landscaped properties.\n- **Street-Lined Greenery**: Residential areas incorporate significant vegetation along roads (e.g., Dorchester Ave SW).\n\n**Takeaway:",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-layer-proof\\browser-screenshots\\01-30m-harmonized-sentinel-2-imagery-at-a-verified-calgary-pixel.png"
+    }
+  ]
+}

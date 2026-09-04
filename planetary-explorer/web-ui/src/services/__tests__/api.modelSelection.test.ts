@@ -60,4 +60,29 @@ describe('ApiService model selection', () => {
     expect(request).not.toHaveProperty('model');
     expect(request).not.toHaveProperty('reasoning_effort');
   });
+
+  it('serializes an explicit Get Started screenshot analysis hint', async () => {
+    await apiService.sendChatMessage(
+      'Describe the visible vegetation colours',
+      undefined,
+      'session-vision',
+      [],
+      undefined,
+      true,
+      {
+        analysis_type: 'screenshot',
+        imagery_base64: 'image-data',
+        current_collection: 'modis-13Q1-061',
+      },
+    );
+
+    expect(post).toHaveBeenCalledWith(
+      '/api/query',
+      expect.objectContaining({
+        analysis_type: 'screenshot',
+        imagery_base64: 'image-data',
+      }),
+      { signal: undefined },
+    );
+  });
 });

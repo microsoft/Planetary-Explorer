@@ -18,6 +18,14 @@ from agents.raster_sampling_agent.raster_sampling_models import (
 )
 from pipeline.analyzers.comparison_analyzer import _sample_pins_inline
 from pipeline.contracts import AnalysisRequest
+from geoint.chat_vision_analyzer import _format_map_location
+
+
+def test_given_western_longitude_when_formatting_vision_context_then_hemisphere_is_west() -> None:
+    assert _format_map_location({
+        "center_lat": 65.3,
+        "center_lng": -126.85,
+    }) == "65.3000°N, 126.8500°W"
 
 
 def test_given_pro_request_when_pipeline_context_is_built_then_mode_and_tilejson_survive() -> None:

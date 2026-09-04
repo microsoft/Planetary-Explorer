@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-09-02T16:36:29.279Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-grounded-0902-1635",
+    "api_image_digest": "sha256:b09d743d21763db31385821e6a4df0f9f5871cf772738a37f35ca001e641c7de",
+    "frontend_deployment_id": "3d75e45a-a4c4-4e6f-9cf3-4b7da24dde22",
+    "frontend_bundle": "index-Bb1Ztwbx.js",
+    "frontend_bundle_sha256": "2b0bd9590e13940fdaf9d189621ce9d7354839f85ce667987b6dddbe8a07fa5d"
+  },
+  "results": [
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m spring river and ice observations near Norman Wells",
+      "setup_query": "Show Sentinel-2 imagery along the Mackenzie River near Norman Wells, Canada from 2026-05-01 to 2026-06-30",
+      "image_query": "Identify open water, ice, snow, and land in this 2026 image.",
+      "outcome": "pass",
+      "elapsed_ms": 30978,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -127.2,
+        65.1,
+        -126.5,
+        65.5
+      ],
+      "expected_pin": {
+        "lat": 65.3,
+        "lng": -126.85
+      },
+      "submitted_pin": {
+        "lat": 65.30075893837062,
+        "lng": -126.84999999999997
+      },
+      "pin_distance_km": 0.08,
+      "map_zoom": 9,
+      "imagery_layer": "Sentinel-2 Level-2A",
+      "imagery_difference": {
+        "changedPixelRatio": 0.8432,
+        "meanAbsoluteDifference": 101.13
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 116921,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 283,
+        "meanRgb": [
+          126.41,
+          136.33,
+          125.64
+        ],
+        "meanLuminance": 133.45,
+        "luminanceVariance": 7762.14,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-grounded-norman-wells\\payload-images\\01-10m-spring-river-and-ice-observations-near-norman-wells.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.11,
+      "evidence_collection": "sentinel-2-l2a",
+      "response_excerpt": "Looking at the image, here’s how the features of open water, ice, snow, and land are distributed based on what is visible:\n\n1. **Open Water**:\n   - The Mackenzie River stands out as dark blue/teal, indicating flowing, possibly open water. Smaller connected waterways also exhibit similar coloration.\n   - Some nearby lakes, such as Three Day Lake and others, also appear dark blue, suggesting they are water bodies.\n\n2. **Ice**:\n   - There is no distinct white-blue shading that suggests significant ice formations in the image. Ice may not be present or distinguishable here.\n\n3. **Snow**:\n   - Snow is strongly represented in the lighter areas of the image, particularly the pale shades over part of the terrain extending near Norman Wells and Canol. These light areas likely signify lingering or accumulated snow on higher-altitude terrain or flat areas.\n\n4. **Land**:\n   - The dark green areas in the left section of the image suggest vegetated land, possibly tundra or forests. \n   - The brown a",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-grounded-norman-wells\\browser-screenshots\\01-10m-spring-river-and-ice-observations-near-norman-wells.png"
+    }
+  ]
+}

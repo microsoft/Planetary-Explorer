@@ -16,6 +16,8 @@ existing endpoint shape requires.
 from __future__ import annotations
 
 import logging
+import os
+import re
 import time
 from typing import Any
 
@@ -24,6 +26,91 @@ from .contracts import AnalysisRequest
 from .action_router import is_explicit_web_request
 
 logger = logging.getLogger(__name__)
+
+_COLLECTION_ALIASES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bhls[\s_-]+s30\b", re.IGNORECASE), "hls2-s30"),
+    (re.compile(r"\bhls[\s_-]+l30\b", re.IGNORECASE), "hls2-l30"),
+)
+
+
+def _unloaded_collection_for_asset_inspection(
+    request: AnalysisRequest,
+    collection_ids: list[str] | None = None,
+) -> str | None:
+    """Return an explicitly named collection that must be loaded first."""
+    query = request.question.casefold()
+    if not re.search(r"\b(?:assets?|bands?)\b", query):
+        return None
+    if not (request.pin or request.bbox or request.location_name):
+        return None
+
+    if collection_ids is None:
+        try:
+            from pc_tasks_config_loader import get_all_collection_ids
+
+            collection_ids = get_all_collection_ids()
+        except Exception:
+            logger.exception("[PIPELINE-V2] collection catalog lookup failed")
+            return None
+
+    loaded_with_metadata = {
+        str(meta.get("id") or meta.get("collection")).casefold()
+        for meta in request.loaded_collections_meta
+        if (meta.get("id") or meta.get("collection"))
+        and meta.get("asset_keys")
+        and str(meta.get("stac_mode") or "").casefold()
+        == request.stac_mode.casefold()
+    }
+    mentioned_collections: list[str] = []
+    available_collections = {
+        collection_id.casefold(): collection_id for collection_id in collection_ids
+    }
+    for alias_pattern, canonical_id in _COLLECTION_ALIASES:
+        collection_id = available_collections.get(canonical_id)
+        if alias_pattern.search(query) and collection_id:
+            mentioned_collections.append(collection_id)
+    for collection_id in sorted(collection_ids, key=len, reverse=True):
+        normalized = collection_id.casefold()
+        if re.search(
+            rf"(?<![a-z0-9]){re.escape(normalized)}(?![a-z0-9])",
+            query,
+        ) and collection_id not in mentioned_collections:
+            mentioned_collections.append(collection_id)
+
+    if not mentioned_collections:
+        current_collections = list(dict.fromkeys(request.loaded_collections))
+        if request.geoint_module == "foundation_change":
+            mentioned_collections = ["hls2-s30"]
+        elif len(current_collections) == 1:
+            mentioned_collections = current_collections
+
+    for collection_id in mentioned_collections:
+        if collection_id.casefold() not in loaded_with_metadata:
+            return collection_id
+    return None
+
+
+async def _collection_ids_for_asset_inspection(
+    request: AnalysisRequest,
+) -> list[str] | None:
+    """Return live collection IDs when the request targets MPC Pro."""
+    query = request.question.casefold()
+    if (
+        request.stac_mode != "pro"
+        or not re.search(r"\b(?:assets?|bands?)\b", query)
+        or not (request.pin or request.bbox or request.location_name)
+    ):
+        return None
+    try:
+        from pc_tasks_config_loader import get_all_collection_ids
+        from pro_stac_client import get_pro_collection_ids
+
+        canonical_ids = get_all_collection_ids()
+        pro_ids = await get_pro_collection_ids()
+        return list(dict.fromkeys([*canonical_ids, *pro_ids]))
+    except Exception:
+        logger.exception("[PIPELINE-V2] Pro collection inventory lookup failed")
+        return None
 
 
 def _extract_collection_meta(stac_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -50,6 +137,8 @@ def _extract_collection_meta(stac_items: list[dict[str, Any]]) -> list[dict[str,
                 "band_names": [],
                 "gsd": None,
                 "eo_cloud_cover": None,
+                "stac_mode": item.get("stac_mode")
+                or item.get("_planetary_explorer_stac_mode"),
             },
         )
         assets = item.get("assets") or {}
@@ -174,7 +263,7 @@ def _build_request(body: dict[str, Any]) -> AnalysisRequest:
 
     # Per-request UI toggles. Defaults match the UI defaults so omitted
     # fields behave the same as the UI's "fresh load" state.
-    _stac_mode_raw = body.get("stac_mode")
+    _stac_mode_raw = body.get("stac_mode") or os.getenv("DEFAULT_STAC_MODE")
     _stac_mode = (_stac_mode_raw or "public").lower()
     if _stac_mode not in ("public", "pro"):
         _stac_mode = "public"
@@ -183,6 +272,12 @@ def _build_request(body: dict[str, Any]) -> AnalysisRequest:
     geoint_module = (
         geoint_module_raw.strip()
         if isinstance(geoint_module_raw, str) and geoint_module_raw.strip()
+        else None
+    )
+    analysis_type_raw = body.get("analysis_type")
+    analysis_type = (
+        analysis_type_raw
+        if analysis_type_raw in {"raster", "screenshot"}
         else None
     )
 
@@ -206,6 +301,7 @@ def _build_request(body: dict[str, Any]) -> AnalysisRequest:
         stac_items=list(stac_items),
         tile_urls=list(tile_urls),
         hint="foundation_change" if geoint_module == "foundation_change" else None,
+        analysis_type=analysis_type,
         geoint_module=geoint_module,
         model=body.get("model"),
         reasoning_effort=str(body.get("reasoning_effort") or "none"),
@@ -269,6 +365,13 @@ async def run_pipeline_v2(body: dict[str, Any]) -> dict[str, Any]:
         "hybrid": "LOAD_AND_ANALYZE",
     }
     clarifier_route = (body.get("clarifier_route") or "").strip().lower() or None
+    inspection_collection_ids = await _collection_ids_for_asset_inspection(
+        request
+    )
+    inspection_collection = _unloaded_collection_for_asset_inspection(
+        request,
+        collection_ids=inspection_collection_ids,
+    )
     # LOAD-clarification resume: when this turn is the user's reply to a
     # prior LoadAgent clarification (body carries _pending_load_clarification
     # hydrated by fastapi_app), the user's message is typically a short
@@ -327,7 +430,24 @@ async def run_pipeline_v2(body: dict[str, Any]) -> dict[str, Any]:
                 _q[:60],
             )
     decision: ActionDecision
-    if request.geoint_module == "foundation_change":
+    if inspection_collection:
+        decision = ActionDecision(
+            action="LOAD",
+            location=request.location_name,
+            use_current_location=not bool(request.location_name),
+            stac_query=inspection_collection,
+            analysis_question=request.question,
+            reasoning="unloaded_collection_inspection",
+            confidence=1.0,
+        )
+        logger.info(
+            "[PIPELINE-V2] unloaded collection %s asset inspection -> LOAD "
+            "(overrode module=%r, clarifier_route=%r)",
+            inspection_collection,
+            request.geoint_module,
+            clarifier_route,
+        )
+    elif request.geoint_module == "foundation_change":
         decision = ActionDecision(
             action="ANALYZE",
             analysis_question=request.question,
@@ -385,6 +505,11 @@ async def run_pipeline_v2(body: dict[str, Any]) -> dict[str, Any]:
         getattr(specialist, "id", specialist.__class__.__name__),
     )
     result = await specialist.run(decision, request, body)
+    if inspection_collection and result.get("action") == "LOAD":
+        result["post_load_inspection"] = {
+            "collection_id": inspection_collection,
+            "question": request.question,
+        }
     # elapsed_ms reflects the whole pipeline; specialists may set their own.
     result.setdefault("elapsed_ms", 0)
     result["elapsed_ms"] = max(result["elapsed_ms"], int((time.time() - started) * 1000))

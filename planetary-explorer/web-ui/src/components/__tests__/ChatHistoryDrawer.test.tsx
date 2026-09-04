@@ -6,7 +6,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiService, ChatHistorySession } from '../../services/api';
 import ChatHistoryDrawer from '../ChatHistoryDrawer';
 
-function renderDrawer(onLoad = vi.fn(), busy = false, onClose = vi.fn()) {
+function renderDrawer(
+  onLoad: (session: ChatHistorySession) => boolean | void = vi.fn(),
+  busy = false,
+  onClose: () => void = vi.fn(),
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });

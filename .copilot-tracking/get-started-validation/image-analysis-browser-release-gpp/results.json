@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-09-02T14:38:07.060Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity at a verified interior BC pixel",
+      "setup_query": "Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26",
+      "image_query": "Explain the productivity colour scale around this interior British Columbia location.",
+      "outcome": "fail",
+      "elapsed_ms": 51077,
+      "error": "Error: Screenshot appears blank: {\"decodedWidth\":1020,\"decodedHeight\":920,\"sampledColorBins\":1,\"luminanceVariance\":0.41}\n    at runScenario (file:///C:/Users/chenalex/Planetary-Explorer/scripts/verify_get_started_image_analysis.mjs:437:13)\n    at async main (file:///C:/Users/chenalex/Planetary-Explorer/scripts/verify_get_started_image_analysis.mjs:547:22)",
+      "diagnostics": {
+        "setup_bbox": [
+          -126.56,
+          54.14,
+          -126.54,
+          54.16
+        ],
+        "expected_pin": {
+          "lat": 54.15,
+          "lng": -126.55000000000001
+        },
+        "map_zoom": 14,
+        "imagery_layer": "MODIS Gross Primary Productivity 8-Day (500m)",
+        "imagery_difference": {
+          "changedPixelRatio": 0.999,
+          "meanAbsoluteDifference": 177.74
+        },
+        "submitted_pin": {
+          "lat": 54.15000120775608,
+          "lng": -126.54999999999973
+        },
+        "pin_distance_km": 0
+      },
+      "page_errors": [],
+      "failure_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-release-gpp\\failures\\01-8-day-vegetation-productivity-at-a-verified-interior-bc-pixel.png"
+    }
+  ]
+}

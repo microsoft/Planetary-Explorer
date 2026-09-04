@@ -141,19 +141,23 @@ function hlsFireLegend(): ChatLegendDefinition {
   ], 'B12/B8A/B04 uses scene-level 2nd to 98th percentile stretches. Colours are relative to this scene, not official burn severity.');
 }
 
+function hasCompletedGeoFmFeatures(response: any): boolean {
+  const structured = response?.structured || response?.data?.structured || {};
+  return ['compare_with_geofm', 'get_geofm_run'].some((toolName) => {
+    const evidence = structured?.[toolName];
+    return evidence?.success === true
+      && evidence?.structured?.status === 'complete'
+      && Array.isArray(evidence.structured.features)
+      && evidence.structured.features.length > 0;
+  });
+}
+
 export function deriveChatLegend(response: any, mapContext?: MapContext): ChatLegendDefinition | undefined {
   if (!response || response?.isError) return undefined;
 
   const isHlsFireFalseColour = hasHlsFireFalseColour(response, mapContext);
 
-  const tools = Array.isArray(response?.tools_used) ? response.tools_used : [];
-  const structured = response?.structured || response?.data?.structured || {};
-  const isGeoFm = tools.some((tool: string) => tool.includes('geofm'))
-    || Boolean(structured?.compare_with_geofm)
-    || Boolean(structured?.get_geofm_run)
-    || Boolean(structured?.cancel_geofm_run)
-    || Boolean(structured?.list_geofm_models);
-  if (isGeoFm) {
+  if (hasCompletedGeoFmFeatures(response)) {
     return categorical('PlanAura contextual change', [
       { color: '#ef4444', label: 'Red area', description: 'Detected change above the requested threshold' },
       { color: '#7f1d1d', label: 'Dark red outline', description: 'Boundary of a detected change polygon' },

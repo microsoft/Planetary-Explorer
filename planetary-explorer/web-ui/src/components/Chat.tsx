@@ -12,6 +12,7 @@ import { TraceDrawer, ConfirmationCard, useToolTrace } from './trace';
 import type { PendingConfirm } from './trace';
 import ChatHistoryDrawer from './ChatHistoryDrawer';
 import {
+  boundedHistorySceneRefs,
   boundedHistoryTileUrls,
   chatHistoryFingerprint,
   confirmFailedHistoryDiscard,
@@ -168,6 +169,21 @@ interface ChatProps {
   stacMode?: 'public' | 'pro'; // Public MPC vs MPC Pro (private GeoCatalog) for STAC routing
 }
 
+interface ChatMutationRequest {
+  message: string;
+  resetContext?: boolean;
+  sessionId?: string;
+  generation?: number;
+  stacMode?: 'public' | 'pro';
+}
+
+interface PendingQueryRequest extends ChatMutationRequest {
+  message: string;
+}
+
+const createWebSessionId = () =>
+  `web-session-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+
 const Chat: React.FC<ChatProps> = ({ 
   selectedDataset, 
   chatMode, 
@@ -199,6 +215,8 @@ const Chat: React.FC<ChatProps> = ({
   stacMode,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const conversationHistoryStartRef = useRef(0);
   const [inputValue, setInputValue] = useState('');
   const [feedback, setFeedback] = useState<Record<number, string>>({});
   // MCP tool-trace state for the active streaming turn. Rows are
@@ -207,19 +225,34 @@ const Chat: React.FC<ChatProps> = ({
   const activeTrace = useToolTrace();
   // Pending WRITE/DESTRUCTIVE confirmations awaiting Approve/Deny. Keyed
   // by trace_id so duplicate `confirm_request` events coalesce.
-  const [pendingConfirms, setPendingConfirms] = useState<PendingConfirm[]>([]);
+  const [pendingConfirms, setPendingConfirmsState] = useState<PendingConfirm[]>([]);
+  const pendingConfirmsRef = useRef<PendingConfirm[]>([]);
+  const setPendingConfirms = React.useCallback(
+    (update: React.SetStateAction<PendingConfirm[]>) => {
+      setPendingConfirmsState((previous) => {
+        const next = typeof update === 'function' ? update(previous) : update;
+        pendingConfirmsRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
   const handleConfirmResolved = React.useCallback(
     (traceId: string, _approved: boolean) => {
       setPendingConfirms((prev) => prev.filter((p) => p.traceId !== traceId));
     },
     [],
   );
-  const createQueryStreamContext = () => {
+  const createQueryStreamContext = (generation?: number) => {
     const rows: any[] = [];
+    const isCurrentGeneration = () => (
+      generation === undefined || generation === requestGenerationRef.current
+    );
     return {
       rows,
       handlers: {
         onTrace: (event: any) => {
+          if (!isCurrentGeneration()) return;
           activeTrace.ingest(event);
           if (event?.type === 'tool_call') {
             rows.push({
@@ -248,6 +281,7 @@ const Chat: React.FC<ChatProps> = ({
           }
         },
         onConfirmRequest: (event: any) => {
+          if (!isCurrentGeneration()) return;
           setPendingConfirms((previous) => previous.some(
             (pending) => pending.traceId === event.trace_id
           ) ? previous : [
@@ -262,6 +296,7 @@ const Chat: React.FC<ChatProps> = ({
           ]);
         },
         onConfirmResolved: (event: any) => {
+          if (!isCurrentGeneration()) return;
           setPendingConfirms((previous) => previous.filter(
             (pending) => pending.traceId !== event.trace_id
           ));
@@ -280,12 +315,13 @@ const Chat: React.FC<ChatProps> = ({
   // AND calls abort() so the HTTP request is genuinely terminated end-to-end
   // (axios honors the signal and the backend connection drops).
   const chatAbortRef = useRef<AbortController | null>(null);
+  const requestGenerationRef = useRef(0);
   const [partsPending, setPartsPending] = useState(false);
   const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
   const initialQueryRef = useRef(false);
   const [lastResponse, setLastResponse] = useState<string>('');
   // Add conversation ID to maintain context across messages
-  const [conversationId, setConversationId] = useState(() => `web-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const [conversationId, setConversationId] = useState(createWebSessionId);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historySaveState, setHistorySaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const lastSavedSnapshotRef = useRef('');
@@ -314,15 +350,20 @@ const Chat: React.FC<ChatProps> = ({
   const [currentCollectionId, setCurrentCollectionId] = useState<string | null>(null);
   
   // State for pending query from GetStartedButton
-  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  const [pendingQuery, setPendingQuery] = useState<PendingQueryRequest | null>(null);
   
   // State for analysis type hint (raster vs screenshot) from GetStartedButton
   const [pendingAnalysisType, setPendingAnalysisType] = useState<'raster' | 'screenshot' | null>(null);
+  const pendingAnalysisTypeRef = useRef<'raster' | 'screenshot' | null>(null);
   
   // Refs to track latest prop values (avoid stale closures in event listeners)
   const selectedModuleRef = useRef(selectedModule);
   const mapContextRef = useRef(mapContext);
   const terrainSessionRef = useRef(terrainSession);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   
   // Keep refs updated with latest prop values
   useEffect(() => {
@@ -385,7 +426,12 @@ const Chat: React.FC<ChatProps> = ({
   
   // Listen for STAC query events from GetStartedButton (clears sessions and processes query)
   useEffect(() => {
-    const handleStacQueryEvent = (event: CustomEvent<{ query: string; clearSessions: boolean }>) => {
+    const handleStacQueryEvent = (event: CustomEvent<{
+      query: string;
+      clearSessions: boolean;
+      resetContext?: boolean;
+      stacMode?: 'public' | 'pro';
+    }>) => {
       const query = event.detail.query;
       if (query && query.trim()) {
         console.log(' Chat: Received STAC query from GetStartedButton:', query);
@@ -407,9 +453,53 @@ const Chat: React.FC<ChatProps> = ({
             onClearTerrainSession();
           }
         }
-        
+
+        const resetContext = event.detail.resetContext !== false;
+        const sessionId = resetContext ? createWebSessionId() : conversationId;
+        const generation = ++requestGenerationRef.current;
+        if (resetContext) {
+          try { chatAbortRef.current?.abort(); } catch (_) { /* already completed */ }
+          chatAbortRef.current = null;
+          setPartsPending(false);
+          setMessages((previous) => previous.filter((message) => !message.isThinking));
+          activeTrace.clear();
+          const staleConfirms = pendingConfirmsRef.current;
+          setPendingConfirms([]);
+          staleConfirms.forEach((pending) => {
+            void apiService.resolveMcpConfirmation(
+              pending.traceId,
+              false,
+              'Superseded by a new Get Started Setup.',
+            ).catch((error) => {
+              console.warn('Chat: failed to deny superseded confirmation', error);
+            });
+          });
+          setConversationId(sessionId);
+          conversationHistoryStartRef.current = messagesRef.current.filter(
+            (message) => !message.isThinking,
+          ).length;
+          historyGenerationRef.current += 1;
+          pendingHistorySaveRef.current = null;
+          retryHistorySaveRef.current = null;
+          lastServerRevisionRef.current = 0;
+          lastSavedSnapshotRef.current = '';
+          terminalHistoryFailureRef.current = false;
+          if (historyRetryTimerRef.current !== null) {
+            window.clearTimeout(historyRetryTimerRef.current);
+            historyRetryTimerRef.current = null;
+          }
+          pendingAnalysisTypeRef.current = null;
+          setPendingAnalysisType(null);
+        }
+
         // Set the pending query to trigger processing
-        setPendingQuery(query);
+        setPendingQuery({
+          message: query,
+          resetContext,
+          sessionId,
+          generation,
+          stacMode: event.detail.stacMode,
+        });
       }
     };
 
@@ -417,7 +507,7 @@ const Chat: React.FC<ChatProps> = ({
     return () => {
       window.removeEventListener('planetaryexplorer-stac-query' as any, handleStacQueryEvent as any);
     };
-  }, [localVisionSessionId, onClearVisionSession, onClearTerrainSession]);
+  }, [conversationId, localVisionSessionId, onClearVisionSession, onClearTerrainSession]);
   
   // Listen for regular query events from GetStartedButton (vision queries - keep session)
   useEffect(() => {
@@ -483,9 +573,13 @@ const Chat: React.FC<ChatProps> = ({
           }
           
           // Store the analysis type hint for the upcoming query
+          pendingAnalysisTypeRef.current = analysisType || null;
           setPendingAnalysisType(analysisType || null);
           // Set the pending query to trigger processing after chatMutation is ready
-          setPendingQuery(query);
+          setPendingQuery({
+            message: query,
+            generation: ++requestGenerationRef.current,
+          });
           }, 50); // 50ms delay to ensure state propagation is complete
         });
       }
@@ -650,16 +744,56 @@ const Chat: React.FC<ChatProps> = ({
   };
 
   const chatMutation = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({
+      message,
+      resetContext = false,
+      sessionId,
+      generation,
+      stacMode: requestedStacMode,
+    }: ChatMutationRequest) => {
       // Fresh AbortController per turn. handleStopMessage calls .abort() on
       // this controller to terminate the in-flight HTTP request end-to-end.
       const controller = new AbortController();
       chatAbortRef.current = controller;
       cancelledRef.current = false;
+      const isCurrentGeneration = () => (
+        generation === undefined || generation === requestGenerationRef.current
+      );
       try {
+        const explicitAnalysisType = pendingAnalysisTypeRef.current;
+        pendingAnalysisTypeRef.current = null;
+        if (pendingAnalysisType) setPendingAnalysisType(null);
+
         // CRITICAL: Always read the latest map context from the ref.
         // The closure-captured `mapContext` prop can be stale after map navigation.
-        const currentMapCtx = mapContextRef.current;
+        let currentMapCtx = resetContext ? null : mapContextRef.current;
+        if (!resetContext && explicitAnalysisType === 'screenshot') {
+          const deadline = Date.now() + 10_000;
+          while (!currentMapCtx?.imagery_base64 && Date.now() < deadline) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            currentMapCtx = mapContextRef.current;
+          }
+          if (!currentMapCtx?.imagery_base64) {
+            return {
+              response: [
+                '**Map screenshot is not ready.**',
+                '',
+                'Wait for the map imagery and pin to finish rendering, then run Image Analysis again.',
+              ].join('\n'),
+              isClarification: true,
+            };
+          }
+        }
+        const activeModule = resetContext
+          ? undefined
+          : (selectedModuleRef.current || selectedModule);
+        const activePin = resetContext ? undefined : (currentPin || undefined);
+        const activeMobilityPinCoords = resetContext ? null : mobilityPinCoords;
+        const activeGeointMode = resetContext ? false : geointMode;
+        const activeHistory = resetContext
+          ? []
+          : messagesRef.current.slice(conversationHistoryStartRef.current);
+        const activeSessionId = sessionId || conversationId;
 
         // ────────────────────────────────────────────────────────────
         // Universal routing: every free-text chat turn now flows through
@@ -687,16 +821,12 @@ const Chat: React.FC<ChatProps> = ({
         // that the generic pipeline does not yet model.
         // ────────────────────────────────────────────────────────────
 
-        // Clear pending analysis-type hint (it was only used by the old
-        // vision sidecar; the AnalysisRouter doesn't need it).
-        if (pendingAnalysisType) setPendingAnalysisType(null);
-
         //  TERRAIN CHAT ROUTING
         // Route to terrain agent if:
         // 1. We have an active terrain session with sessionId (follow-up), OR
         // 2. Terrain module is selected and session is initializing (pin placed, API call in flight)
-        const terrainSessionNow = terrainSessionRef.current;
-        const isTerrainModuleActive = selectedModuleRef.current === 'terrain';
+        const terrainSessionNow = resetContext ? null : terrainSessionRef.current;
+        const isTerrainModuleActive = activeModule === 'terrain';
         
         if (terrainSessionNow && (terrainSessionNow.sessionId || isTerrainModuleActive)) {
           const sessionId = terrainSessionNow.sessionId || null; // null creates new session
@@ -713,14 +843,19 @@ const Chat: React.FC<ChatProps> = ({
             terrainLat,
             terrainLng,
             currentMapCtx?.imagery_base64, // Include screenshot for vision analysis
-            5.0
+            5.0,
+            controller.signal,
           );
           
           console.log(' Chat: Terrain agent response:', result);
           console.log(' Chat: Tool calls:', result.tool_calls);
           
           // Store session ID for follow-up questions
-          if (result.session_id && !terrainSessionNow.sessionId) {
+          if (
+            isCurrentGeneration()
+            && result.session_id
+            && !terrainSessionNow.sessionId
+          ) {
             console.log(' Chat: Storing new terrain session ID:', result.session_id);
             if (onTerrainSessionChange) {
               onTerrainSessionChange({
@@ -742,24 +877,24 @@ const Chat: React.FC<ChatProps> = ({
         
         //  COMPARISON ROUTING
         // Route to comparison agent when comparison module is selected
-        if (selectedModule === 'comparison') {
+        if (activeModule === 'comparison') {
           console.log(' Chat: Routing to comparison agent');
           console.log(' Chat: Query:', message);
           console.log(' Chat: Map context:', {
-            lat: currentMapCtx?.vision_pin?.lat || currentPin?.lat,
-            lng: currentMapCtx?.vision_pin?.lng || currentPin?.lng
+            lat: currentMapCtx?.vision_pin?.lat || activePin?.lat,
+            lng: currentMapCtx?.vision_pin?.lng || activePin?.lng
           });
           console.log(' Chat: Including screenshot for comparison agent:', !!currentMapCtx?.imagery_base64);
           
           try {
             const response = await apiService.triggerGeointAnalysis(
-              currentMapCtx?.vision_pin?.lat || currentPin?.lat || 0,
-              currentMapCtx?.vision_pin?.lng || currentPin?.lng || 0,
+              currentMapCtx?.vision_pin?.lat || activePin?.lat || 0,
+              currentMapCtx?.vision_pin?.lng || activePin?.lng || 0,
               'comparison',
               message, // user_query
               undefined, // userContext
               currentMapCtx?.imagery_base64 || undefined, // screenshot - include map view for visual context
-              undefined, // signal
+              controller.signal,
               { stac_mode: stacMode || 'public' },
             );
             
@@ -820,8 +955,8 @@ const Chat: React.FC<ChatProps> = ({
         
         //  MOBILITY ROUTING
         // Route to mobility agent when mobility module is selected and both pins are placed
-        if (selectedModule === 'mobility' && mobilityPinCoords) {
-          const { pinA, pinB } = mobilityPinCoords;
+        if (activeModule === 'mobility' && activeMobilityPinCoords) {
+          const { pinA, pinB } = activeMobilityPinCoords;
           
           console.log(' Chat: Routing to mobility agent');
           console.log(' Chat: User question:', message);
@@ -836,7 +971,7 @@ const Chat: React.FC<ChatProps> = ({
               `${message} Analyze traversability from Point A (${pinA.lat.toFixed(4)}, ${pinA.lng.toFixed(4)}) to Point B (${pinB.lat.toFixed(4)}, ${pinB.lng.toFixed(4)}). You MUST use your satellite analysis tools (analyze_directional_mobility, detect_water_bodies, analyze_slope_for_mobility, analyze_vegetation_density, detect_active_fires) at both coordinates. Do NOT answer from general knowledge.`,
               undefined, // userContext
               currentMapCtx?.imagery_base64 || undefined, // screenshot - include map view for visual context
-              undefined, // signal
+              controller.signal,
               { latitude_b: pinB.lat, longitude_b: pinB.lng, stac_mode: stacMode || 'public' },
             );
             
@@ -860,9 +995,9 @@ const Chat: React.FC<ChatProps> = ({
         
         // BUILDING DAMAGE ROUTING
         // Route to building damage agent when building_damage module is selected and pin is dropped
-        if (selectedModule === 'building_damage') {
-          const lat = currentMapCtx?.vision_pin?.lat || currentPin?.lat || 0;
-          const lng = currentMapCtx?.vision_pin?.lng || currentPin?.lng || 0;
+        if (activeModule === 'building_damage') {
+          const lat = currentMapCtx?.vision_pin?.lat || activePin?.lat || 0;
+          const lng = currentMapCtx?.vision_pin?.lng || activePin?.lng || 0;
           
           console.log(' Chat: Routing to building damage agent');
           console.log(' Chat: Query:', message);
@@ -877,8 +1012,12 @@ const Chat: React.FC<ChatProps> = ({
               message, // user_query - the damage assessment question
               undefined, // userContext
               currentMapCtx?.imagery_base64 || undefined, // screenshot - include loaded map imagery
-              undefined, // signal
-              { stac_mode: stacMode || 'public' },
+              controller.signal,
+              {
+                stac_mode: stacMode || 'public',
+                current_collection: currentMapCtx?.current_collection,
+                stac_items: currentMapCtx?.stac_items || [],
+              },
             );
             
             console.log(' Chat: Building damage response:', response);
@@ -901,9 +1040,9 @@ const Chat: React.FC<ChatProps> = ({
         
         //  EXTREME WEATHER ROUTING
         // Route to extreme weather agent when extreme_weather module is selected and pin is dropped
-        if (selectedModule === 'extreme_weather') {
-          const lat = currentMapCtx?.vision_pin?.lat || currentPin?.lat || 0;
-          const lng = currentMapCtx?.vision_pin?.lng || currentPin?.lng || 0;
+        if (activeModule === 'extreme_weather') {
+          const lat = currentMapCtx?.vision_pin?.lat || activePin?.lat || 0;
+          const lng = currentMapCtx?.vision_pin?.lng || activePin?.lng || 0;
           
           console.log(' Chat: Routing to extreme weather agent');
           console.log(' Chat: Query:', message);
@@ -918,7 +1057,7 @@ const Chat: React.FC<ChatProps> = ({
               message, // user_query - the climate question
               undefined, // userContext
               currentMapCtx?.imagery_base64 || undefined, // screenshot - include map view for visual context
-              undefined, // signal
+              controller.signal,
               { stac_mode: stacMode || 'public' },
             );
             
@@ -958,8 +1097,7 @@ const Chat: React.FC<ChatProps> = ({
         // captured value can lag the actual state and the message falls
         // through to the generic /api/query path (which is why some queries
         // came back as "Loading imagery…" instead of running the planner).
-        const _activeModule = selectedModuleRef.current || selectedModule;
-        if (_activeModule === 'resilience') {
+        if (activeModule === 'resilience') {
           // NOTE: the old frontend clarify-guard that demanded a region /
           // hazard / horizon keyword has been removed. The MAF planner now
           // defaults to the investigative route and handles ambiguity,
@@ -1027,6 +1165,7 @@ const Chat: React.FC<ChatProps> = ({
               },
               {
                 onTrace: (evt) => {
+                  if (!isCurrentGeneration()) return;
                   activeTrace.ingest(evt);
                   // Mirror ingest into a local accumulator so we can
                   // attach the final row list to the chat message.
@@ -1058,6 +1197,7 @@ const Chat: React.FC<ChatProps> = ({
                   }
                 },
                 onConfirmRequest: (evt) => {
+                  if (!isCurrentGeneration()) return;
                   setPendingConfirms((prev) => {
                     if (prev.some((p) => p.traceId === evt.trace_id)) return prev;
                     return [
@@ -1073,10 +1213,16 @@ const Chat: React.FC<ChatProps> = ({
                   });
                 },
                 onConfirmResolved: (evt) => {
+                  if (!isCurrentGeneration()) return;
                   setPendingConfirms((prev) => prev.filter((p) => p.traceId !== evt.trace_id));
                 },
-                onError: (err) => console.warn(' Resilience stream error event:', err),
+                onError: (err) => {
+                  if (isCurrentGeneration()) {
+                    console.warn(' Resilience stream error event:', err);
+                  }
+                },
               },
+              controller.signal,
             );
             if (!dossier) {
               // Stream closed without a terminal dossier event — fall
@@ -1093,7 +1239,9 @@ const Chat: React.FC<ChatProps> = ({
             // Dispatch facility markers to the map (MapView already listens).
             const facilities: any[] = Array.isArray(dossier?.facilities) ? dossier.facilities : [];
             try {
-              window.dispatchEvent(new CustomEvent('resilience:facilities', { detail: { facilities, dossier } }));
+              if (isCurrentGeneration()) {
+                window.dispatchEvent(new CustomEvent('resilience:facilities', { detail: { facilities, dossier } }));
+              }
             } catch (e) {
               console.warn(' Chat: failed to dispatch resilience:facilities event', e);
             }
@@ -1333,7 +1481,7 @@ const Chat: React.FC<ChatProps> = ({
         // Route to /api/sites/audit when site_audit module is selected and pin is dropped.
         // Backend body shape is {lat, lng, claimed_mw}; we parse claimed MW from the user
         // query (e.g. "audit a 200 MW site"); default 200 MW.
-        if (selectedModule === 'site_audit') {
+        if (activeModule === 'site_audit') {
           // Prefer an explicit pin (vision-mode pin or generic dropped pin).
           // Fall back to the current map center so a geocode pan (e.g. user
           // typed "Calgary, Alberta" and the map moved there)
@@ -1342,9 +1490,9 @@ const Chat: React.FC<ChatProps> = ({
           // the truly-unset case (map never moved).
           const centerLat = (currentMapCtx as any)?.bounds?.center_lat;
           const centerLng = (currentMapCtx as any)?.bounds?.center_lng;
-          const lat = currentMapCtx?.vision_pin?.lat || currentPin?.lat
+          const lat = currentMapCtx?.vision_pin?.lat || activePin?.lat
             || (Number.isFinite(centerLat) ? centerLat : 0);
-          const lng = currentMapCtx?.vision_pin?.lng || currentPin?.lng
+          const lng = currentMapCtx?.vision_pin?.lng || activePin?.lng
             || (Number.isFinite(centerLng) ? centerLng : 0);
 
           let claimedMw = 200;
@@ -1400,7 +1548,13 @@ const Chat: React.FC<ChatProps> = ({
           console.log(' Chat: Routing to Site Audit', { lat, lng, claimedMw, query: message });
 
           try {
-            const dossier = await apiService.triggerSiteAudit(lat, lng, claimedMw, message);
+            const dossier = await apiService.triggerSiteAudit(
+              lat,
+              lng,
+              claimedMw,
+              message,
+              controller.signal,
+            );
             console.log(' Chat: Site audit dossier:', dossier);
 
             // Format dossier as markdown
@@ -1729,15 +1883,15 @@ const Chat: React.FC<ChatProps> = ({
         // and a pin is dropped. Backend fans out across configured AI weather
         // providers (Aurora / Earth-2 FCN / MAI Weather) and returns an
         // ensemble dossier.
-        if (selectedModule === 'forecast') {
+        if (activeModule === 'forecast') {
           // Same map-center fallback as Site Intel: geocoded location pan
           // is treated as an implicit pin so the user doesn't have to
           // manually click after typing a place name.
           const centerLat = (currentMapCtx as any)?.bounds?.center_lat;
           const centerLng = (currentMapCtx as any)?.bounds?.center_lng;
-          const lat = currentMapCtx?.vision_pin?.lat || currentPin?.lat
+          const lat = currentMapCtx?.vision_pin?.lat || activePin?.lat
             || (Number.isFinite(centerLat) ? centerLat : 0);
-          const lng = currentMapCtx?.vision_pin?.lng || currentPin?.lng
+          const lng = currentMapCtx?.vision_pin?.lng || activePin?.lng
             || (Number.isFinite(centerLng) ? centerLng : 0);
 
           if (lat === 0 && lng === 0) {
@@ -1777,15 +1931,34 @@ const Chat: React.FC<ChatProps> = ({
             const called: string[] = Array.isArray(dossier?.providers_called) ? dossier.providers_called : [];
             const succ: string[] = Array.isArray(dossier?.providers_succeeded) ? dossier.providers_succeeded : [];
             const failed: any[] = Array.isArray(dossier?.providers_failed) ? dossier.providers_failed : [];
+            const forecasts: any[] = Array.isArray(dossier?.forecasts) ? dossier.forecasts : [];
+            const adapterForecasts = forecasts.filter(
+              (forecast: any) => forecast?.extras?.native_model_inference === false,
+            );
+            const adapterProviderIds = new Set(
+              adapterForecasts.map((forecast: any) => forecast?.provider_id).filter(Boolean),
+            );
+            const nativeProviderIds = succ.filter((providerId) => !adapterProviderIds.has(providerId));
             const summary = dossier?.ensemble_summary || {};
             const vars = summary?.variables || {};
             const note = dossier?.note || '';
 
             lines.push(`**AI weather ensemble** · ${lat.toFixed(3)}°, ${lng.toFixed(3)}° · +${leadHours}h`);
-            if (succ.length > 0) {
-              lines.push(`- Models run: ${succ.join(', ')}`);
+            if (nativeProviderIds.length > 0) {
+              lines.push(`- Native models run: ${nativeProviderIds.join(', ')}`);
+            }
+            if (adapterProviderIds.size > 0) {
+              lines.push(`- Adapter-backed provider contracts: ${[...adapterProviderIds].join(', ')}`);
             } else if (called.length > 0) {
               lines.push(`- Models attempted: ${called.join(', ')}`);
+            }
+            if (adapterForecasts.length > 0) {
+              const sources = [...new Set(
+                adapterForecasts
+                  .map((forecast: any) => forecast?.extras?.source)
+                  .filter(Boolean),
+              )];
+              lines.push(`- Underlying NWP sources: ${sources.join(', ')}`);
             }
             if (failed.length > 0) {
               lines.push(`- Models failed: ${failed.map((f: any) => `${f?.provider_id || f?.provider || '?'} (${f?.error || 'error'})`).join('; ')}`);
@@ -1797,9 +1970,14 @@ const Chat: React.FC<ChatProps> = ({
               lines.push('**Ensemble (center cell)**');
               for (const v of varKeys) {
                 const e = vars[v] || {};
-                const mean = typeof e.mean === 'number' ? e.mean.toFixed(2) : '—';
-                const spread = typeof e.spread === 'number' ? ` · spread ${e.spread.toFixed(2)}` : '';
-                const stdev = typeof e.stdev === 'number' ? ` · σ ${e.stdev.toFixed(2)}` : '';
+                if (e.error === 'mixed_units') {
+                  lines.push(`- \`${v}\` · unavailable (mixed units: ${(e.units || []).join(', ') || 'missing'})`);
+                  continue;
+                }
+                const unit = typeof e.unit === 'string' && e.unit ? ` ${e.unit}` : '';
+                const mean = typeof e.mean === 'number' ? `${e.mean.toFixed(2)}${unit}` : '—';
+                const spread = typeof e.spread === 'number' ? ` · spread ${e.spread.toFixed(2)}${unit}` : '';
+                const stdev = typeof e.stdev === 'number' ? ` · σ ${e.stdev.toFixed(2)}${unit}` : '';
                 const samples = typeof e.samples === 'number' ? ` · n=${e.samples}` : '';
                 lines.push(`- \`${v}\` · mean ${mean}${spread}${stdev}${samples}`);
               }
@@ -1834,9 +2012,12 @@ const Chat: React.FC<ChatProps> = ({
         // The closure-captured `mapContext` prop can be stale after navigate_to
         // because React state propagation (MapView -> MainApp -> Chat) takes
         // multiple render cycles. The ref is updated synchronously via useEffect.
-        const freshMapContext = mapContextRef.current;
-        console.log(` Chat: Sending message with ${currentPin ? 'pin' : 'no pin'}:`, currentPin);
-        console.log(` Chat: GEOINT mode is ${geointMode ? 'ON' : 'OFF'}`);
+        const freshMapContext = currentMapCtx;
+        const requestMapContext = explicitAnalysisType
+          ? { ...(freshMapContext || {}), analysis_type: explicitAnalysisType }
+          : (freshMapContext || undefined);
+        console.log(` Chat: Sending message with ${activePin ? 'pin' : 'no pin'}:`, activePin);
+        console.log(` Chat: GEOINT mode is ${activeGeointMode ? 'ON' : 'OFF'}`);
         console.log(` Chat: Map context for vision (from ref):`, {
           has_satellite_data: freshMapContext?.has_satellite_data,
           has_screenshot: !!freshMapContext?.imagery_base64,
@@ -1847,20 +2028,20 @@ const Chat: React.FC<ChatProps> = ({
           bounds: freshMapContext?.bounds
         });
         activeTrace.clear();
-        const stream = createQueryStreamContext();
+        const stream = createQueryStreamContext(generation);
         const result = await apiService.sendChatMessage(
           message,
           selectedDataset?.id,
-          conversationId,
-          messages,
-          currentPin || undefined,
-          geointMode,
-          freshMapContext,
+          activeSessionId,
+          activeHistory,
+          activePin,
+          activeGeointMode,
+          requestMapContext,
           selectedModel,
           reasoningEffort,
-          selectedModule,
+          activeModule,
           false,
-          stacMode,
+          requestedStacMode || stacMode,
           controller.signal,
           stream.handlers,
         );
@@ -1875,7 +2056,14 @@ const Chat: React.FC<ChatProps> = ({
         throw error;
       }
     },
-    onSuccess: (responseData) => {
+    onSuccess: (responseData, variables) => {
+      if (
+        variables.generation !== undefined
+        && variables.generation !== requestGenerationRef.current
+      ) {
+        console.log(' Chat: Ignoring response superseded by a newer turn');
+        return;
+      }
       // If the user clicked Stop while this turn was in flight, drop the
       // response on the floor — the Thinking message was already removed
       // by handleStopMessage, and we don't want a late reply to surprise
@@ -2057,7 +2245,9 @@ const Chat: React.FC<ChatProps> = ({
               ]));
 
               try {
-                const partStream = createQueryStreamContext();
+                const partStream = createQueryStreamContext(
+                  requestGenerationRef.current,
+                );
                 const partResult = await apiService.sendChatMessage(
                   queryText,
                   selectedDataset?.id,
@@ -2218,7 +2408,13 @@ const Chat: React.FC<ChatProps> = ({
         onResponseReceived(enhancedResponseData);
       }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
+      if (
+        variables.generation !== undefined
+        && variables.generation !== requestGenerationRef.current
+      ) {
+        return;
+      }
       // Same short-circuit as onSuccess — don't surface an error toast
       // for a turn the user explicitly cancelled.
       if (cancelledRef.current || (error as any)?.cancelled || (error as any)?.name === 'CanceledError') {
@@ -2299,7 +2495,10 @@ const Chat: React.FC<ChatProps> = ({
           timestamp: new Date()
         };
         setMessages(prev => [...prev, userMessage]);
-        chatMutation.mutate(initialQuery);
+        chatMutation.mutate({
+          message: initialQuery,
+          generation: ++requestGenerationRef.current,
+        });
         setInputValue('');
       }, 500); // Small delay to ensure chat mode is properly set
     }
@@ -2307,11 +2506,12 @@ const Chat: React.FC<ChatProps> = ({
 
   // Handle pending query from GetStartedButton
   useEffect(() => {
-    if (pendingQuery && pendingQuery.trim()) {
-      console.log(' Chat: Processing pending query:', pendingQuery);
+    if (pendingQuery?.message.trim()) {
+      console.log(' Chat: Processing pending query:', pendingQuery.message);
       
       // Capture the query and clear immediately to prevent re-triggering
-      const queryToProcess = pendingQuery;
+      const requestToProcess = pendingQuery;
+      const queryToProcess = requestToProcess.message;
       setPendingQuery(null);
       
       // Set the input value
@@ -2326,7 +2526,7 @@ const Chat: React.FC<ChatProps> = ({
       setMessages(prev => [...prev, userMessage]);
       
       // Send the message using the chat mutation
-      chatMutation.mutate(queryToProcess);
+      chatMutation.mutate(requestToProcess);
       
       // Clear input
       setInputValue('');
@@ -2360,7 +2560,10 @@ const Chat: React.FC<ChatProps> = ({
       setMessages([systemMessage, userMessage]);
       
       // Use main chat endpoint instead of VEDA search
-      chatMutation.mutate(query);
+      chatMutation.mutate({
+        message: query,
+        generation: ++requestGenerationRef.current,
+      });
     } else if (privateSearchTrigger && privateSearchTrigger.isPCStructuredSearch) {
       console.log(' Chat: Handling PC structured search trigger:', privateSearchTrigger);
 
@@ -2400,7 +2603,10 @@ const Chat: React.FC<ChatProps> = ({
       // `stacMode` from chatMutation's closure. The simplest correct thing
       // is to call sendChatMessage directly with the panel's mode, then
       // hand the result to the same onSuccess handler chatMutation uses.
-      chatMutation.mutate(nl);
+      chatMutation.mutate({
+        message: nl,
+        generation: ++requestGenerationRef.current,
+      });
     }
   }, [privateSearchTrigger]);
 
@@ -2445,7 +2651,10 @@ const Chat: React.FC<ChatProps> = ({
     
     // Use main chat endpoint instead of VEDA search (VEDA integration disabled)
     console.log(' Chat: Sending message via main chat endpoint:', { inputValue, selectedDataset: selectedDataset?.id });
-    chatMutation.mutate(inputValue);
+    chatMutation.mutate({
+      message: inputValue,
+      generation: ++requestGenerationRef.current,
+    });
     
     setInputValue('');
   };
@@ -2531,6 +2740,7 @@ const Chat: React.FC<ChatProps> = ({
             } else if (pendingHistorySaveRef.current) {
               try {
                 const server = await apiService.getChatSession(pending.sessionId);
+                if (pending.generation !== historyGenerationRef.current) continue;
                 const resolution = reconcileAmbiguousHistorySave(
                   server,
                   pending.snapshot.mutationId,
@@ -2549,6 +2759,7 @@ const Chat: React.FC<ChatProps> = ({
                 terminalHistoryFailureRef.current = true;
                 if (historyMountedRef.current) setHistorySaveState('error');
               } catch (reconcileError) {
+                if (pending.generation !== historyGenerationRef.current) continue;
                 console.error(' Chat: Failed to reconcile chat history:', reconcileError);
                 conflictBlocked = true;
                 terminalHistoryFailureRef.current = true;
@@ -2557,6 +2768,7 @@ const Chat: React.FC<ChatProps> = ({
             } else {
               try {
                 const server = await apiService.getChatSession(pending.sessionId);
+                if (pending.generation !== historyGenerationRef.current) continue;
                 const resolution = reconcileAmbiguousHistorySave(
                   server,
                   pending.snapshot.mutationId,
@@ -2574,6 +2786,7 @@ const Chat: React.FC<ChatProps> = ({
                   if (historyMountedRef.current) setHistorySaveState('error');
                 }
               } catch (reconcileError) {
+                if (pending.generation !== historyGenerationRef.current) continue;
                 console.error(' Chat: Failed to reconcile chat history:', reconcileError);
                 pendingHistorySaveRef.current = pending;
                 conflictBlocked = true;
@@ -2639,7 +2852,9 @@ const Chat: React.FC<ChatProps> = ({
       return;
     }
 
-    const persistedMessages = persistedChatMessages(messages);
+    const persistedMessages = persistedChatMessages(
+      messages.slice(conversationHistoryStartRef.current),
+    );
     if (!persistedMessages.some((message) => message.role === 'user')) {
       return;
     }
@@ -2660,14 +2875,18 @@ const Chat: React.FC<ChatProps> = ({
         pin: currentPin || undefined,
         map: mapContext
           ? {
+              stac_mode: mapContext.stac_mode || stacMode,
               bounds: mapContext.bounds,
               current_collection: mapContext.current_collection,
+              render_profile_id: mapContext.render_profile_id,
               has_satellite_data: mapContext.has_satellite_data,
               imagery_url: mapContext.imagery_url,
               item_id: mapContext.item_id,
               datetime: mapContext.datetime,
+              search_datetime: mapContext.search_datetime,
               zoom_level: mapContext.zoom_level,
               tile_urls: boundedHistoryTileUrls(mapContext.tile_urls),
+              scene_refs: boundedHistorySceneRefs(mapContext.stac_items),
               vision_mode: mapContext.vision_mode,
               vision_pin: mapContext.vision_pin,
             }
@@ -2734,6 +2953,7 @@ const Chat: React.FC<ChatProps> = ({
     }
     lastServerRevisionRef.current = session.revision;
     const restoredContext = onRestoreContext?.(session.context) || session.context;
+    conversationHistoryStartRef.current = 0;
     restoringDatasetIdRef.current = restoredContext.selectedDataset?.id || null;
     lastSavedSnapshotRef.current = chatHistoryFingerprint({
       messages: restoredMessages,
@@ -2782,7 +3002,7 @@ const Chat: React.FC<ChatProps> = ({
   const getPlanetaryComputerExamples = (dataset: Dataset | null): string[] => {
     const defaultExamples = [
       'Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26',
-      'Show MODIS daily snow cover over Quebec from 2026-02-01 to 2026-02-28',
+      'Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28',
       'Show Sentinel-1 RTC radar imagery over Vancouver, Canada from 2026-01-01 to 2026-08-26'
     ];
 
@@ -2791,7 +3011,7 @@ const Chat: React.FC<ChatProps> = ({
     const pcExamples: Record<string, string[]> = {
       'landsat-c2-l2': [
         'Show Landsat imagery over Halifax from 2026-01-01 to 2026-08-26',
-        'Find Landsat scenes over Hudson Bay from 2026-06-01 to 2026-08-26',
+        'Show Landsat Collection 2 Level-2 imagery along the Hudson Bay coast at Churchill, Manitoba, Canada, latitude 58.7684, longitude -94.1650, from 2026-06-01 to 2026-08-26',
         'Analyze British Columbia forest conditions from 2026-05-01 to 2026-08-26',
         'Find cloud-free Landsat scenes over Toronto from 2026-06-01 to 2026-08-26'
       ],
@@ -2808,10 +3028,10 @@ const Chat: React.FC<ChatProps> = ({
         'Detect ships near Halifax from 2026-01-01 to 2026-08-26 using SAR'
       ],
       'modis': [
-        'Show MODIS thermal anomalies across Alberta from 2026-05-01 to 2026-08-26',
-        'Show MODIS vegetation indices over Saskatchewan from 2026-04-01 to 2026-08-26',
-        'Show MODIS gross primary productivity over British Columbia from 2026-05-01 to 2026-08-26',
-        'Show MODIS daily snow cover over Quebec from 2026-02-01 to 2026-02-28'
+        'Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26',
+        'Show MODIS 13Q1 vegetation indices over cropland south of Regina, Saskatchewan, Canada, latitude 50.3500, longitude -104.6000, from 2026-04-01 to 2026-08-26',
+        'Show collection modis-17A2H-061 gross primary productivity at latitude 54.1500, longitude -126.5500 in British Columbia from 2026-05-01 to 2026-08-26',
+        'Show MODIS 10A1 daily snow cover at Quebec City, Canada, latitude 46.8139, longitude -71.2080, from 2025-02-01 to 2025-02-28'
       ],
       'daymet-daily-na': [
         'Show precipitation over Alberta from 2026-05-01 to 2026-08-26',

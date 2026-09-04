@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-09-03T00:06:55.344Z",
+  "app_url": "http://127.0.0.1:5175/",
+  "release": {},
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "setup_query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the colours in this 2026 Toronto image and identify visible land-cover types.",
+      "outcome": "pass",
+      "elapsed_ms": 36918,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show HLS S30 imagery at Calgary, Canada, latitude 51.0300, longitude -114.0800, from 2026-05-01 to 2026-08-26",
+        "latitude": 51.03,
+        "longitude": -114.08,
+        "session_id": "web-session-1788393979743-3czg8ebgy"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -79.64,
+        43.58,
+        -79.12,
+        43.86
+      ],
+      "expected_pin": {
+        "lat": 43.72,
+        "lng": -79.38
+      },
+      "submitted_pin": {
+        "lat": 43.72016356643846,
+        "lng": -79.380000000001
+      },
+      "pin_distance_km": 0.02,
+      "map_zoom": 10,
+      "imagery_layer": "Sentinel-2 Level-2A",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9683,
+        "meanAbsoluteDifference": 18.73
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 244661,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 303,
+        "meanRgb": [
+          60.4,
+          73.12,
+          61.59
+        ],
+        "meanLuminance": 69.58,
+        "luminanceVariance": 1600.38,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-smoke\\payload-images\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.03,
+      "evidence_collection": "sentinel-2-l2a",
+      "response_excerpt": "This map image presents a wide view of much of Canada and the northern United States. However, Toronto and its surrounding area are part of the focus. Here’s an explanation of colours and land-cover visible in this context:\n\n### Colours in the Image:\n1. **Dark Green**: Found in forested regions, indicating high vegetation density such as boreal forests across Canada and less-dense deciduous forests in southern Ontario.\n2. **Light Green/Brown**: Represents agricultural areas and grasslands, seen prominently in southern Ontario and prairie regions westward.\n3. **White**: Snow or ice cover, most likely present in the northern areas and Arctic regions, characteristic of alpine and tundra zones.\n4. **Blue**: Water bodies, such as Lake Ontario near Toronto, Hudson Bay, and rivers like the St. Lawrence River. The large blue region west represents the Pacific Ocean.\n5. **Grey/Beige**: Urban development and built-up areas, which are more concentrated around Toronto and other metropolitan areas,",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-adversarial-location-smoke\\browser-screenshots\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.png"
+    }
+  ]
+}

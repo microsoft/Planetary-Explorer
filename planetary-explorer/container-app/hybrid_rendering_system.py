@@ -348,11 +348,11 @@ EXPLICIT_RENDER_CONFIGS: Dict[str, RenderingConfig] = {
         assets=["red", "green", "blue"],
         rescale=(0, 3000),  # Surface reflectance 0-10000 range, scaled to 0-3000 for proper contrast (like Sentinel-2 L2A)
         resampling="bilinear",  # Bilinear for maximum sharpness (sharper than lanczos)
-        tile_scale=4,  # @4x for ultra-high resolution (2048x2048 tiles)
+        tile_scale=2,
         min_zoom=5,
         max_zoom=22,  # Native ~30m resolution, allow deep zoom
         color_formula="gamma RGB 2.7, saturation 1.5, sigmoidal RGB 15 0.55",
-        notes="Landsat Collection 2 Level-2 surface reflectance with maximum sharpness - @4x tiles with bilinear resampling"
+        notes="Landsat Collection 2 Level-2 surface reflectance with @2x tiles and bilinear resampling"
     ),
     
     # NAIP: public Planetary Computer publishes NAIP items with a single
@@ -550,11 +550,10 @@ EXPLICIT_RENDER_CONFIGS: Dict[str, RenderingConfig] = {
     "modis-17A2H-061": RenderingConfig(
         collection_id="modis-17A2H-061",
         data_type=DataType.VEGETATION,
-        assets=["Gpp"],
-        rescale=(0, 30000),  # GPP in kg C/m^2
-        colormap="greens",
+        assets=["Gpp_500m"],
+        colormap="modis-17A2H|A2HGF",
         resampling="bilinear",
-        notes="MODIS 8-day Gross Primary Productivity (GPP) 500m - single-band asset doesn't need bidx"
+        notes="MODIS 8-day GPP 500m using the Planetary Computer product colormap"
     ),
     
     # === THERMAL ===

@@ -1,0 +1,731 @@
+{
+  "generated_at": "2026-09-02T04:08:40.527556+00:00",
+  "base_url": "https://ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+  "deployment_features": {
+    "mpcPublic": true,
+    "mpcPro": false,
+    "fabric": false,
+    "chatHistory": false,
+    "weather": true
+  },
+  "scenario_count": 32,
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "question": "Sample the 2026 red and near-infrared reflectance values at this pin.",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 9740,
+      "pin": [
+        43.74107595,
+        -79.07066065000001
+      ],
+      "collection": "sentinel-2-l2a",
+      "item_id": "S2A_MSIL2A_20260805T161711_R140_T17TPJ_20260806T021712",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "**Point Sampling at (43.7411\u00b0, -79.0707\u00b0):**\n\n**Reflectance Values (Sentinel-2 `L2A`):**\n- RED (`B04`): 1217\n- Near-Infrared (`B08`): 1189\n- **NDVI Value:** -0.012\n\n**Interpretation:** Likely water, snow, or non-vegetated surface.  \n**Date:** 2026-08-05  \n\n**Data source:** Public Planetary Computer \u2014 `sentinel-2-l2a`."
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "30m harmonized Landsat and Sentinel-2 imagery over Calgary",
+      "question": "What is the 2026 NDVI value at this Calgary pin?",
+      "outcome": "pass",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11461,
+      "pin": [
+        50.8956015,
+        -113.36695
+      ],
+      "collection": "hls2-s30",
+      "item_id": "HLS.S30.T11UQS.2026227T182921.v2.0",
+      "tools_used": [
+        "sample_raster_value"
+      ],
+      "evidence_error": null,
+      "response": "**The 2026 NDVI value at the pinned location near Calgary is approximately 0.225.**\n\n**Point Sampling (hls2-s30):**\n- RED (`B04`): 1161\n- NIR (`B08`): 1836\n- **NDVI**: `(1836 - 1161) / (1836 + 1161) \u2248 0.225`\n\n- **Date**: 2026-08-15\n- **Interpretation**: Sparse or stressed vegetation.\n\n**Data source:** Public Planetary Computer \u2014 Harmonized Landsat Sentinel-2 (`hls2-s30`)"
+    },
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "Landsat Collection 2 surface reflectance over coastal Nova Scotia",
+      "question": "Sample the 2026 coastal surface-reflectance bands at this location.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 15389,
+      "pin": [
+        44.594755,
+        -62.60606654647001
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC08_L2SP_007029_20260807_02_T1",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire and thermal-anomaly observations",
+      "question": "What is the 2026 fire-confidence value at this Alberta pixel?",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11366,
+      "pin": [
+        55.0,
+        -98.8930955
+      ],
+      "collection": "modis-14A1-061",
+      "item_id": "MYD14A1.A2026225.h12v03.061.2026234002711",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "250m NDVI and EVI composites over Prairie cropland",
+      "question": "Sample the 2026 NDVI and EVI values at this Saskatchewan field.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 12892,
+      "pin": [
+        55.0,
+        -98.8930955
+      ],
+      "collection": "modis-13Q1-061",
+      "item_id": "MYD13Q1.A2026217.h12v03.061.2026234002623",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "8-day vegetation productivity composites over British Columbia",
+      "question": "What is the 2026 gross primary productivity value at this location?",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 6771,
+      "pin": [
+        55.0,
+        -116.671715
+      ],
+      "collection": "modis-17A2H-061",
+      "item_id": "MYD17A2H.A2026225.h11v03.061.2026234045000",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "500m archived daily snow cover and normalized-difference snow index",
+      "question": "Sample the February 2025 NDSI value at this Quebec location.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 11695,
+      "pin": [
+        54.89085,
+        -63.35675
+      ],
+      "collection": "modis-10A1-061",
+      "item_id": "MYD10A1.A2025059.h14v03.061.2025063044407",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "10m optical observations of spring river and ice conditions",
+      "question": "Sample 2026 water and ice reflectance at this Mackenzie River pin.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 7049,
+      "pin": [
+        67.9740687,
+        -131.26863395
+      ],
+      "collection": "sentinel-2-l2a",
+      "item_id": "S2B_MSIL2A_20260630T203839_R014_T08WPA_20260630T225218",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Water, Snow, and Ice",
+      "location": "30m summer coastal and sea-ice observations",
+      "question": "Sample the 2026 water and short-wave infrared bands at this Hudson Bay pin.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 12362,
+      "pin": [
+        54.49115,
+        -95.58612875690434
+      ],
+      "collection": "landsat-c2-l2",
+      "item_id": "LC09_L2SP_031022_20260823_02_T1",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "30m elevation used for current-year terrain analysis",
+      "question": "What is the elevation in metres at this Banff pin for the 2026 analysis?",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 7862,
+      "pin": [
+        51.50013888888889,
+        -115.50020833333333
+      ],
+      "collection": "cop-dem-glo-30",
+      "item_id": "Copernicus_DSM_COG_10_N51_00_W116_00_DEM",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "10m terrain-corrected radar backscatter for Metro Vancouver",
+      "question": "What are the 2026 VV and VH backscatter values in dB?",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 12196,
+      "pin": [
+        48.601866182834016,
+        -122.56510062025117
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1D_IW_GRDH_1SDV_20260823T142041_20260823T142106_004254_007D23_rtc",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Vision - Terrain and Radar",
+      "location": "All-weather radar observations for spring flood monitoring",
+      "question": "Sample the 2026 radar backscatter at this Red River pin.",
+      "outcome": "fail",
+      "stage": "raster",
+      "http_status": 200,
+      "elapsed_ms": 14812,
+      "pin": [
+        49.326511783894844,
+        -96.41619483189598
+      ],
+      "collection": "sentinel-1-rtc",
+      "item_id": "S1C_IW_GRDH_1SDV_20260522T001451_20260522T001516_007759_00FC4E_rtc",
+      "tools_used": [],
+      "evidence_error": null,
+      "response": "I couldn't complete the analysis right now \u2014 the Planetary Explorer analyst service was unavailable (Agent Service run failed: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have). Please retry; if the problem persists, check the AZURE_AI_PROJECT_ENDPOINT and managed-identity configuration."
+    },
+    {
+      "family": "Terrain",
+      "location": "Vancouver, British Columbia",
+      "question": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 5511,
+      "request": {
+        "message": "For 2026, is this Metro Vancouver location suitable for a construction permit? Analyze slope, flood exposure, and flat areas.",
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "radius_km": 5.0
+      },
+      "response": "I encountered an error analyzing this location: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}",
+      "errors": [
+        "{'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}"
+      ],
+      "tools": []
+    },
+    {
+      "family": "Terrain",
+      "location": "Calgary, Alberta",
+      "question": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 5515,
+      "request": {
+        "message": "Analyze 2026 terrain elevation, slope, and line-of-sight near Calgary at 51.0447N, 114.0719W.",
+        "latitude": 51.0447,
+        "longitude": -114.0719,
+        "radius_km": 5.0
+      },
+      "response": "I encountered an error analyzing this location: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}",
+      "errors": [
+        "{'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}"
+      ],
+      "tools": []
+    },
+    {
+      "family": "Terrain",
+      "location": "Halifax, Nova Scotia",
+      "question": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/terrain/chat",
+      "http_status": 200,
+      "elapsed_ms": 16090,
+      "request": {
+        "message": "Assess 2026 coastal flood exposure, environmental sensitivity, and permitting constraints for this Halifax site.",
+        "latitude": 44.6488,
+        "longitude": -63.5752,
+        "radius_km": 5.0
+      },
+      "response": "### Terrain Overview\nThe Halifax site, with a radius of 5km, shows significant coastal influence, notable historical flooding, and environmental sensitivity based on land cover analyses.\n\n---\n\n### Flood Risk Assessment\n- **Mean water occurrence**: 26.0%\n- **Maximum water occurrence**: 99.0%\n- **Area ever flooded**: 28.4%\n- **Area frequently flooded**: 27.4%\n- **Flood risk level**: **HIGH**\n- **Permitting Status**: **NOT RECOMMENDED**\n  - **Reason**: Historical data shows significant flooding, indicating high exposure for coastal flooding risks in 2026.\n- **Data Source**: JRC Global Surface Water (1984-2021)\n\n---\n\n### Environmental Sensitivity\n- **Land Cover Breakdown**:\n  - Tree Cover: 36.5%\n  - Grassland: 6.6%\n  - Built-up area: 27.1%\n  - Bare/Sparse vegetation: 0.8%\n  - Permanent Water: 28.8%\n- **Sensitive Area Percentage**: 65.5% of the area identified as environmentally sensitive.\n  - **Constraints**:\n    - **Forest Cover**: 36.5% may require deforestation permit.\n    - **Water Bodies**: 28.8%\u2014setback requirements and protection for aquatic habitats apply.\n- **Dominant Land Cover**: Tree Cover\n- **Environmental Sensitivity Level**: **HIGH**\n- **Permitting Status**: **NOT RECOMMENDED**\n- **Data Source**: ESA WorldCover 2021 (10m resolution)\n\n---\n\n### Summary\nThe Halifax site is **NOT SUITABLE** for permitting due to the following factors:\n1. **High Flood Risk**: Coastal flooding likelihood is substantial, with frequent past occurrences.\n2. **Environmental Constraints**: Over 65% of the area poses regulatory challenges related to deforestation and proximity to water bodies.\n\nThese findings suggest significant limitations for any coastal developments or projects requiring site permitting.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "analyze_flood_risk",
+          "result": null
+        },
+        {
+          "tool": "analyze_environmental_sensitivity",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Mobility",
+      "location": "Kananaskis, Alberta",
+      "question": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 6722,
+      "request": {
+        "latitude": 50.7,
+        "longitude": -115.0,
+        "latitude_b": 50.735,
+        "longitude_b": -114.95,
+        "user_query": "Using 2026 conditions, classify vehicle traversability between these pins across five elevation layers and identify steep terrain barriers."
+      },
+      "response": "Mobility analysis error: {'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}",
+      "errors": [
+        "{'code': 'rate_limit_exceeded', 'message': 'Your requests to gpt-4o for gpt-4o in eastus2 have exceeded rate limit.'}"
+      ],
+      "analysis_type": null
+    },
+    {
+      "family": "Mobility",
+      "location": "North Shore Mountains, British Columbia",
+      "question": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 200,
+      "elapsed_ms": 149612,
+      "request": {
+        "latitude": 49.32,
+        "longitude": -123.07,
+        "latitude_b": 49.355,
+        "longitude_b": -123.02,
+        "user_query": "For a 2026 search-and-rescue plan, identify flat helicopter landing zones between these pins and explain slope and vegetation constraints."
+      },
+      "response": "### Two-Point Terrain Analysis: North Vancouver Helicopter Landing Zone Assessment\n\n**1. Area of Operations**  \n- **Origin (Point A)**: (49.320000, -123.070000)  \n- **Destination (Point B)**: North Vancouver (49.355000, -123.020000)  \n- **Distance**: ~3.3 miles (5.32 km)  \n- **Bearing**: ~43\u00b0 NE from Point A to Point B  \n\n**2. Weather Conditions**  \n- **Point A (Origin)**: 17.7\u00b0C, light rain (\"A shower\"), 73% humidity, 5.8 km/h winds (from E), visibility 35.4 km, 79% cloud cover.  \n- **Point B (Destination)**: 17.8\u00b0C, mostly cloudy, 62% humidity, 3.7 km/h winds (from E), visibility 30.6 km, 84% cloud cover.  \n\n**3. Road Route**  \nAn available road route exists with **26.2 minutes travel time**, covering **5.92 miles (9.53 km)**, with no current traffic delays.\n\n**4. Terrain Overview**  \n- **Land Cover Composition**: Predominantly tree cover along the corridor, accompanied by minor grassland and built-up areas. Tree cover dominates the surrounding areas (~74%-95% for most radial directions from origin and destination).  \n- **Elevation Details**: The route climbs steadily, with a total ascent of **130.7 m**, no descent, and a range of elevation spanning **94.7 m to 225.3 m**. Intermediate terrain shows consistent elevation gains, peaking near Point B.  \n\n**5. Corridor Assessment**  \n- One key waypoint at (49.3375\u00b0N, -123.0450\u00b0W):  \n  - **Elevation**: 9.5-49.1 m, mostly gentle slopes (78.9%).  \n  - **Landcover**: Highly vegetated with 74.3% tree cover; some built-up areas (22.6%).  \n  - **Assessment**: Challenging due to dominant tree cover and minor wetland presence despite some built-up regions.  \n\n**6. Endpoint Assessment**  \n- **Point A**:  \n  - **Terrain**: Low slopes (~7.7\u00b0 avg). 86.7% of the area has gentle terrain (<15\u00b0 slopes).  \n  - **Vegetation**: Light vegetation (88.9% sparse canopy), NDVI 0.32; tree cover dominates (72%).  \n  - **Presence of Water**: No significant water coverage.  \n  - **Overall Assessment**: Challenging for helicopters due to high tree cover, despite moderate slopes and no water.  \n\n- **Point B**:  \n  - **Terrain**: Somewhat steeper near the destination (avg slope 15.3\u00b0; moderate ~36.4%, gentle ~54.3%).  \n  - **Vegetation**: Sparse canopy (NDVI 0.36); however, tree cover dominates (95%).  \n  - **Presence of Water**: Minimal/no water detected.  \n  - **Overall Assessment**: Highly challenging for helicopters due to steep slopes and near-complete forest cover.  \n\n**7. Hazards**  \n- **Slopes**: The highest slope detected was 19\u00b0 (",
+      "errors": [],
+      "analysis_type": null
+    },
+    {
+      "family": "Mobility",
+      "location": "Yukon River corridor, Yukon",
+      "question": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/mobility",
+      "http_status": 502,
+      "elapsed_ms": 90695,
+      "request": {
+        "latitude": 60.7212,
+        "longitude": -135.0568,
+        "latitude_b": 60.7562,
+        "longitude_b": -135.0068,
+        "user_query": "Assess this 2026 emergency-supply route for water crossings, wildfire exposure, steep slopes, and ground-vehicle feasibility."
+      },
+      "response": "",
+      "errors": [],
+      "analysis_type": null
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Vancouver, British Columbia",
+      "question": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 200,
+      "elapsed_ms": 29529,
+      "request": {
+        "latitude": 49.2827,
+        "longitude": -123.1207,
+        "user_query": "What are the projected annual precipitation and peak daily rainfall values for Vancouver in 2026?"
+      },
+      "response": "### Location & Context:\nFor Vancouver (coordinates 49.2827, -123.1207), I analyzed projected annual precipitation and peak daily rainfall data for the year 2026 under the SSP5-8.5 (worst-case emissions) scenario.\n\n### Climate Projections:\n- **Annual Mean Precipitation**: 4.18 mm/day\n- **Estimated Annual Total Precipitation**: 1,525.7 mm/year\n- **Peak Daily Rainfall**: 31.23 mm/day\n\nThese projections were calculated using NASA NEX-GDDP-CMIP6 data at a 0.25\u00b0 \u00d7 0.25\u00b0 resolution (~10 km sampling offset to the nearest valid land grid cell).\n\n### Interpretation:\n1. **Annual Total Precipitation**: About 1,526 mm per year suggests Vancouver will continue receiving substantial rainfall, consistent with its current wet climate. This matches expectations for a coastal, temperate location in the Pacific Northwest.\n2. **Peak Daily Rainfall**: A single-day maximum of 31.23 mm highlights the potential for intense rainfall events, which may impact urban drainage systems and increase flash flood risks.\n\n### Caveats:\n- These are projections based on climate models, not forecasts. Uncertainties exist due to model limitations and future variability.\n- Sampling was adjusted to the closest valid land cell (10 km away) due to mask issues on the Vancouver grid.\n\n### Summary:\nIn 2026, Vancouver's projected precipitation remains high, with approximately 1,525 mm annually and the possibility of peak rainfall of 31.23 mm in a single day. These estimates align with Vancouver's reputation for wet conditions.",
+      "errors": [],
+      "tools": [
+        {
+          "tool": "get_precipitation_projection",
+          "result": null
+        }
+      ]
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Toronto, Ontario",
+      "question": "Compute the 2026 precipitation trend for Toronto and identify the wettest projected period.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 504,
+      "elapsed_ms": 240193,
+      "request": {
+        "latitude": 43.6532,
+        "longitude": -79.3832,
+        "user_query": "Compute the 2026 precipitation trend for Toronto and identify the wettest projected period."
+      },
+      "response": "stream timeout",
+      "errors": [
+        "stream timeout"
+      ],
+      "tools": []
+    },
+    {
+      "family": "Extreme Weather",
+      "location": "Montreal, Quebec",
+      "question": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/extreme-weather",
+      "http_status": 502,
+      "elapsed_ms": 124823,
+      "request": {
+        "latitude": 45.5019,
+        "longitude": -73.5674,
+        "user_query": "What are the projected temperature and precipitation trends for Montreal during 2026 under SSP245 and SSP585?"
+      },
+      "response": "",
+      "errors": [],
+      "tools": []
+    },
+    {
+      "family": "Building Damage",
+      "location": "Jasper, Alberta",
+      "question": "Using the 2026 before-and-after tenant imagery, assess potential building damage and distinguish destroyed, major-damage, and unaffected structures.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Building Damage",
+      "location": "Lytton, British Columbia",
+      "question": "Using the 2026 before-and-after tenant imagery, assess structural damage and identify blocks requiring field verification.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "MPC Pro tenant imagery is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Calgary region, Alberta - Data centre",
+      "question": "For 2026, score our candidate data-centre sites near Calgary for power, water, competition, wildfire, flood, and heat exposure.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Montreal region, Quebec - Industrial parcels",
+      "question": "Which 2026 candidate parcels near Montreal clear slope, flood, heat, and grid-proximity thresholds?",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Site Intel",
+      "location": "Edmonton region, Alberta - Grid expansion",
+      "question": "Rank the top three 2026 sites near Edmonton with permitting precedent and grid proximity weighted highest.",
+      "outcome": "blocked",
+      "stage": "analysis",
+      "blocked_reason": "Fabric-backed Site Intel is disabled in this deployment."
+    },
+    {
+      "family": "Resilience",
+      "location": "Seven-day Canadian facility outlook",
+      "question": "Over the next seven days, which Canadian facilities are most at risk and what is the supply-chain blast radius?",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/resilience/assess/smart",
+      "http_status": 401,
+      "elapsed_ms": 186,
+      "request": {
+        "region_filter": null,
+        "horizon_days": 7,
+        "hazards": [
+          "heat",
+          "wildfire"
+        ],
+        "user_query": "Over the next seven days, which Canadian facilities are most at risk and what is the supply-chain blast radius?"
+      },
+      "response": "No user token. Sign in so the request carries X-MS-TOKEN-AAD-ACCESS-TOKEN.",
+      "errors": [],
+      "route": null,
+      "facility_count": 0
+    },
+    {
+      "family": "Resilience",
+      "location": "Vancouver distribution disruption",
+      "question": "If our Vancouver distribution centre goes offline for 48 hours in 2026, which downstream Canadian facilities are exposed?",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/resilience/assess/smart",
+      "http_status": 401,
+      "elapsed_ms": 217,
+      "request": {
+        "region_filter": "BC",
+        "horizon_days": 7,
+        "hazards": [
+          "heat",
+          "wildfire"
+        ],
+        "user_query": "If our Vancouver distribution centre goes offline for 48 hours in 2026, which downstream Canadian facilities are exposed?"
+      },
+      "response": "No user token. Sign in so the request carries X-MS-TOKEN-AAD-ACCESS-TOKEN.",
+      "errors": [],
+      "route": null,
+      "facility_count": 0
+    },
+    {
+      "family": "Resilience",
+      "location": "Western Canada weekly review",
+      "question": "Show 2026 heat and wildfire risk for all Western Canada facilities this week, ranked by severity with a response playbook.",
+      "outcome": "fail",
+      "stage": "analysis",
+      "endpoint": "/api/resilience/assess/smart",
+      "http_status": 401,
+      "elapsed_ms": 197,
+      "request": {
+        "region_filter": null,
+        "horizon_days": 7,
+        "hazards": [
+          "heat",
+          "wildfire"
+        ],
+        "user_query": "Show 2026 heat and wildfire risk for all Western Canada facilities this week, ranked by severity with a response playbook."
+      },
+      "response": "No user token. Sign in so the request carries X-MS-TOKEN-AAD-ACCESS-TOKEN.",
+      "errors": [],
+      "route": null,
+      "facility_count": 0
+    },
+    {
+      "family": "Forecast",
+      "location": "Great Lakes five-day ensemble",
+      "question": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 34761,
+      "request": {
+        "latitude": 43.75,
+        "longitude": -77.9,
+        "lead_hours": 120,
+        "grid_size": 8,
+        "user_query": "Give me a 120-hour (five-day) forecast over Lake Ontario using every available model and summarize ensemble spread.",
+        "location_label": "Great Lakes five-day ensemble"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 291.154,
+            "min": 289.998,
+            "max": 292.31,
+            "samples": 2,
+            "stdev": 1.635,
+            "spread": 2.312
+          },
+          "precip": {
+            "mean": 0.005,
+            "min": 0.003,
+            "max": 0.007,
+            "samples": 2,
+            "stdev": 0.003,
+            "spread": 0.004
+          },
+          "u10": {
+            "mean": 1.247,
+            "min": 0.704,
+            "max": 1.79,
+            "samples": 2,
+            "stdev": 0.768,
+            "spread": 1.086
+          },
+          "v10": {
+            "mean": 0.755,
+            "min": -0.793,
+            "max": 2.303,
+            "samples": 2,
+            "stdev": 2.189,
+            "spread": 3.096
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Prairie temperature and wind",
+      "question": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 684,
+      "request": {
+        "latitude": 52.94,
+        "longitude": -106.45,
+        "lead_hours": 72,
+        "grid_size": 8,
+        "user_query": "Forecast 2m temperature and 10m wind across southern Saskatchewan for the next 72 hours.",
+        "location_label": "Prairie temperature and wind"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 291.257,
+            "min": 289.805,
+            "max": 292.709,
+            "samples": 2,
+            "stdev": 2.053,
+            "spread": 2.904
+          },
+          "precip": {
+            "mean": 1.346,
+            "min": 0.397,
+            "max": 2.296,
+            "samples": 2,
+            "stdev": 1.343,
+            "spread": 1.899
+          },
+          "u10": {
+            "mean": -2.607,
+            "min": -4.597,
+            "max": -0.617,
+            "samples": 2,
+            "stdev": 2.814,
+            "spread": 3.98
+          },
+          "v10": {
+            "mean": -0.015,
+            "min": -0.598,
+            "max": 0.569,
+            "samples": 2,
+            "stdev": 0.825,
+            "spread": 1.167
+          }
+        }
+      }
+    },
+    {
+      "family": "Forecast",
+      "location": "Atlantic Canada precipitation comparison",
+      "question": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+      "outcome": "pass",
+      "stage": "analysis",
+      "endpoint": "/api/geoint/forecast",
+      "http_status": 200,
+      "elapsed_ms": 632,
+      "request": {
+        "latitude": 45.0,
+        "longitude": -63.0,
+        "lead_hours": 24,
+        "grid_size": 8,
+        "user_query": "Compare Aurora and Earth-2 FCN precipitation over Nova Scotia for the next 24 hours and explain model disagreement.",
+        "location_label": "Atlantic Canada precipitation comparison"
+      },
+      "response": "",
+      "errors": [],
+      "providers_succeeded": [
+        "aurora-1.x",
+        "earth2-fcn"
+      ],
+      "providers_failed": [],
+      "ensemble_summary": {
+        "providers": [
+          "aurora-1.x",
+          "earth2-fcn"
+        ],
+        "variables": {
+          "t2m": {
+            "mean": 287.811,
+            "min": 287.217,
+            "max": 288.405,
+            "samples": 2,
+            "stdev": 0.84,
+            "spread": 1.188
+          },
+          "precip": {
+            "mean": -0.004,
+            "min": -0.011,
+            "max": 0.003,
+            "samples": 2,
+            "stdev": 0.01,
+            "spread": 0.014
+          },
+          "u10": {
+            "mean": -2.006,
+            "min": -2.109,
+            "max": -1.902,
+            "samples": 2,
+            "stdev": 0.146,
+            "spread": 0.207
+          },
+          "v10": {
+            "mean": 0.902,
+            "min": 0.413,
+            "max": 1.391,
+            "samples": 2,
+            "stdev": 0.692,
+            "spread": 0.978
+          }
+        }
+      }
+    }
+  ]
+}

@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.51.9",
-    "axios": "^1.7.7",
+    "axios": "^1.20.0",
     "lucide-react": "^0.468.0",
     "modern-normalize": "^2.0.0",
     "react": "^18.3.1",
@@ -32,10 +32,20 @@
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.2",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/ui": "^4.0.17",
+    "@vitest/ui": "4.1.11",
+    "esbuild": "0.28.2",
     "jsdom": "^23.0.1",
+    "playwright": "1.62.1",
     "typescript": "^5.6.2",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.17"
+    "vite": "7.3.6",
+    "vitest": "4.1.11"
+  },
+  "overrides": {
+    "browserslist": "4.28.8",
+    "nanoid": "3.3.18",
+    "picomatch": "4.0.7",
+    "postcss": "8.5.26",
+    "rollup": "4.63.0",
+    "ws": "8.21.3"
   }
 }

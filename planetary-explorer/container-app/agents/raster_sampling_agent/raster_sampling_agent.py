@@ -25,31 +25,68 @@ logger = logging.getLogger(__name__)
 
 _KNOWN_DATA_TYPES = {
     "sst", "temperature", "elevation", "ndvi", "burn", "fire", "water",
-    "snow", "sar", "biomass", "reflectance", "climate", "auto",
+    "snow", "sar", "biomass", "reflectance", "climate", "vegetation",
+    "gpp", "npp", "auto",
 }
 
 
+def _parse_numeric_samples(text: str) -> list[dict[str, object]]:
+    """Extract aligned metric/value/unit samples from tool markdown."""
+    headings = list(re.finditer(r"\*\*([^*\n:]+(?:\s+\([^*\n]+\))?):\*\*", text))
+    samples: list[dict[str, object]] = []
+    for index, heading in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        block = text[heading.end():end]
+        ndvi_match = re.search(
+            r"\*\*NDVI Value:\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))\*\*",
+            block,
+        )
+        value_match = ndvi_match or re.search(
+            r"-\s*(?:Converted|Value|Class):\s*\*\*"
+            r"([-+]?(?:\d+(?:\.\d*)?|\.\d+))\s*([^*\n]*)\*\*",
+            block,
+        )
+        if not value_match:
+            continue
+        unit = "" if ndvi_match else (value_match.group(2).strip() or None)
+        samples.append({
+            "metric": heading.group(1).strip(),
+            "value": float(value_match.group(1)),
+            "unit": unit,
+        })
+    return samples
+
+
 def _parse_numeric_sample(text: str) -> tuple[float | None, str | None, str | None]:
-    """Extract the first displayed value, metric, and unit from tool markdown."""
-    metric_matches = re.findall(r"\*\*([^*\n:]+(?:\s+\([^*\n]+\))?):\*\*", text)
-    metric = metric_matches[-1].strip() if metric_matches else None
+    """Extract the first aligned value for the legacy singular contract."""
+    samples = _parse_numeric_samples(text)
+    if not samples:
+        return None, None, None
+    first = samples[0]
+    return first["value"], first["metric"], first["unit"]  # type: ignore[return-value]
 
-    ndvi_match = re.search(
-        r"\*\*NDVI Value:\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))\*\*",
-        text,
-    )
-    if ndvi_match:
-        return float(ndvi_match.group(1)), metric or "NDVI", ""
 
-    value_match = re.search(
-        r"-\s*(?:Converted|Value|Class):\s*\*\*"
-        r"([-+]?(?:\d+(?:\.\d*)?|\.\d+))\s*([^*\n]*)\*\*",
-        text,
-    )
-    if not value_match:
-        return None, metric, None
-    unit = value_match.group(2).strip() or None
-    return float(value_match.group(1)), metric, unit
+def _parse_sample_provenance(text: str) -> tuple[list[str], list[str]]:
+    """Extract unique sampled item ids and acquisition dates from tool output."""
+    scenes = _parse_sampled_scenes(text)
+    item_ids = list(dict.fromkeys(scene["item_id"] for scene in scenes))
+    dates = list(dict.fromkeys(scene["date"] for scene in scenes))
+    return item_ids, dates
+
+
+def _parse_sampled_scenes(text: str) -> list[dict[str, str]]:
+    """Extract scene ids and their immediately adjacent optional dates."""
+    scenes = []
+    for item_match in re.finditer(r"(?m)^- Item:\s*([^\r\n]+?)\s*$", text):
+        date_match = re.match(
+            r"\r?\n- Date:\s*((?:19|20)\d{2}-\d{2}-\d{2})\s*(?:\r?\n|$)",
+            text[item_match.end():],
+        )
+        scenes.append({
+            "item_id": item_match.group(1).strip(),
+            "date": date_match.group(1) if date_match else "",
+        })
+    return list({(scene["item_id"], scene["date"]): scene for scene in scenes}.values())
 
 
 class RasterSamplingAgent:
@@ -117,11 +154,12 @@ class RasterSamplingAgent:
             )
 
         text = (raw or "").strip()
-        # Helper returns sentences starting with "No ..." when it can't sample.
-        success = bool(text) and not text.lower().startswith("no ")
-
         sources = [{"title": cid, "kind": "raster"} for cid in payload.loaded_collections[:3]]
+        samples = _parse_numeric_samples(text)
         value, metric, unit = _parse_numeric_sample(text)
+        sampled_scenes = _parse_sampled_scenes(text)
+        sampled_item_ids, sampled_dates = _parse_sample_provenance(text)
+        success = bool(text) and not text.lower().startswith("no ") and value is not None
 
         return RasterSamplingResult(
             success=success,
@@ -132,6 +170,7 @@ class RasterSamplingAgent:
             loaded_collections=list(payload.loaded_collections),
             sources=sources,
             confidence=0.9 if success else 0.2,
+            error=None if success else "Sampling returned no numeric value.",
             structured={
                 "data_type": data_type,
                 "pin": list(payload.pin),
@@ -140,6 +179,10 @@ class RasterSamplingAgent:
                 "value": value,
                 "metric": metric,
                 "unit": unit,
+                "samples": samples,
+                "sampled_scenes": sampled_scenes,
+                "sampled_item_ids": sampled_item_ids,
+                "sampled_dates": sampled_dates,
                 "loaded_collections": list(payload.loaded_collections),
             },
             elapsed_ms=int((time.time() - started) * 1000),

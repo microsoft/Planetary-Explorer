@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-02T12:30:33.558Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "results": [
+    {
+      "family": "Vision - Fire and Vegetation",
+      "location": "Daily 1km active-fire observations at a verified Alberta pixel",
+      "setup_query": "Show MODIS thermal anomalies at latitude 54.5000, longitude -115.0000 in Alberta from 2026-05-01 to 2026-08-26",
+      "image_query": "Explain the fire-intensity colours and identify clusters visible in Alberta.",
+      "outcome": "pass",
+      "elapsed_ms": 33104,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "setup_bbox": [
+        -115.01,
+        54.49,
+        -114.99,
+        54.51
+      ],
+      "expected_pin": {
+        "lat": 54.5,
+        "lng": -115
+      },
+      "submitted_pin": {
+        "lat": 54.50000122343144,
+        "lng": -115.00000000000034
+      },
+      "pin_distance_km": 0,
+      "map_zoom": 14,
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 44220,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 10,
+        "luminanceVariance": 15.75,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-browser-fire\\payload-images\\01-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "response_excerpt": "**Fire-intensity colours** in MODIS fire data typically range from low-intensity (blue) to high-intensity (red). However, the current screenshot does not display specific fire-intensity imagery, focusing instead on geographic terrain and vegetation patterns without thermal indication.\n\n**Fire clusters**\n- If MODIS fire products are overlayed, clusters should appear as concentrated areas marked with warmer colors (orange or red).\n- The screenshot lacks direct overlays for fire-analysis visualization.\n\n**Data source:** Frontend screenshot — MODIS данных rendering in the vicinity of Alberta. You may need specific analysis overlays for better tracing.",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-browser-fire\\browser-screenshots\\01-daily-1km-active-fire-observations-at-a-verified-alberta-pixel.png"
+    }
+  ]
+}

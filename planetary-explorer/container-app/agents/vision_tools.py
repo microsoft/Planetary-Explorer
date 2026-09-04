@@ -262,6 +262,32 @@ def _parse_tile_url(tile_url: str) -> Dict[str, str]:
     }
 
 
+def _stac_item_mode(item: Dict[str, Any], fallback: str = 'public') -> str:
+    """Resolve catalog provenance from an item before using request fallback."""
+    value = item.get('stac_mode') or item.get('_planetary_explorer_stac_mode')
+    if str(value).casefold() in {'public', 'pro'}:
+        return str(value).casefold()
+    return 'pro' if fallback == 'pro' else 'public'
+
+
+def _append_sample_provenance(
+    lines: List[str],
+    item: Dict[str, Any],
+) -> None:
+    """Append stable scene and acquisition evidence to a successful sample."""
+    item_id = item.get('id')
+    if item_id:
+        lines.append(f"- Item: {item_id}")
+    properties = item.get('properties') or {}
+    item_date = (
+        properties.get('datetime')
+        or properties.get('start_datetime')
+        or properties.get('end_datetime')
+    )
+    if item_date:
+        lines.append(f"- Date: {str(item_date)[:10]}")
+
+
 def _rehydrate_stac_items_for_sampling(
     stac_items: List[Dict[str, Any]],
     tile_urls: List[Any],
@@ -271,11 +297,6 @@ def _rehydrate_stac_items_for_sampling(
     longitude: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
     """Fetch current STAC assets for restored items that only retain stable IDs."""
-    fetch_item = (
-        _fetch_pro_stac_item_sync
-        if stac_mode == 'pro'
-        else _fetch_stac_item_sync
-    )
     valid_items = [item for item in stac_items if isinstance(item, dict)]
 
     def covers_pin(item: Dict[str, Any]) -> bool:
@@ -294,6 +315,12 @@ def _rehydrate_stac_items_for_sampling(
     if selected:
         def hydrate(candidate: tuple[int, Dict[str, Any]]) -> tuple[int, Dict[str, Any]]:
             index, item = candidate
+            item_mode = _stac_item_mode(item, stac_mode)
+            fetch_item = (
+                _fetch_pro_stac_item_sync
+                if item_mode == 'pro'
+                else _fetch_stac_item_sync
+            )
             try:
                 fetched = fetch_item(str(item['collection']), str(item['id']))
             except Exception as exc:
@@ -304,6 +331,9 @@ def _rehydrate_stac_items_for_sampling(
                     exc,
                 )
                 fetched = None
+            if fetched:
+                fetched = dict(fetched)
+                fetched['stac_mode'] = item_mode
             return index, fetched or item
 
         with ThreadPoolExecutor(max_workers=len(selected)) as executor:
@@ -323,23 +353,38 @@ def _rehydrate_stac_items_for_sampling(
             for item in valid_items
         ]
 
-    tile_candidates: List[tuple[str, str]] = []
+    tile_candidates: List[tuple[str, str, str]] = []
     for tile_reference in tile_urls[:5]:
         if isinstance(tile_reference, dict):
             tile_url = tile_reference.get('tilejson_url') or tile_reference.get('tile_url') or ''
             parsed = _parse_tile_url(tile_url) if tile_url else {}
             collection = tile_reference.get('collection') or parsed.get('collection')
             item_id = tile_reference.get('item_id') or tile_reference.get('item') or parsed.get('item')
+            item_mode = _stac_item_mode(tile_reference, stac_mode)
         else:
             parsed = _parse_tile_url(str(tile_reference))
             collection = parsed.get('collection')
             item_id = parsed.get('item')
+            item_mode = 'pro' if stac_mode == 'pro' else 'public'
         if collection and item_id:
-            tile_candidates.append((str(collection), str(item_id)))
+            tile_candidates.append((str(collection), str(item_id), item_mode))
 
     if tile_candidates:
+        def fetch_tile(candidate: tuple[str, str, str]) -> Optional[Dict[str, Any]]:
+            collection, item_id, item_mode = candidate
+            fetch_item = (
+                _fetch_pro_stac_item_sync
+                if item_mode == 'pro'
+                else _fetch_stac_item_sync
+            )
+            fetched = fetch_item(collection, item_id)
+            if fetched:
+                fetched = dict(fetched)
+                fetched['stac_mode'] = item_mode
+            return fetched
+
         with ThreadPoolExecutor(max_workers=len(tile_candidates)) as executor:
-            fetched_items = list(executor.map(lambda item: fetch_item(*item), tile_candidates))
+            fetched_items = list(executor.map(fetch_tile, tile_candidates))
         return [
             _prepare_stac_item_for_sampling(item, stac_mode)
             for item in fetched_items
@@ -381,7 +426,7 @@ def _prepare_stac_item_for_sampling(
     stac_mode: str,
 ) -> Dict[str, Any]:
     """Authorize assets for sampling through the active catalog."""
-    if stac_mode == 'pro':
+    if _stac_item_mode(item, stac_mode) == 'pro':
         from pro_stac_client import pro_sign_item_assets_sync
 
         return pro_sign_item_assets_sync(item)
@@ -1075,6 +1120,20 @@ def analyze_biomass(analysis_type: str = "general") -> str:
 # TOOL 10: SAMPLE RASTER VALUE (most complex tool)
 # ============================================================================
 
+def _asset_scale_offset(asset: dict, collection_id: str) -> tuple[float, float]:
+    """Return STAC raster scaling metadata with collection-safe fallbacks."""
+    bands = asset.get('raster:bands') or asset.get('bands') or []
+    band = bands[0] if isinstance(bands, list) and bands else {}
+    scale = band.get('scale') if isinstance(band, dict) else None
+    offset = band.get('offset') if isinstance(band, dict) else None
+    if isinstance(scale, (int, float)) and isinstance(offset, (int, float)):
+        return float(scale), float(offset)
+    if isinstance(scale, (int, float)):
+        return float(scale), 0.0
+    if 'landsat' in collection_id.casefold():
+        return 0.0000275, -0.2
+    return 0.0001, 0.0
+
 def sample_raster_value(data_type: str = "auto") -> str:
     """Extract the actual pixel/raster value from loaded satellite data at a specific
     location. Returns the numeric value (e.g., SST in Celsius, elevation in meters,
@@ -1330,7 +1389,20 @@ def sample_raster_value(data_type: str = "auto") -> str:
                 if 'modis-13' in coll or 'modis-15' in coll or 'modis-17' in coll:
                     assets = item.get('assets', {})
                     if '250m_16_days_NDVI' in assets:
-                        ak, nm, tf = '250m_16_days_NDVI', 'NDVI', lambda v: v * 0.0001 if v else v
+                        vegetation_assets = [
+                            ('250m_16_days_NDVI', 'NDVI'),
+                            ('250m_16_days_EVI', 'EVI'),
+                        ]
+                        for ak, nm in vegetation_assets:
+                            if ak in assets:
+                                target_items.append(item)
+                                asset_keys.append(ak)
+                                value_transforms.append({
+                                    'name': nm, 'unit_raw': 'scaled', 'unit_display': '',
+                                    'transform': lambda v: v * 0.0001 if v else v,
+                                    'valid_range': None,
+                                })
+                        break
                     elif 'Lai_500m' in assets:
                         ak, nm, tf = 'Lai_500m', 'LAI', lambda v: v * 0.1 if v else v
                     elif 'Gpp_500m' in assets:
@@ -1360,7 +1432,8 @@ def sample_raster_value(data_type: str = "auto") -> str:
                                 'transform': lambda v: 10 * math.log10(v) if v and v > 0 else v,
                                 'valid_range': (-30, 10)
                             })
-                            break
+                    if target_items:
+                        break
 
         # Reflectance (MODIS BRDF / HLS)
         if data_type in ['reflectance', 'brdf', 'surface', 'auto'] and not target_items:
@@ -1382,17 +1455,24 @@ def sample_raster_value(data_type: str = "auto") -> str:
                             })
                     if target_items:
                         break  # Found bands in this item, don't check other items
-                elif 'hls' in coll or 's30' in coll or 'l30' in coll:
-                    for bk in ['B04', 'B03', 'B02', 'B05', 'B08']:
+                elif any(kw in coll for kw in ['hls', 's30', 'l30', 'sentinel-2', 'landsat']):
+                    optical_bands = [
+                        'B03', 'B04', 'B08', 'B8A', 'B11', 'B12',
+                        'green', 'red', 'nir08', 'swir16', 'swir22',
+                    ]
+                    for bk in optical_bands:
                         if bk in assets:
+                            scale, offset = _asset_scale_offset(assets[bk], coll)
                             target_items.append(item)
                             asset_keys.append(bk)
                             value_transforms.append({
                                 'name': f'Surface Reflectance ({bk})', 'unit_raw': 'scaled',
-                                'unit_display': 'reflectance', 'transform': lambda v: v * 0.0001 if v else v,
+                                'unit_display': 'reflectance',
+                                'transform': lambda v, s=scale, o=offset: v * s + o if v is not None else v,
                                 'valid_range': (0, 10000)
                             })
-                            break
+                    if target_items:
+                        break
 
         # 3DEP LiDAR
         if data_type in ['lidar', 'hag', '3dep', 'auto'] and not target_items:
@@ -1496,6 +1576,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
             collection_id = items_out[0][0].get('collection', '')
             if collection_id:
                 try:
+                    fallback_stac_mode = _stac_item_mode(items_out[0][0], stac_mode)
                     buf = 0.5
                     pin_bbox = [lng - buf, lat - buf, lng + buf, lat + buf]
                     is_optical_coll = any(kw in collection_id.lower() for kw in ['sentinel-2', 'landsat', 'hls', 's30', 'l30'])
@@ -1503,9 +1584,9 @@ def sample_raster_value(data_type: str = "auto") -> str:
                     if is_optical_coll:
                         search_body["query"] = {"eo:cloud_cover": {"lt": 20}}
                         search_body["sortby"] = [{"field": "properties.datetime", "direction": "desc"}]
-                    for feature in _search_stac_items_sync(search_body, stac_mode):
+                    for feature in _search_stac_items_sync(search_body, fallback_stac_mode):
                         if point_in_bbox(lat, lng, feature.get('bbox')):
-                            signed = _prepare_stac_item_for_sampling(feature, stac_mode)
+                            signed = _prepare_stac_item_for_sampling(feature, fallback_stac_mode)
                             assets = signed.get('assets', {})
                             ak = None
                             tf_info = None
@@ -1607,8 +1688,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
                             elif ndvi > 0: interp = "Minimal vegetation, bare soil"
                             else: interp = "Water, snow, or non-vegetated"
                             results.append(f"- Interpretation: {interp}")
-                            if props.get('datetime'):
-                                results.append(f"- Date: {props['datetime'][:10]}")
+                            _append_sample_provenance(results, item)
                             sampled_count += 1
                 results.append("")
                 continue
@@ -1661,6 +1741,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
                                 results.append(f"- Model/Scenario: {model_scenario}")
                                 results.append(f"- Grid resolution: 0.25° × 0.25°")
                                 results.append(f"- Band sampled: {last_band} (last day in file)")
+                                _append_sample_provenance(results, item)
                                 if tile_date:
                                     results.append(f"- Year: {tile_date[:4]}")
                                 sampled_count += 1
@@ -1749,14 +1830,15 @@ def sample_raster_value(data_type: str = "auto") -> str:
                         elif pct < 75: results.append(f"- [SNOW][SNOW] Moderate snow ({pct:.0f}%)")
                         else: results.append(f"- [SNOW][SNOW][SNOW] Heavy snow ({pct:.0f}%)")
 
-                if props.get('datetime'):
-                    results.append(f"- Date: {props['datetime'][:10]}")
+                _append_sample_provenance(results, item)
                 sampled_count += 1
             results.append("")
 
         # ── Clear-sky fallback: search for un-masked tiles when all loaded ones failed ──
         if sampled_count == 0 and stac_items:
-            collection_id = stac_items[0].get('collection', '')
+            fallback_source = sorted_data[0][0] if sorted_data else stac_items[0]
+            collection_id = fallback_source.get('collection', '')
+            fallback_stac_mode = _stac_item_mode(fallback_source, stac_mode)
             is_optical_coll = any(kw in collection_id.lower() for kw in ['sentinel-2', 'landsat', 'hls', 's30', 'l30'])
             if collection_id and (is_ndvi_sampling or is_optical_coll):
                 try:
@@ -1776,7 +1858,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
                     }
                     logger.info(f"[PIN] Clear-sky fallback search: collection={collection_id}, bbox={pin_bbox}")
 
-                    features = _search_stac_items_sync(search_body, stac_mode)
+                    features = _search_stac_items_sync(search_body, fallback_stac_mode)
                     if features is not None:
                         if features:
                             logger.info(f"[PIN] Clear-sky fallback found {len(features)} candidates")
@@ -1790,11 +1872,10 @@ def sample_raster_value(data_type: str = "auto") -> str:
                                 if not point_in_bbox(lat, lng, feature.get('bbox')):
                                     continue
 
-                                signed = _prepare_stac_item_for_sampling(feature, stac_mode)
+                                signed = _prepare_stac_item_for_sampling(feature, fallback_stac_mode)
 
                                 f_assets = signed.get('assets', {})
                                 f_props = signed.get('properties', {})
-                                f_date = (f_props.get('datetime') or '')[:10]
                                 f_cloud = f_props.get('eo:cloud_cover')
                                 f_id_short = fid[:30]
 
@@ -1835,7 +1916,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
                                             elif ndvi > 0: interp = "Minimal vegetation, bare soil"
                                             else: interp = "Water, snow, or non-vegetated"
                                             results.append(f"- Interpretation: {interp}")
-                                            results.append(f"- Date: {f_date}")
+                                            _append_sample_provenance(results, feature)
                                             if f_cloud is not None:
                                                 results.append(f"- Cloud cover: {f_cloud:.0f}%")
                                             results.append(f"- *(Used a different date because the loaded tiles were cloud-masked at this pin)*")
@@ -1851,7 +1932,7 @@ def sample_raster_value(data_type: str = "auto") -> str:
                                                     raw_value = fb_result['value']
                                                     results.append(f"\n**{collection_id} (clear-sky fallback):**")
                                                     results.append(f"- Value: **{raw_value:.2f}**")
-                                                    results.append(f"- Date: {f_date}")
+                                                    _append_sample_provenance(results, feature)
                                                     if f_cloud is not None:
                                                         results.append(f"- Cloud cover: {f_cloud:.0f}%")
                                                     results.append(f"- *(Used a different date because the loaded tiles were cloud-masked at this pin)*")

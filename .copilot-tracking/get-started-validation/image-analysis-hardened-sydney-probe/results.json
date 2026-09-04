@@ -1,0 +1,99 @@
+{
+  "generated_at": "2026-09-03T04:16:02.396Z",
+  "app_url": "https://app-earthcopilot-e1bb5a9c.azurewebsites.net/",
+  "release": {
+    "api_revision": "ca-earthcopilot-api--getstarted-hardened-0903-0316",
+    "api_image_digest": "sha256:4b5288048cd6ab9033284e49cea6ad85129fb30925c82f0fde88dc6ba04dd73e",
+    "weather_revision": "ca-weather-44gnuvaloryac--getstarted-0902-1700",
+    "weather_image_digest": "sha256:4f928d2b54e2fb0712703eba111395c9a62e2b0d6901d908fa4ac8a5cff2660b",
+    "frontend_deployment_id": "72b1ce87-7b21-4793-990b-c9e557fe7d10",
+    "frontend_bundle": "index-jUC2ydNZ.js",
+    "frontend_bundle_sha256": "6e446d885a45f14e593ea0f88f5edfb30c682eb5e90e9a320584d4106e02d05a",
+    "verification": {
+      "verified_at": "2026-09-03T04:15:16.624652+00:00",
+      "azure_subscription": "a0c62bdd-d642-4fdb-b372-ae041cf83ce3",
+      "azure_tenant": "711a9076-1115-4c36-b7b4-82b4f3a05f6f",
+      "api_fqdn": "ca-earthcopilot-api.thankfulplant-49ee7bc3.eastus2.azurecontainerapps.io",
+      "api_health": "healthy",
+      "api_revision_health": "Healthy",
+      "api_revision_running": "Running",
+      "api_traffic_weight": 100,
+      "weather_revision_health": "Healthy",
+      "weather_revision_running": "ScaledToZero",
+      "weather_traffic_weight": 100,
+      "frontend_deployment_active": true,
+      "frontend_bundle_live_sha256": "6e446d885a45f14e593ea0f88f5edfb30c682eb5e90e9a320584d4106e02d05a",
+      "geofm_worker_min_replicas": 0,
+      "geofm_worker_active_replicas": 0
+    }
+  },
+  "results": [
+    {
+      "family": "Vision - Optical Imagery",
+      "location": "10m surface-reflectance imagery for the Greater Toronto Area",
+      "setup_query": "Show Sentinel-2 imagery over Toronto, Canada from 2026-06-01 to 2026-08-26",
+      "image_query": "Explain the colours in this 2026 Toronto image and identify visible land-cover types.",
+      "outcome": "pass",
+      "elapsed_ms": 44240,
+      "setup_http_status": 200,
+      "analysis_http_status": 200,
+      "adversarial_location": {
+        "query": "Show Sentinel-2 imagery over Sydney, Australia from 2026-01-01 to 2026-02-01",
+        "latitude": -26.85,
+        "longitude": 133.28,
+        "session_id": "web-session-1788408919669-bfrsx1xvl"
+      },
+      "setup_context_reset": {
+        "stale_fields": [],
+        "geoint_mode": false,
+        "session_changed": true
+      },
+      "setup_bbox": [
+        -79.64,
+        43.58,
+        -79.12,
+        43.86
+      ],
+      "expected_pin": {
+        "lat": 43.72,
+        "lng": -79.38
+      },
+      "submitted_pin": {
+        "lat": 43.72016356643684,
+        "lng": -79.38000000000152
+      },
+      "pin_distance_km": 0.02,
+      "map_zoom": 10,
+      "imagery_layer": "Sentinel-2 Level-2A",
+      "imagery_difference": {
+        "changedPixelRatio": 0.9684,
+        "meanAbsoluteDifference": 18.73
+      },
+      "screenshot": {
+        "format": "jpeg",
+        "byte_length": 218603,
+        "width": 1020,
+        "height": 920,
+        "decodedWidth": 1020,
+        "decodedHeight": 920,
+        "sampledColorBins": 212,
+        "meanRgb": [
+          75.43,
+          78.27,
+          70.58
+        ],
+        "meanLuminance": 77.11,
+        "luminanceVariance": 1272.48,
+        "path": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-sydney-probe\\payload-images\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.jpg"
+      },
+      "tools_used": [
+        "describe_map_screenshot"
+      ],
+      "structured_success": true,
+      "evidence_pin_distance_km": 0.03,
+      "evidence_collection": "sentinel-2-l2a",
+      "response_excerpt": "This Sentinel-2 Level-2A image of Toronto captures land-cover types and features distinct colors that signify natural and human-made landscapes:\n\n### **Color Analysis**\n1. **Dark Blue/Black (Lake Ontario)**  \n   - Found along the southern edge of the image, this indicates water, specifically Lake Ontario. The uniform dark color suggests calm water, while subtle tonal variations may be indicative of cloud shadows or minor surface features.\n\n2. **Green (Vegetation)**  \n   - Green areas are prevalent, primarily in parks, forests, and undeveloped spaces. Prominent areas of vegetation include large parks such as High Park, Parkway Forest, and the Rouge Valley in Scarborough. The intensity of the green suggests a mix of dense tree coverage and grasslands.\n\n3. **Grayish Tan (Urban Areas)**  \n   - The dominant color in the image represents the densely populated urban zones of Toronto and surrounding areas like Etobicoke, Scarborough, and Vaughan. This indicates built-up landscapes, including r",
+      "browser_screenshot": ".copilot-tracking\\get-started-validation\\image-analysis-hardened-sydney-probe\\browser-screenshots\\01-10m-surface-reflectance-imagery-for-the-greater-toronto-area.png"
+    }
+  ]
+}

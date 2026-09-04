@@ -106,6 +106,7 @@ class AnalysisRequest(BaseModel):
 
     # Hint from the AnalysisRouter (e.g. "methodology", "compute_anomaly")
     hint: Optional[str] = None
+    analysis_type: Optional[Literal["raster", "screenshot"]] = None
     geoint_module: Optional[str] = None
     geofm_context: Optional[dict[str, Any]] = None
     model: Optional[str] = None

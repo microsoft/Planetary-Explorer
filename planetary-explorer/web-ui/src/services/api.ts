@@ -152,6 +152,7 @@ export interface ChatHistorySnapshot {
 
 export interface MapContext {
   stac_mode?: 'public' | 'pro';
+  analysis_type?: 'raster' | 'screenshot';
   bounds?: {
     north: number;
     south: number;
@@ -164,13 +165,16 @@ export interface MapContext {
   imagery_url?: string;
   item_id?: string;
   datetime?: string;
+  search_datetime?: string;
   zoom_level?: number;
   current_collection?: string;
+  render_profile_id?: string;
   tile_urls?: Array<{  // TiTiler URLs from prior STAC response for Vision Agent
     tilejson_url: string;
     item_id?: string;
     collection?: string;
     bbox?: number[];
+    stac_mode?: 'public' | 'pro';
   }>;
   // Full STAC items captured by MapView after a search. Includes
   // `assets` with `href` URLs needed by the backend `sample_raster_value`
@@ -181,9 +185,17 @@ export interface MapContext {
   stac_items?: Array<{
     id: string;
     collection: string;
+    stac_mode?: 'public' | 'pro';
     bbox?: number[];
     properties?: Record<string, any>;
     assets?: Record<string, any>;
+  }>;
+  scene_refs?: Array<{
+    id: string;
+    collection: string;
+    stac_mode?: 'public' | 'pro';
+    bbox?: number[];
+    datetime?: string;
   }>;
   has_satellite_data?: boolean; // Flag indicating if STAC imagery is loaded
   vision_mode?: boolean; // NEW: explicit vision analysis mode
@@ -595,6 +607,10 @@ class ApiService {
           requestData.vision_pin = mapContext.vision_pin;
           debugLog('Including vision_pin', mapContext.vision_pin);
         }
+        if (mapContext.analysis_type) {
+          requestData.analysis_type = mapContext.analysis_type;
+          debugLog('Including explicit analysis type', mapContext.analysis_type);
+        }
       }
 
       //  DEBUG: Log the complete request body before sending
@@ -814,7 +830,8 @@ class ApiService {
     latitude: number,
     longitude: number,
     screenshot?: string,
-    radiusKm: number = 5.0
+    radiusKm: number = 5.0,
+    signal?: AbortSignal,
   ): Promise<any> {
     console.log(' API: Sending terrain chat message', { sessionId, message: message.substring(0, 50) + '...' });
 
@@ -841,7 +858,10 @@ class ApiService {
         console.log(' Including screenshot in terrain chat request');
       }
 
-      const response = await this.api.post('/api/geoint/terrain/chat', requestData);
+      const response = await this.api.post('/api/geoint/terrain/chat', requestData, {
+        signal,
+        timeout: 300000,
+      });
       console.log(' Terrain chat response:', response.data);
 
       return response.data;
@@ -1573,9 +1593,18 @@ export async function sendTerrainChatMessage(
   latitude: number,
   longitude: number,
   screenshot?: string,
-  radiusKm: number = 5.0
+  radiusKm: number = 5.0,
+  signal?: AbortSignal,
 ): Promise<any> {
-  return apiService.sendTerrainChatMessage(sessionId, message, latitude, longitude, screenshot, radiusKm);
+  return apiService.sendTerrainChatMessage(
+    sessionId,
+    message,
+    latitude,
+    longitude,
+    screenshot,
+    radiusKm,
+    signal,
+  );
 }
 
 export async function clearTerrainSession(sessionId: string): Promise<boolean> {
