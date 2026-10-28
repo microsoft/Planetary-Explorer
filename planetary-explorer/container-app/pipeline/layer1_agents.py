@@ -446,7 +446,12 @@ class AnalyzeAgent(Executor):  # type: ignore[misc]
         # ------------------------------------------------------------
         from agents.analyst_agent import get_analyst_agent
 
-        response = await get_analyst_agent().run(request)
+        # Honor the frontend model selector for this path too. Without
+        # this, AnalystAgent silently ignored the user's dropdown choice
+        # and always used AZURE_OPENAI_DEPLOYMENT_NAME, unlike the
+        # semantic_translator path which does respect it via set_model().
+        _selected_model = body.get("model") if isinstance(body, dict) else None
+        response = await get_analyst_agent().run(request, model=_selected_model)
 
         # The AnalystAgent surfaces clarifications via a "clarify" key in
         # ``structured`` (set by the ask_user_to_clarify tool). Mirror the

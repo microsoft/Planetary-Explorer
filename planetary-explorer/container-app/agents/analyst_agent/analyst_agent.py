@@ -71,10 +71,21 @@ class AnalystAgent:
 
     def __init__(self) -> None:
         self._agents_client = None
-        self._agent_id: Optional[str] = None
         self._initialized = False
         self._init_lock = asyncio.Lock()
+        self._model_lock = asyncio.Lock()
         self._threads: Dict[str, AnalystThread] = {}
+        # Per-model agent cache. Previously a single mutable self._agent_id /
+        # self._current_model pair was shared across all concurrent requests
+        # -- if user A selected gpt-5 and user B selected gpt-4o-mini at
+        # nearly the same time, the model-switch code could swap the shared
+        # agent_id out from under user A's in-flight run (PR #31 review
+        # finding). Caching one agent per model, and resolving the agent_id
+        # to a local variable per request instead of reading shared mutable
+        # state, removes the race entirely and also avoids leaking a new
+        # Agent Service agent definition on every back-and-forth switch.
+        self._agents_by_model: Dict[str, str] = {}
+        self._default_model: Optional[str] = None
         self._max_init_retries = 2
         logger.info("AnalystAgent created (lazy init on first use)")
 
@@ -108,12 +119,12 @@ class AnalystAgent:
                         "[ANALYST] init attempt %d failed: %s", attempt + 1, e
                     )
                     self._agents_client = None
-                    self._agent_id = None
+                    self._agents_by_model.clear()
                     self._initialized = False
             assert last_error is not None
             raise last_error
 
-    async def _do_initialize(self) -> None:
+    async def _do_initialize(self, model: Optional[str] = None) -> None:
         if not _AZURE_AVAILABLE:
             raise RuntimeError("azure.identity not installed")
 
@@ -123,7 +134,11 @@ class AnalystAgent:
         endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT") or os.getenv(
             "AZURE_OPENAI_ENDPOINT"
         )
-        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5")
+        # `model` is the user-selected deployment (from the frontend's model
+        # selector, threaded in via AnalyzeAgent.run -> AnalystAgent.run).
+        # Falls back to the env-configured default when no selection was
+        # made, preserving prior behavior for callers that don't pass one.
+        deployment = model or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5")
         if not endpoint:
             raise ValueError(
                 "AZURE_AI_PROJECT_ENDPOINT or AZURE_OPENAI_ENDPOINT must be set"
@@ -140,16 +155,104 @@ class AnalystAgent:
         toolset.add(functions)
         self._agents_client.enable_auto_function_calls(toolset)
 
-        agent = await self._agents_client.create_agent(
-            model=deployment,
-            name="PlanetaryExplorerAnalyst",
-            instructions=ANALYST_AGENT_INSTRUCTIONS,
-            toolset=toolset,
-        )
-        self._agent_id = agent.id
+        agent = await self._create_agent_capped(deployment, ANALYST_AGENT_INSTRUCTIONS, toolset)
+        self._agents_by_model[deployment] = agent.id
+        self._default_model = deployment
         self._initialized = True
         logger.info(
             "AnalystAgent initialized: agent_id=%s model=%s", agent.id, deployment
+        )
+
+    async def _get_or_create_agent_for_model(self, model: Optional[str]) -> str:
+        """Return the Agent Service agent_id for ``model``, creating and
+        caching it if needed.
+
+        Resolves to a return value the caller stores locally, rather than
+        mutating shared instance state read later by a different request --
+        see the race-condition note on ``self._agents_by_model`` in
+        ``__init__`` for why that distinction matters.
+
+        Falsy ``model`` resolves to the default deployment set up at first
+        initialization. No-op fast path (plain dict read, no lock) when the
+        agent for this model is already cached, so the common case (no
+        selection made, or same model as last turn) costs nothing.
+        """
+        await self._ensure_initialized()
+        resolved_model = model or self._default_model
+        cached = self._agents_by_model.get(resolved_model)
+        if cached:
+            return cached
+        async with self._model_lock:
+            cached = self._agents_by_model.get(resolved_model)
+            if cached:
+                return cached
+            from .analyst_prompt import ANALYST_AGENT_INSTRUCTIONS
+            from .tools import create_analyst_functions
+            from azure.ai.agents.models import AsyncFunctionTool, AsyncToolSet  # type: ignore
+
+            logger.info(
+                "[ANALYST] No cached agent for model=%s -- creating one (%d cached so far)",
+                resolved_model, len(self._agents_by_model),
+            )
+            functions = AsyncFunctionTool(create_analyst_functions())
+            toolset = AsyncToolSet()
+            toolset.add(functions)
+            self._agents_client.enable_auto_function_calls(toolset)  # type: ignore[union-attr]
+            agent = await self._create_agent_capped(resolved_model, ANALYST_AGENT_INSTRUCTIONS, toolset)
+            self._agents_by_model[resolved_model] = agent.id
+            return agent.id
+
+    async def _create_agent_capped(self, model: str, instructions: str, toolset):
+        """Create an Agent Service agent, capping reasoning effort for
+        reasoning-family models when possible.
+
+        The Agents SDK's ``create_agent`` does not document a
+        ``reasoning_effort`` parameter the way the plain chat.completions
+        API does (see ContextualAgent/LoadAgent/etc., which already cap
+        this on gpt-5 for latency). Since the underlying REST API is built
+        on the same schema family as the Assistants/Responses API, it may
+        still accept the field as an undocumented passthrough -- but this
+        is unverified, so we try it and transparently fall back to
+        creating the agent without it if the service/SDK rejects the
+        extra kwarg. Never raises solely because of this attempt.
+
+        Per-family effort value: gpt-5-family models accept "minimal" (and
+        higher); o-series (o1/o3/o4) models only accept "low"/"medium"/
+        "high" and reject "minimal" with an HTTP 400 -- using the same
+        value for both families was a real bug (PR #31 review finding).
+        """
+        from model_family import reasoning_effort_for_model
+        effort = reasoning_effort_for_model(model)
+        if effort:
+            try:
+                return await self._agents_client.create_agent(  # type: ignore[union-attr]
+                    model=model,
+                    name="PlanetaryExplorerAnalyst",
+                    instructions=instructions,
+                    toolset=toolset,
+                    reasoning_effort=effort,
+                )
+            except TypeError:
+                # SDK's typed signature rejects the kwarg outright (no
+                # passthrough support at all in this SDK version).
+                logger.info(
+                    "[ANALYST] reasoning_effort not supported by installed "
+                    "azure-ai-agents SDK version -- creating agent without it"
+                )
+            except Exception as exc:
+                # Service-side rejection (e.g. unknown field in request
+                # body) surfaces as an HTTP error from the SDK, not a
+                # TypeError -- catch broadly here so a latency-cap attempt
+                # never breaks agent creation.
+                logger.info(
+                    "[ANALYST] reasoning_effort=%s rejected by service (%s) -- "
+                    "creating agent without it", effort, exc,
+                )
+        return await self._agents_client.create_agent(  # type: ignore[union-attr]
+            model=model,
+            name="PlanetaryExplorerAnalyst",
+            instructions=instructions,
+            toolset=toolset,
         )
 
     # ------------------------------------------------------------------
@@ -171,12 +274,18 @@ class AnalystAgent:
     # Main entry
     # ------------------------------------------------------------------
 
-    async def run(self, request) -> "SynthesizedResponse":
+    async def run(self, request, model: Optional[str] = None) -> "SynthesizedResponse":
         """Run the ReAct loop for a single AnalysisRequest.
 
         Returns a SynthesizedResponse that's drop-in compatible with the
         old Orchestrator + Synthesizer output (so layer1_agents.AnalyzeAgent
         doesn't need to change its caller contract).
+
+        Args:
+            model: Optional user-selected deployment name (from the
+                frontend model selector). Resolved to a cached (or newly
+                created) Agent Service agent for that model -- see
+                ``_get_or_create_agent_for_model``.
         """
         from pipeline.contracts import (
             AnalysisPlan,
@@ -217,12 +326,19 @@ class AnalystAgent:
         set_session(sess)
 
         try:
-            answer, tool_calls, evidence = await self._invoke_agent_service(request)
+            # Resolved inside the try so a bad/unavailable deployment (e.g.
+            # Agent Service rejects the model, transient failure) degrades
+            # to _fallback_answer below instead of raising out of run() as
+            # an uncaught 500 (PR #41 review finding: this previously ran
+            # before the try: block).
+            agent_id = await self._get_or_create_agent_for_model(model)
+            answer, tool_calls, evidence, skill_pack_id = await self._invoke_agent_service(request, agent_id)
         except Exception as e:
             logger.exception("[ANALYST] run failed, returning fallback response")
             answer = self._fallback_answer(request, str(e))
             tool_calls = []
             evidence = []
+            skill_pack_id = None
 
         # Aggregate sources from tool evidence
         sources: List[Source] = []
@@ -251,6 +367,9 @@ class AnalystAgent:
 
         if clarify_payload:
             structured_by_tool["clarify"] = clarify_payload
+
+        if skill_pack_id:
+            structured_by_tool["skill_pack"] = {"id": skill_pack_id}
 
         # Build a degenerate plan record for back-compat with callers that
         # still serialize ``plan``. The plan is just the sequence of tools
@@ -287,16 +406,37 @@ class AnalystAgent:
     # Agent Service invocation
     # ------------------------------------------------------------------
 
-    async def _invoke_agent_service(self, request):
-        """Send message, run, collect assistant text + tool-call evidence."""
+    async def _invoke_agent_service(self, request, agent_id: str):
+        """Send message, run, collect assistant text + tool-call evidence.
+
+        ``agent_id`` is resolved by the caller (``run()``) via
+        ``_get_or_create_agent_for_model`` into a local value, not shared
+        mutable instance state -- so concurrent requests on different
+        models can't race each other (see the note in ``__init__``).
+        """
         from azure.ai.agents.models import ListSortOrder  # type: ignore
 
         await self._ensure_initialized()
-        assert self._agents_client is not None and self._agent_id is not None
+        assert self._agents_client is not None
 
         thread = await self._get_or_create_thread(request.session_id)
 
         augmented = self._build_message(request)
+
+        # Skill pack: pick 0-1 domain guidance packs matching this question
+        # and inject as additional_instructions for this run only -- pure
+        # prompt augmentation, no new tools, no model change. Mirrors the
+        # identical mechanism in EnhancedVisionAgent.analyze().
+        skill_instructions = None
+        skill_pack_id = None
+        try:
+            from skills.skill_selector import select_skill_pack, render_skill_block
+            pack = select_skill_pack(request.question, applies_to="analyst_agent")
+            if pack:
+                skill_instructions = render_skill_block(pack)
+                skill_pack_id = pack.id
+        except Exception as skill_exc:
+            logger.warning("[SKILLS] Selection failed (continuing without): %s", skill_exc)
 
         run = None
         for attempt in range(3):
@@ -316,7 +456,8 @@ class AnalystAgent:
                 )
                 run = await self._agents_client.runs.create_and_process(
                     thread_id=thread.thread_id,
-                    agent_id=self._agent_id,
+                    agent_id=agent_id,
+                    additional_instructions=skill_instructions,
                 )
                 break
             except Exception as e:
@@ -359,7 +500,7 @@ class AnalystAgent:
         # Tools recorded their results on the session ContextVar
         from .session_context import get_session
         evidence = list(get_session().evidence)
-        return answer, tool_calls, evidence
+        return answer, tool_calls, evidence, skill_pack_id
 
     # ------------------------------------------------------------------
     # Helpers

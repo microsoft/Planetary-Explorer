@@ -118,13 +118,35 @@ class ClarifierAgent:
             "AZURE_OPENAI_CLARIFIER_DEPLOYMENT",
             os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-5"),
         )
-        self.endpoint = endpoint or os.getenv(
-            "AZURE_AI_PROJECT_ENDPOINT"
-        ) or os.getenv("AZURE_OPENAI_ENDPOINT")
+        # NOTE: ClarifierAgent talks to AzureOpenAI's plain chat-completions
+        # API (not the Agent Service), so it must use the Cognitive
+        # Services endpoint/token audience, not AZURE_AI_PROJECT_ENDPOINT
+        # (an ai.azure.com Agent Service project endpoint used elsewhere,
+        # e.g. by AnalystAgent). Using the project endpoint here caused a
+        # silent 401 "audience is incorrect (https://ai.azure.com)" on
+        # every greeting/identity short-circuit -- the code fell back to
+        # a static passthrough on error, which masked the failure.
+        self.endpoint = endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
+        if not self.endpoint:
+            # Compatibility fallback for deployments that only set
+            # AZURE_OPENAI_ACCOUNT_NAME (the Cognitive Services account
+            # name used elsewhere for ARM discovery, see
+            # fastapi_app._compute_available_models) instead of the full
+            # AZURE_OPENAI_ENDPOINT URL. Deliberately does NOT fall back to
+            # AZURE_AI_PROJECT_ENDPOINT -- that's an ai.azure.com Agent
+            # Service project endpoint with a different token audience and
+            # reintroduces the silent 401 this fix exists to prevent
+            # (PR #41 review finding: dropping that fallback entirely is a
+            # breaking change for environments that only set the project
+            # endpoint, so this gives them a correct-audience alternative
+            # instead of just raising).
+            _account_name = os.getenv("AZURE_OPENAI_ACCOUNT_NAME")
+            if _account_name:
+                self.endpoint = f"https://{_account_name}.cognitiveservices.azure.com/"
         if not self.endpoint:
             raise ValueError(
-                "ClarifierAgent requires AZURE_AI_PROJECT_ENDPOINT or "
-                "AZURE_OPENAI_ENDPOINT to be set."
+                "ClarifierAgent requires AZURE_OPENAI_ENDPOINT (or "
+                "AZURE_OPENAI_ACCOUNT_NAME) to be set."
             )
         self.api_version = api_version
         self._client: Optional[AsyncAzureOpenAI] = None
@@ -155,13 +177,26 @@ class ClarifierAgent:
     # ------------------------------------------------------------------
     # Public entry point
     # ------------------------------------------------------------------
-    async def decide(self, payload: ClarifierInput) -> ClarifierDecision:
+    async def decide(
+        self, payload: ClarifierInput, model: Optional[str] = None
+    ) -> ClarifierDecision:
         """
         Run the clarifier prompt and return a ClarifierDecision.
+
+        Args:
+            payload: The clarifier input.
+            model: Optional per-call model override (the frontend's
+                model selector). Falls back to ``self.deployment`` (the
+                env-configured default) when not given, preserving prior
+                behavior for callers that don't pass one. This mirrors
+                the fix already applied to AnalystAgent.run(model=...) --
+                without it, the greeting/identity short-circuit silently
+                ignored the user's model selection.
 
         Falls back to a deterministic passthrough on any error so the
         request keeps working even if the LLM is unreachable.
         """
+        _deployment = model or self.deployment
         try:
             pin_lat_lng = (
                 f"({payload.pin_lat:.4f}, {payload.pin_lng:.4f})"
@@ -183,8 +218,16 @@ class ClarifierAgent:
             )
 
             client = self._get_client()
+            # Per-family effort value: gpt-5-family models accept "minimal";
+            # o-series (o1/o3/o4) models only accept "low"/"medium"/"high"
+            # and reject "minimal" with an HTTP 400 (PR #31 review finding).
+            # Shared helper (PR #41 review: "a single reasoning_kwargs(model)
+            # helper would stop it drifting") -- see model_family.py.
+            from model_family import reasoning_effort_for_model
+            _effort = reasoning_effort_for_model(_deployment)
+            _sampling_kwargs = {"reasoning_effort": _effort} if _effort else {"temperature": 0.0}
             response = await client.chat.completions.create(
-                model=self.deployment,
+                model=_deployment,
                 messages=[
                     {"role": "system", "content": CLARIFIER_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt},
@@ -193,8 +236,7 @@ class ClarifierAgent:
                     "type": "json_schema",
                     "json_schema": CLARIFIER_DECISION_SCHEMA,
                 },
-                temperature=0.0,
-                reasoning_effort="minimal",
+                **_sampling_kwargs,
             )
 
             content = response.choices[0].message.content or "{}"

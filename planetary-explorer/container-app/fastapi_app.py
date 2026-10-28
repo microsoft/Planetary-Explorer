@@ -14,7 +14,7 @@ import os
 import sys
 import traceback
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional, Tuple
 import aiohttp
 import sys
@@ -2524,6 +2524,204 @@ async def health_check():
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 
+# Simple in-memory cache for /api/models -- deployment lists rarely change,
+# so avoid hitting the ARM management API on every dropdown render.
+_MODELS_CACHE: dict = {"data": None, "fetched_at": 0.0, "source": None}
+_MODELS_CACHE_TTL_SECONDS = 300  # 5 minutes for a successful ARM result
+# Short TTL specifically for fallback payloads (ARM unreachable / not
+# configured) -- a transient ARM error shouldn't stick for the full 5
+# minutes once the service recovers (PR #31 review finding).
+_MODELS_FALLBACK_TTL_SECONDS = 30
+
+# Non-chat deployment model-name prefixes to exclude from the selector --
+# embedding/audio/image deployments on the same Cognitive Services account
+# would otherwise show up in the model dropdown as if they were chat models
+# (PR #31 review finding).
+_NON_CHAT_MODEL_PREFIXES = ("text-embedding-", "whisper", "dall-e", "tts-")
+
+# Static fallback used when ARM discovery isn't configured (missing env
+# vars) or the management-plane call fails for any reason -- the dropdown
+# should never come back empty just because discovery had a hiccup.
+_FALLBACK_MODELS = [
+    {"id": "gpt-4o-mini", "name": "GPT-4o mini (fast)", "isDefault": True, "isAvailable": True},
+    {"id": "gpt-4o", "name": "GPT-4o", "isAvailable": True},
+    {"id": "gpt-5", "name": "GPT-5 (deep reasoning)", "isAvailable": True},
+]
+
+
+def _fallback_models_with_configured_deployment() -> list:
+    """Static fallback list, plus whatever AZURE_OPENAI_DEPLOYMENT_NAME is
+    actually configured to in this environment (if it isn't already one of
+    the 3 hardcoded ids). Without this, a legitimate custom deployment name
+    would be silently rejected by model validation whenever ARM discovery
+    is unavailable (PR #41 review finding).
+
+    When a deployment name IS configured, it is marked isDefault=True (and
+    the static list's gpt-4o-mini entry is demoted) -- this environment is
+    actually running that deployment, so the model-validation fallback
+    should rewrite invalid/missing model ids to it, not to a model that may
+    not even be provisioned in this tenant (PR #41 second-round review
+    finding: previously gpt-4o-mini stayed isDefault even when the only
+    real deployment was the configured custom one).
+    """
+    configured = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+    models = [dict(m) for m in _FALLBACK_MODELS]
+    if configured:
+        for m in models:
+            m["isDefault"] = False
+        existing = next((m for m in models if m["id"] == configured), None)
+        if existing is not None:
+            existing["isDefault"] = True
+        else:
+            models.append({
+                "id": configured,
+                "name": configured,
+                "isDefault": True,
+                "isAvailable": True,
+            })
+    return models
+
+
+def _friendly_model_name(model_name: str, model_version: str) -> str:
+    """Best-effort human-readable label for a deployment.
+
+    Falls back to the raw deployment name if we don't recognize the
+    model family -- this keeps unknown/future models (e.g. a
+    hypothetical "gpt-5.5") visible in the dropdown instead of hidden.
+    """
+    name_lc = (model_name or "").lower()
+    if name_lc.startswith("gpt-5"):
+        return f"{model_name.upper()} (deep reasoning)"
+    if "mini" in name_lc:
+        return f"{model_name} (fast)"
+    if name_lc.startswith(("o1", "o3", "o4")):
+        return f"{model_name} (reasoning)"
+    return model_name
+
+
+async def _compute_available_models() -> dict:
+    """Compute (or return cached) available-models payload.
+
+    Factored out of the ``/api/models`` endpoint so other code paths
+    (e.g. validating a client-supplied ``model`` in ``/api/query``) can
+    reuse the exact same discovery + cache logic instead of duplicating
+    it or hard-coding a second list that could drift out of sync.
+    """
+    import time as _time
+
+    now = _time.time()
+    cache_ttl = (
+        _MODELS_FALLBACK_TTL_SECONDS
+        if _MODELS_CACHE["source"] == "fallback"
+        else _MODELS_CACHE_TTL_SECONDS
+    )
+    if _MODELS_CACHE["data"] is not None and (now - _MODELS_CACHE["fetched_at"]) < cache_ttl:
+        return _MODELS_CACHE["data"]
+
+    subscription_id = os.getenv("AZURE_SUBSCRIPTION_ID")
+    resource_group = os.getenv("AZURE_RESOURCE_GROUP")
+    account_name = os.getenv("AZURE_OPENAI_ACCOUNT_NAME")
+
+    if not (subscription_id and resource_group and account_name):
+        logger.info(
+            "[MODELS] ARM discovery not configured (missing "
+            "AZURE_SUBSCRIPTION_ID/AZURE_RESOURCE_GROUP/AZURE_OPENAI_ACCOUNT_NAME) "
+            "-- using static fallback list"
+        )
+        payload = {"models": _fallback_models_with_configured_deployment(), "source": "fallback"}
+        _MODELS_CACHE["data"] = payload
+        _MODELS_CACHE["fetched_at"] = now
+        _MODELS_CACHE["source"] = "fallback"
+        return payload
+
+    credential = None
+    try:
+        from azure.identity.aio import DefaultAzureCredential as AsyncDefaultAzureCredential
+
+        credential = AsyncDefaultAzureCredential()
+        token = await credential.get_token("https://management.azure.com/.default")
+
+        url = (
+            f"https://management.azure.com/subscriptions/{subscription_id}"
+            f"/resourceGroups/{resource_group}"
+            f"/providers/Microsoft.CognitiveServices/accounts/{account_name}"
+            f"/deployments?api-version=2023-05-01"
+        )
+        headers = {"Authorization": f"Bearer {token.token}"}
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+            async with session.get(url, headers=headers) as resp:
+                if resp.status != 200:
+                    raise RuntimeError(f"ARM deployments list returned HTTP {resp.status}")
+                body = await resp.json()
+
+        models = []
+        default_set = False
+        for entry in body.get("value", []):
+            deployment_name = entry.get("name")
+            props = entry.get("properties", {})
+            model_info = props.get("model", {})
+            model_name = model_info.get("name", deployment_name)
+            model_version = model_info.get("version", "")
+            # Skip non-chat deployments (embeddings, audio, image models) --
+            # they'd otherwise show up as selectable "models" in the chat
+            # dropdown even though they can't serve chat completions.
+            if (model_name or "").lower().startswith(_NON_CHAT_MODEL_PREFIXES):
+                continue
+            provisioning_state = props.get("provisioningState", "")
+            is_available = provisioning_state.lower() == "succeeded"
+            is_default = not default_set and "mini" in deployment_name.lower()
+            if is_default:
+                default_set = True
+            models.append({
+                "id": deployment_name,
+                "name": _friendly_model_name(model_name, model_version),
+                "isDefault": is_default,
+                "isAvailable": is_available,
+            })
+
+        if not models:
+            raise RuntimeError("ARM returned zero chat-capable deployments")
+        if not default_set:
+            models[0]["isDefault"] = True
+
+        payload = {"models": models, "source": "arm"}
+        _MODELS_CACHE["data"] = payload
+        _MODELS_CACHE["fetched_at"] = now
+        _MODELS_CACHE["source"] = "arm"
+        logger.info("[MODELS] Discovered %d live deployment(s) via ARM: %s", len(models), [m["id"] for m in models])
+        return payload
+
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[MODELS] ARM discovery failed (%s) -- using static fallback list", exc)
+        payload = {"models": _fallback_models_with_configured_deployment(), "source": "fallback"}
+        _MODELS_CACHE["data"] = payload
+        _MODELS_CACHE["fetched_at"] = now
+        _MODELS_CACHE["source"] = "fallback"
+        return payload
+    finally:
+        if credential is not None:
+            await credential.close()
+
+
+@app.get("/api/models")
+async def get_available_models():
+    """Return the Azure OpenAI deployments actually available in this
+    tenant, discovered live via the ARM management API, instead of a
+    hardcoded list.
+
+    Requires AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP, and
+    AZURE_OPENAI_ACCOUNT_NAME to be set, plus the container app's managed
+    identity to have at least Reader on the Cognitive Services account
+    (a data-plane-only identity, as used for chat completions, cannot
+    list deployments -- that's a management-plane call).
+
+    Falls back to a static default list (matching prior hardcoded
+    frontend behavior) if discovery isn't configured or fails, so the
+    model selector never renders empty.
+    """
+    payload = await _compute_available_models()
+    return JSONResponse(content=payload)
+
 
 def _env_flag(name: str, default: bool = False) -> bool:
     """Parse a string env var as a boolean flag.
@@ -4242,6 +4440,253 @@ async def resilience_facilities(request: Request, region: str | None = None):
 
 
 # ---------------------------------------------------------------------------
+# Copilot / M365 declarative agent — stateless Earth-observation Q&A
+# ---------------------------------------------------------------------------
+# Separate, narrow action from the Resilience plugin above (see
+# m365/teams-app/plugin-query/). Wraps AnalystAgent's ReAct loop for
+# general "what is X" / "how does Y work" Earth-science questions without
+# requiring any of the map-session state (screenshot, loaded_collections,
+# pin, tile_urls) the web UI provides — Teams/Copilot callers don't have a
+# map, so this is intentionally a stateless, single-turn endpoint.
+# ---------------------------------------------------------------------------
+@app.get("/api/copilot/health")
+async def copilot_health():
+    """Readiness probe for the Copilot Q&A action. No auth, no external calls."""
+    return {"status": "ready"}
+
+
+@app.post("/api/copilot/ask")
+async def copilot_ask(request: Request):
+    """Answer a stateless Earth-observation question via AnalystAgent.
+
+    Body:
+        {
+            "question": "what is a spectral index?",   # required
+            "location": "Gulf Coast",                    # optional, free text
+            "time_range": "last week"                    # optional, free text
+        }
+
+    This calls the same v2 pipeline (ActionRouter -> AnalyzeAgent ->
+    AnalystAgent) used by /api/query, but with a minimal body containing
+    no map/session context, so the router reliably lands on ANALYZE for
+    knowledge questions. Returns a small, Copilot-friendly shape rather
+    than the full /api/query response (which includes map/tile fields
+    that have no meaning without a map).
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    question = (body.get("question") or "").strip()
+    if not question:
+        raise HTTPException(status_code=422, detail="'question' is required")
+
+    location = body.get("location")
+    time_range = body.get("time_range")
+    natural_query = question
+    if location:
+        natural_query = f"{natural_query} (location: {location})"
+    if time_range:
+        natural_query = f"{natural_query} (time range: {time_range})"
+
+    pipeline_body = {
+        "query": natural_query,
+        "session_id": f"copilot-{_uuid.uuid4().hex[:12]}",
+    }
+
+    try:
+        from pipeline.dispatch import run_pipeline_v2
+        result = await run_pipeline_v2(pipeline_body)
+    except Exception:
+        # Log full exception server-side only -- do not return str(exc) to
+        # the client, which can leak internal paths/config details (PR #31
+        # review finding).
+        logger.exception("[COPILOT] /api/copilot/ask pipeline failed")
+        raise HTTPException(status_code=502, detail="Upstream pipeline error -- please retry.")
+
+    action = result.get("action")
+    answer = result.get("answer") or ""
+
+    if action == "CLARIFY":
+        return {
+            "answer": answer or "Could you clarify your question?",
+            "needs_clarification": True,
+            "options": (result.get("structured") or {}).get("options", []),
+        }
+
+    if action in ("NAVIGATE", "LOAD", "LOAD_AND_ANALYZE") and not answer:
+        # These actions expect a map to render into, which Copilot doesn't
+        # have. Give the user a clear, honest response instead of an
+        # empty/misleading one.
+        return {
+            "answer": (
+                "That looks like a request to load or navigate to map data, "
+                "which requires the Planetary Explorer map view. Try asking "
+                "a general Earth-science question instead, or use the "
+                "Planetary Explorer web app for imagery/navigation requests."
+            ),
+            "needs_clarification": False,
+            "options": [],
+        }
+
+    structured = result.get("structured") or {}
+    skill_pack = structured.get("skill_pack") if isinstance(structured, dict) else None
+    return {
+        "answer": answer or "I wasn't able to find an answer to that question.",
+        "needs_clarification": False,
+        "options": [],
+        "skill_pack": skill_pack.get("id") if isinstance(skill_pack, dict) else None,
+    }
+
+
+@app.post("/api/copilot/vision")
+async def copilot_vision(request: Request):
+    """Answer a visual/imagery question about a named location, statelessly.
+
+    Body:
+        {
+            "question": "what does the vegetation look like here?",  # required
+            "location": "Austin, Texas"                              # required
+        }
+
+    Unlike the web UI's Vision Agent flow (which analyzes a screenshot/tiles
+    already loaded on the user's map), Copilot has no map session to draw
+    from. This endpoint closes that gap itself:
+
+      1. Geocode ``location`` to a bbox (EnhancedLocationResolver — same
+         resolver NavigateAgent uses for the web UI's "go to X" flow).
+      2. Search Planetary Computer for the most recent low-cloud Sentinel-2
+         scene covering that bbox (mirrors geoint/vision_analyzer.py's
+         ``_fetch_satellite_image`` pattern).
+      3. Fetch a rendered PNG preview of that scene and base64-encode it.
+      4. Pass the image + STAC context to EnhancedVisionAgent.analyze(),
+         the same vision pipeline the web UI uses.
+
+    This is intentionally narrow: one image, one location, one question,
+    no multi-turn map session. Multi-turn visual analysis still requires
+    the Planetary Explorer web app.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    question = (body.get("question") or "").strip()
+    location = (body.get("location") or "").strip()
+    if not question:
+        raise HTTPException(status_code=422, detail="'question' is required")
+    if not location:
+        raise HTTPException(status_code=422, detail="'location' is required")
+
+    # Step 1: geocode
+    try:
+        from location_resolver import EnhancedLocationResolver
+        resolver = EnhancedLocationResolver()
+        bbox = await resolver.resolve_location_to_bbox(location)
+    except Exception:
+        # Log full exception server-side only -- do not return str(exc) to
+        # the client (PR #31 review finding).
+        logger.exception("[COPILOT-VISION] geocoding failed")
+        raise HTTPException(status_code=502, detail="Geocoding error -- please retry.")
+    if not bbox:
+        return {
+            "answer": f"I couldn't find a location matching '{location}'. Try a more specific place name.",
+            "needs_clarification": True,
+            "options": [],
+        }
+
+    # Step 2 + 3: STAC search + fetch a rendered preview image, mirroring
+    # geoint/vision_analyzer.py's _fetch_satellite_image pattern (recent,
+    # low-cloud Sentinel-2 scene covering the bbox; 30-day window with a
+    # 60-day/relaxed-cloud fallback).
+    try:
+        import planetary_computer
+        from pystac_client import Client as _StacClient
+
+        catalog = _StacClient.open(
+            "https://planetarycomputer.microsoft.com/api/stac/v1",
+            modifier=planetary_computer.sign_inplace,
+        )
+        now = datetime.now(timezone.utc)
+
+        def _search_sentinel2(start_days: int, cloud_lt: int, limit: int):
+            # pystac_client's search()/items() perform synchronous network
+            # I/O; running them directly inside this async def would block
+            # the event loop for the duration of each STAC query (PR #41
+            # review finding). Offloaded to a worker thread via
+            # asyncio.to_thread at the call sites below.
+            _search = catalog.search(
+                collections=["sentinel-2-l2a"],
+                bbox=bbox,
+                datetime=f"{(now - timedelta(days=start_days)).strftime('%Y-%m-%dT%H:%M:%SZ')}/{now.strftime('%Y-%m-%dT%H:%M:%SZ')}",
+                query={"eo:cloud_cover": {"lt": cloud_lt}},
+                limit=limit,
+            )
+            return list(_search.items())
+
+        items = await asyncio.to_thread(_search_sentinel2, 30, 20, 20)
+        if not items:
+            items = await asyncio.to_thread(_search_sentinel2, 60, 30, 10)
+        if not items:
+            return {
+                "answer": f"I couldn't find recent, mostly-clear Sentinel-2 imagery for {location}. Try a different location or check back later.",
+                "needs_clarification": False,
+                "options": [],
+            }
+        # item.datetime can be None for some STAC items -- sort with a
+        # fallback so this doesn't raise a TypeError comparing None to a
+        # real datetime (PR #41 review finding).
+        item = sorted(items, key=lambda x: x.datetime or datetime.min.replace(tzinfo=timezone.utc), reverse=True)[0]
+
+        preview_url = (
+            f"https://planetarycomputer.microsoft.com/api/data/v1/item/preview.png"
+            f"?collection=sentinel-2-l2a&item={item.id}&assets=visual&width=512&height=512"
+        )
+        signed_url = planetary_computer.sign_url(preview_url)
+
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(signed_url, timeout=aiohttp.ClientTimeout(total=45)) as resp:
+                if resp.status != 200:
+                    raise RuntimeError(f"preview fetch returned HTTP {resp.status}")
+                image_bytes = await resp.read()
+    except Exception:
+        logger.exception("[COPILOT-VISION] STAC search / image fetch failed")
+        raise HTTPException(status_code=502, detail="Imagery fetch error -- please retry.")
+
+    import base64 as _b64
+    imagery_base64 = _b64.b64encode(image_bytes).decode("utf-8")
+
+    # Step 4: vision analysis, same agent the web UI uses
+    try:
+        from agents.enhanced_vision_agent import get_enhanced_vision_agent
+        vision_agent = get_enhanced_vision_agent()
+        result = await vision_agent.analyze(
+            user_query=question,
+            session_id=f"copilot-vision-{_uuid.uuid4().hex[:12]}",
+            imagery_base64=imagery_base64,
+            map_bounds={
+                "west": bbox[0], "south": bbox[1], "east": bbox[2], "north": bbox[3],
+                "center_lat": (bbox[1] + bbox[3]) / 2, "center_lng": (bbox[0] + bbox[2]) / 2,
+            },
+            collections=["sentinel-2-l2a"],
+        )
+    except Exception:
+        logger.exception("[COPILOT-VISION] vision analysis failed")
+        raise HTTPException(status_code=502, detail="Vision analysis error -- please retry.")
+
+    answer = result.get("response") or result.get("analysis") or ""
+    return {
+        "answer": answer or "I wasn't able to analyze the imagery for that location.",
+        "needs_clarification": False,
+        "options": [],
+        "imagery_date": item.datetime.isoformat() if item.datetime else None,
+        "cloud_cover": item.properties.get("eo:cloud_cover"),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Resilience assessment cache + snapshot endpoint
 # ---------------------------------------------------------------------------
 # In-process TTL cache of assessment dossiers keyed by ``assessment_id``.
@@ -4388,7 +4833,55 @@ async def unified_query_processor(request: Request):
         natural_query = req_body.get('query') or req_body.get('user_query') or 'No query provided'
         session_id = req_body.get('session_id') or req_body.get('conversation_id')
         pin = req_body.get('pin') or req_body.get('vision_pin')  # Pin {lat, lng} (web-ui sends 'vision_pin')
-        selected_model = req_body.get('model', 'gpt-5')  # Model selection from frontend, default to gpt-5
+        selected_model = req_body.get('model', 'gpt-4o-mini')  # Model selection from frontend, default to fast model
+
+        # Validate the client-supplied model against the same live-discovery
+        # list /api/models returns, instead of passing an unvalidated value
+        # straight into create_agent()/chat.completions.create() (PR #31
+        # review finding). A forged/stale model id would otherwise surface
+        # as an opaque Azure error deep in the pipeline instead of being
+        # caught here with a safe fallback.
+        try:
+            from model_family import resolve_fallback_model_id
+            _models_payload = await _compute_available_models()
+            _valid_models = _models_payload.get("models", [])
+            _valid_model_ids = {m["id"] for m in _valid_models}
+            if selected_model not in _valid_model_ids:
+                # Fall back to whichever entry the live list marks as
+                # isDefault (works in both ARM and static-fallback modes,
+                # since both always set exactly one isDefault=True), rather
+                # than a hardcoded id that may not exist in this tenant/mode
+                # (PR #41 review finding). Extracted to model_family.py so
+                # this precedence is independently unit-tested.
+                _fallback_model = resolve_fallback_model_id(_valid_models)
+                logger.warning(
+                    "[BOT] Rejecting unknown model '%s' (not in %s) -- falling back to '%s'",
+                    selected_model, sorted(_valid_model_ids), _fallback_model,
+                )
+                selected_model = _fallback_model
+            # Write the validated value back into the shared request body so
+            # every downstream consumer reading body.get("model") directly
+            # (e.g. pipeline.layer1_agents.AnalyzeAgent) sees the corrected
+            # value instead of bypassing this validation (PR #41 review
+            # finding -- req_body is the same dict passed into
+            # run_pipeline_v2, so mutating it here is sufficient).
+            req_body['model'] = selected_model
+        except Exception as _model_validate_exc:  # noqa: BLE001
+            # Never let validation itself break the request, but ALSO never
+            # leave an unvalidated client-supplied model in req_body -- that
+            # would silently reopen the exact bypass this fix exists to
+            # close (PR #41 second-round review finding: fail-open was
+            # failing open with the attacker-controlled value still intact).
+            # Fall back to whatever this environment is actually configured
+            # to run, same precedence _fallback_models_with_configured_deployment()
+            # uses: a configured custom deployment name, else the static
+            # default.
+            selected_model = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME") or "gpt-4o-mini"
+            req_body['model'] = selected_model
+            logger.warning(
+                "[BOT] Model validation failed (%s) -- forcing fallback to '%s'",
+                _model_validate_exc, selected_model,
+            )
 
         # ================================================================
         # TOP-LEVEL GREETING / IDENTITY SHORT-CIRCUIT
@@ -4456,16 +4949,19 @@ async def unified_query_processor(request: Request):
                         get_clarifier_agent, ClarifierInput,
                     )
                     _agent_top = get_clarifier_agent()
-                    _decision_top = await _agent_top.decide(ClarifierInput(
-                        query=natural_query,
-                        has_rendered_map=False,
-                        has_screenshot=False,
-                        has_last_bbox=False,
-                        pending_clarification=False,
-                        has_pin=False,
-                        prior_action=None,
-                        prior_target_route=None,
-                    ))
+                    _decision_top = await _agent_top.decide(
+                        ClarifierInput(
+                            query=natural_query,
+                            has_rendered_map=False,
+                            has_screenshot=False,
+                            has_last_bbox=False,
+                            pending_clarification=False,
+                            has_pin=False,
+                            prior_action=None,
+                            prior_target_route=None,
+                        ),
+                        model=selected_model,
+                    )
                     if _decision_top.user_response:
                         _llm_text = _decision_top.user_response
                         _llm_options = list(_decision_top.options or [])
@@ -5422,16 +5918,19 @@ async def unified_query_processor(request: Request):
                                 )
                                 _agent = get_clarifier_agent()
                                 _pin = pin or req_body.get("vision_pin")
-                                _decision = await _agent.decide(ClarifierInput(
-                                    query=natural_query,
-                                    has_rendered_map=_has_map,
-                                    has_screenshot=_has_shot,
-                                    has_last_bbox=_has_bbox,
-                                    pending_clarification=False,
-                                    has_pin=bool(_pin),
-                                    prior_action=router_action.get("action_type"),
-                                    prior_target_route=router_action.get("target_route"),
-                                ))
+                                _decision = await _agent.decide(
+                                    ClarifierInput(
+                                        query=natural_query,
+                                        has_rendered_map=_has_map,
+                                        has_screenshot=_has_shot,
+                                        has_last_bbox=_has_bbox,
+                                        pending_clarification=False,
+                                        has_pin=bool(_pin),
+                                        prior_action=router_action.get("action_type"),
+                                        prior_target_route=router_action.get("target_route"),
+                                    ),
+                                    model=selected_model,
+                                )
                                 if _decision.user_response:
                                     _llm_reply = _decision.user_response
                                     _llm_options = list(_decision.options or [])
@@ -7216,6 +7715,28 @@ async def unified_query_processor(request: Request):
             collection_id.startswith(oc) or collection_id == oc 
             for oc in optical_collections_needing_mosaic
         )
+
+        # PERF: gate mosaic registration on feature count, mirroring the
+        # Pro-mode threshold below (`pro_mosaic_eligible` requires >=2
+        # features -- "registering a one-item mosaic adds latency without
+        # benefit"). The Public PC path had no such gate: every query --
+        # including single-city, single-item results -- paid the full
+        # ~10-25s mosaic registration round-trip to
+        # planetarycomputer.microsoft.com/api/data/v1/mosaic/register even
+        # though a single feature already renders its own full-coverage
+        # tile with no gap to stitch. Measured as the dominant cost in the
+        # /api/query pipeline trace (11-26s out of 13-33s total).
+        #
+        # NAIP is exempted: its irregular county-scale polygons can leave
+        # visible gaps within a city-scale bbox even with a single feature
+        # (see comment above), so it always uses mosaic when eligible.
+        if needs_mosaic and collection_id != "naip" and (not features or len(features) < 2):
+            logger.info(
+                "[MOSAIC] Public mode -- skipping mosaic for %s "
+                "(features=%d, threshold=2)",
+                collection_id, len(features) if features else 0,
+            )
+            needs_mosaic = False
         
         # MOSAIC ROUTING.
         # ``get_mosaic_tilejson_url`` registers a search against the

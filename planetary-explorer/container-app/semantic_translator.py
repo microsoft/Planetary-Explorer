@@ -3236,12 +3236,47 @@ IMPORTANT:
 - Select tiles that fully cover the bounding box
 - Prioritize quality over quantity"""
 
-                # Use GPT-5 for tile selection
-                execution_settings = AzureChatPromptExecutionSettings(
-                    max_completion_tokens=2000,
-                    temperature=1.0,  # GPT-5 only supports default temperature
-                    top_p=0.95
-                )
+                # Tile selection runs against whichever model is currently
+                # active (the user-selectable model, via set_model()/
+                # get_active_model()). gpt-5/o-series reasoning models
+                # reject non-default temperature and burn hidden reasoning
+                # tokens unless reasoning_effort is capped -- the same fix
+                # already validated on ContextualAgent. Classic chat models
+                # (gpt-4o*) reject reasoning_effort but accept temperature.
+                #
+                # Per-family effort value: gpt-5-family models accept
+                # "minimal"; o-series (o1/o3/o4) models only accept
+                # "low"/"medium"/"high" and reject "minimal" with an HTTP
+                # 400 (PR #31 review finding). AzureChatPromptExecutionSettings
+                # is already imported at module level (see top of file) --
+                # no local import needed here (PR #41 review finding: a
+                # local import of the same name would make it function-local
+                # for the whole function, risking UnboundLocalError if used
+                # earlier in the function; removed to avoid any ambiguity).
+                # Effort/temperature mapping uses the shared helper (PR #41
+                # review: "a single reasoning_kwargs(model) helper would
+                # stop it drifting") -- see model_family.py.
+                from model_family import reasoning_effort_for_model
+                _active_model = self.get_active_model()
+                _effort = reasoning_effort_for_model(_active_model)
+                if _effort == "minimal":
+                    execution_settings = AzureChatPromptExecutionSettings(
+                        max_completion_tokens=2000,
+                        temperature=1.0,  # GPT-5 only supports default temperature
+                        reasoning_effort="minimal",
+                    )
+                elif _effort == "low":
+                    execution_settings = AzureChatPromptExecutionSettings(
+                        max_completion_tokens=2000,
+                        temperature=1.0,
+                        reasoning_effort="low",
+                    )
+                else:
+                    execution_settings = AzureChatPromptExecutionSettings(
+                        max_completion_tokens=2000,
+                        temperature=0.3,
+                        top_p=0.95,
+                    )
                 
                 # Create chat history
                 chat_history = ChatHistory()
@@ -8052,11 +8087,28 @@ Keep your response focused, informative, and directly relevant to the user's que
             # Prepare data summary as formatted text for the LLM
             formatted_data_summary = self._format_data_summary_for_llm(data_summary)
             
+            # Use fast model (gpt-4o-mini) for final response wording -- this is
+            # a short "describe the results" narration, the same complexity
+            # class as the classification/datetime prompts elsewhere in this
+            # file that already pin service_id="chat-completion-4o". Without
+            # this, invoke_prompt fell back to the heavy "chat-completion"
+            # (gpt-5) service with no reasoning_effort cap, which measured as
+            # a major latency contributor on every successful STAC search
+            # response (folded into the TILE_URLS pipeline-trace span since
+            # this call executes just before the tile-URL build loop).
+            from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
+            execution_settings = AzureChatPromptExecutionSettings(
+                service_id="chat-completion-4o",
+                temperature=0.4,
+                max_completion_tokens=500
+            )
+
             # Execute using SK 1.36.2 invoke_prompt
             arguments = KernelArguments(
                 user_query=user_query,
                 data_summary=formatted_data_summary,
-                conversation_context=conversation_context or "No previous conversation context."
+                conversation_context=conversation_context or "No previous conversation context.",
+                settings=execution_settings
             )
             result = await self.kernel.invoke_prompt(
                 prompt=prompt_template,
